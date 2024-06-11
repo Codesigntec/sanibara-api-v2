@@ -1,4 +1,4 @@
-name: sanibara-v2-api-auto-deploy
+name: sanibara-v2-api-auto-deploy2
 
 on:
   pull_request:
