@@ -1,0 +1,47 @@
+name: sanibara-v2-api-auto-deploy2
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: create env file
+      run: |
+        touch .env
+        echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+        echo CENTRAL_DATABASE_URL=${{ secrets.CENTRAL_DATABASE_URL }} >> .env
+        
+        echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
+        echo JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} >> .env
+        
+        
+        echo MAIL_HOST=${{ secrets.MAIL_HOST }} >> .env
+        echo MAIL_PORT=${{ secrets.MAIL_PORT }} >> .env
+        echo MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} >> .env
+        echo MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} >> .env
+
+        echo HASHID_SECRET_KEY_BASE=${{ secrets.HASHID_SECRET_KEY_BASE }} >> .env
+         
+        echo HOST=${{ secrets.HOST }} >> .env
+        echo PORT=${{ secrets.PORT }} >> .env
+
+
+    - name: install dependencies and build app
+      run: |
+        bun run build:do
+        bun run start:prod
