@@ -10,13 +10,16 @@ async function bootstrap() {
   app.use(helmet())
   app.use(compression())
 
+  const port = Number(process.env.PORT) || 3002
+  const host = process.env.HOST || 'localhost'
+
   const config = new DocumentBuilder()
     .setTitle('Sanibara v2 api')
     .setDescription('La documentation officielle de la plateforme de gestion de production SANIBARA')
     .setVersion('1.0')
     .setContact('Codesign', 'https://codesign.tech', 'contact@codesign.tech')
-    .addServer('http://localhost:3002/api/v1', 'Version 1 - dev')
-    .addServer('http://test.com', 'production')
+    .addServer(`http://${host}:${port}/api/v2`, 'Version 2 - dev')
+    .addServer('https://sanibara-api.codesign.tech', 'Version 2 -production')
 
     // .addTag('categories', 'Gestion des categories de produit')
     // .addTag('users', 'Gestions des utilisateurs')
@@ -31,13 +34,13 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
     prefix: 'api/v', // default value = v
-    defaultVersion: '1'
+    defaultVersion: '2'
   });
 
   app.enableCors({
     origin: "*"
   })
 
-  await app.listen(3002);
+  await app.listen(port);
 }
 bootstrap();

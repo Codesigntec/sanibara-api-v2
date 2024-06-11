@@ -1,5 +1,6 @@
 
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './resources/auth/auth.module';
@@ -17,6 +18,7 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     // ArticleModule,
     AuthModule,
     // DeviseModule,
