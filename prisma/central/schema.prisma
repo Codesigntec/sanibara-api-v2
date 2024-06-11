@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@okucraft/code_central"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CENTRAL_DATABASE_URL")
+}
+
+model Store {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  name      String
+  email     String
+  db        String
+  app       App
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  subscriptions Subscription[]
+
+  @@unique([app, db], map: "app_db_uniq")
+  @@map("stores")
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  start     DateTime
+  end       DateTime
+  storeId   Int      @map("store_id")
+  store     Store    @relation(fields: [storeId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum App {
+  sanifere
+  sanibara
+}
+

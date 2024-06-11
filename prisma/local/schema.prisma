@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MatierePremiere {
+  id          String   @id @default(cuid())
+  designation String
+  numero      Int      @default(autoincrement())
+  uniteId     String   @map("unite_id")
+  unite       Unite    @relation(fields: [uniteId], references: [id])
+  // categorieId String    @map("categorie_id")
+  // categorie   Categorie @relation(fields: [categorieId], references: [id])
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("Matieres_premieres")
+}
+
+// model Categorie {
+//   id        String   @id @default(cuid())
+//   numero    Int      @default(autoincrement())
+//   libelle   String
+//   archive   Boolean  @default(false)
+//   removed   Boolean  @default(false)
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+
+//   // articles Article[]
+
+//   @@map("categories")
+// }
+
+model Client {
+  id        String   @id @default(cuid())
+  numero    Int      @default(autoincrement())
+  nom       String
+  telephone String?
+  email     String?
+  adresse   String?
+  societe   String?
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("clients")
+}
+
+model Fournisseur {
+  id        String   @id @default(cuid())
+  numero    Int      @default(autoincrement())
+  nom       String
+  telephone String?
+  email     String?
+  adresse   String?
+  societe   String?
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  commandes Commande[]
+
+  @@map("fournisseurs")
+}
+
+model Depense {
+  id        String   @id @default(cuid())
+  numero    Int      @default(autoincrement())
+  motif     String
+  montant   Float
+  date      DateTime
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("depenses")
+}
+
+model Devise {
+  id        String   @id @default(cuid())
+  numero    Int      @default(autoincrement())
+  libelle   String
+  symbole   String
+  active    Boolean  @default(false)
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("devises")
+}
+
+model Magasin {
+  id        String   @id @default(cuid())
+  // numero    Int      @default(autoincrement())
+  nom       String
+  type      String
+  adresse   String
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accesUtilisateurs MagasinUtilisateur[]
+
+  @@map("magasins")
+}
+
+model Role {
+  id        String   @id @default(cuid())
+  numero    Int      @default(autoincrement())
+  libelle   String
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users    Utilisateur[]
+  accesses Access[]
+
+  @@map("roles")
+}
+
+model Access {
+  id        String   @id @default(cuid())
+  module    String
+  read      Boolean  @default(false)
+  write     Boolean  @default(false)
+  remove    Boolean  @default(false)
+  archive   Boolean  @default(false)
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([module, roleId], map: "module_role_uniq")
+  @@map("accesses")
+}
+
+model Unite {
+  id        String   @id @default(cuid())
+  libelle   String
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  matieresPremieres MatierePremiere[]
+
+  @@map("unites")
+}
+
+model Utilisateur {
+  id               String   @id @default(cuid())
+  numero           Int      @default(autoincrement())
+  nom              String
+  email            String   @unique
+  password         String
+  confirmationCode Int      @default(0)
+  status           Boolean  @default(true)
+  archive          Boolean  @default(false)
+  removed          Boolean  @default(false)
+  roleId           String   @map("role_id")
+  role             Role     @relation(fields: [roleId], references: [id])
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  traces        Trace[]
+  accesMagasins MagasinUtilisateur[]
+
+  @@map("utilisateurs")
+}
+
+model MagasinUtilisateur {
+  id String @id @default(cuid())
+
+  magasinId String  @map("magasin_id")
+  magasin   Magasin @relation(fields: [magasinId], references: [id])
+
+  utilisateurId String      @map("utilisateur_id")
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("magasin_utilisateurs")
+}
+
+model Commande {
+  id             String          @id @default(cuid())
+  numero         Int             @default(autoincrement())
+  montant        Float
+  date           DateTime
+  tva            Int             @default(0)
+  statut         String          @default("EN COURS")
+  archive        Boolean         @default(false)
+  removed        Boolean         @default(false)
+  // commandeChargeId String?         @map("commande_charge_id")
+  commandeCharge CommandeCharge?
+  fournisseurId  String?         @map("fournisseur_id")
+  fournisseur    Fournisseur?    @relation(fields: [fournisseurId], references: [id])
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@map("commandes")
+}
+
+model CommandeCharge {
+  id         String   @id @default(cuid())
+  montant    Float
+  motif      String   @db.Text
+  commandeId String   @unique @map("commande_id")
+  commande   Commande @relation(fields: [commandeId], references: [id])
+  // Commande Commande[]
+
+  @@map("commande_charges")
+}
+
+// 
+
+// this._id = uniqid.time();
+// this.fournisseur_id = achat.fournisseur_id;
+// this.montant = achat.montant;
+// this.date = achat.date;
+// this.devis = achat.devis;
+// this.type = achat.type;
+// this.tva = achat.tva;
+// this.charge = achat.charge;
+// this.motif = achat.motif;
+// this.etat = achat.etat;
+
+model Trace {
+  id            String      @id @default(cuid())
+  action        String
+  description   String
+  utilisateurId String      @map("utilisateur_id")
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("traces")
+}
+
+model Structure {
+  id        String   @id @default(cuid())
+  nom       String
+  email     String
+  telephone String
+  adresse   String
+  logo      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("structures")
+}
