@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "build:do": "bun install && bun run build && bun run db:deploy",
+    "build:do": "npm install && npm run build && npm run db:deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
@@ -20,7 +20,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:deploy": "bun run db:gen:central && bun run db:gen:local && bun run db:migrate",
+    "db:deploy": "npm run db:gen:central && npm run db:gen:local && npm run db:migrate",
     "db:gen:central": "npx prisma generate --schema prisma/central/schema.prisma",
     "db:gen:local": "npx prisma generate --schema prisma/local/schema.prisma",
     "db:migrate:dev": "npx prisma migrate dev --schema prisma/local/schema.prisma",
