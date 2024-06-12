@@ -30,7 +30,7 @@ export class AuthController {
     constructor(private auth: AuthService) { }
 
     @Post('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(credentialSchema))
     @UseGuards(WorkspaceGuard)
@@ -41,7 +41,7 @@ export class AuthController {
     }
 
     @Post('/forget-password')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(forgetPasswordSchema))
     @UseGuards(WorkspaceGuard)
@@ -51,7 +51,7 @@ export class AuthController {
     }
 
     @Post('/reset-password')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(resetPasswordSchema))
     @UseGuards(WorkspaceGuard)
@@ -62,7 +62,7 @@ export class AuthController {
     }
 
     @Post('/workspace')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(workspaceSchema))
     @ApiOkResponse({type: WorkspaceResponse})

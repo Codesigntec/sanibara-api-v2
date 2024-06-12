@@ -45,4 +45,4 @@ jobs:
     - name: install dependencies and build app
       run: |
         npm run build:do
-        npm run start:prod
+        npm run restart:prod

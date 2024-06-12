@@ -18,7 +18,7 @@ export class UtilisateurController {
     constructor(private service: UtilisateurService) { }
 
     @Get('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiResponse({ type: Pagination<Utilisateur>})
@@ -44,7 +44,7 @@ export class UtilisateurController {
     }
 
     @Get('/select')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     async select(): Promise<UtilisateurSelect[]> {
@@ -52,7 +52,7 @@ export class UtilisateurController {
     }
 
     @Get('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     async findOne(@Param('id') id: string): Promise<UtilisateurFull> {
@@ -60,7 +60,7 @@ export class UtilisateurController {
     }
 
     @Post('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -71,7 +71,7 @@ export class UtilisateurController {
 
 
     @Put('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(updaterSchema))
     @UseGuards(AuthGuard)
@@ -82,7 +82,7 @@ export class UtilisateurController {
     }
 
     @Delete('/:id/archive')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     async archive(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
@@ -92,7 +92,7 @@ export class UtilisateurController {
     }
 
     @Delete('/:id/destroy')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     async destroy(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
@@ -102,7 +102,7 @@ export class UtilisateurController {
     }
 
     @Delete('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     async remove(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
