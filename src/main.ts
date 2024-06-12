@@ -18,8 +18,8 @@ async function bootstrap() {
     .setDescription('La documentation officielle de la plateforme de gestion de production SANIBARA')
     .setVersion('1.0')
     .setContact('Codesign', 'https://codesign.tech', 'contact@codesign.tech')
+    .addServer('https://sanibara-api.codesign.tech/api/v2', 'Version 2 -production')
     .addServer(`http://${host}:${port}/api/v2`, 'Version 2 - dev')
-    .addServer('https://sanibara-api.codesign.tech', 'Version 2 -production')
 
     // .addTag('categories', 'Gestion des categories de produit')
     // .addTag('users', 'Gestions des utilisateurs')
