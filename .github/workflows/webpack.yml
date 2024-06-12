@@ -44,5 +44,5 @@ jobs:
 
     - name: install dependencies and build app
       run: |
-        bun run build:do
-        bun run start:prod
+        npm run build:do
+        npm run start:prod
