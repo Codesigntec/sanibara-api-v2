@@ -12,7 +12,7 @@
     "start": "nest start",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "pm2 start dist/main --name sanibara-v2-api",
+    "start:prod": "pm2 start dist/src/main.js --name sanibara-v2-api",
     "restart:prod": "pm2 restart sanibara-v2-api",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
