@@ -6,11 +6,11 @@ async function main() {
 
     await prisma.store.create({
         data: {
-            key: 'kzr59ew4',
-            email: 'dembelemassire34@gmail.com',
-            app: 'sanifere',
-            db: 'sanifere',
-            name: 'Sanifere codesign',
+            key: 'kzzqn9y4',
+            email: 'm.dembele@codesign.tech',
+            app: 'sanibara',
+            db: 'sanibara',
+            name: 'sanibara codesign',
             subscriptions: {
                 create: {
                     end: new Date('2024-12-31'),
