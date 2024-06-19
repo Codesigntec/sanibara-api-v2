@@ -9,6 +9,7 @@ import { UniteModule } from './resources/unite/unite.module';
 // import { TraceModule } from './resources/trace/trace.module';
 import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
 import { MagasinProduitFiniModule } from './resources/magasin/produit-fini/magasin.module';
+import { MagasinMatierePremiereModule } from './resources/magasin/matiere-premiere/magasin.module';
 // import { ClientModule } from './resources/client/client.module';
 // import { FournisseurModule } from './resources/fournisseur/fournisseur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
@@ -27,6 +28,7 @@ import { DepenseModule } from './resources/depense/depense.module';
     // ClientModule,
     // FournisseurModule,
     MagasinProduitFiniModule,
+    MagasinMatierePremiereModule,
     RoleModule,
     UniteModule,
     UtilisateurModule,

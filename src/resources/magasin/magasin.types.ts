@@ -21,8 +21,8 @@ export class MagasinSelect {
   nom: string
 }
 export class Magasin extends MagasinSelect {
-  // @ApiProperty()
-  // numero: number
+  @ApiProperty()
+  numero: number
 
   @ApiProperty()
   adresse: string
