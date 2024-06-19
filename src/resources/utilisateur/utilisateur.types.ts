@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter, Pagination } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./utilisateur.constant"
+import { RoleSelect } from "../role/role.types"
 // import { MagasinSelect } from "../magasin/magasin.types"
 
 export class UtilisateurFetcher extends FetcherFilter {
@@ -66,13 +67,6 @@ export class UtilisateurLight extends UtilisateurSelect {
 
   @ApiProperty()
   status: boolean
-}
-export class RoleSelect {
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  libelle: string
 }
 export class Utilisateur extends UtilisateurLight {
 

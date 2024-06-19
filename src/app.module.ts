@@ -12,7 +12,7 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
 // import { ClientModule } from './resources/client/client.module';
 // import { FournisseurModule } from './resources/fournisseur/fournisseur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
-// import { RoleModule } from './resources/role/role.module';
+import { RoleModule } from './resources/role/role.module';
 // import { ArticleModule } from './resources/article/article.module';
 import { DepenseModule } from './resources/depense/depense.module';
 
@@ -27,7 +27,7 @@ import { DepenseModule } from './resources/depense/depense.module';
     // ClientModule,
     // FournisseurModule,
     // MagasinModule,
-    // RoleModule,
+    RoleModule,
     UniteModule,
     UtilisateurModule,
     // TraceModule
