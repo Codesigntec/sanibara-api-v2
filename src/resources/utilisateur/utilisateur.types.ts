@@ -30,7 +30,10 @@ export class UtilisateurSaver {
   roleId: string
 
   @ApiProperty()
-  magasins: UtilisateurMagasinsSaver[] | null
+  magasinsPrduitsFinis: UtilisateurMagasinsSaver[] | null
+
+  @ApiProperty()
+  magasinsMatieresPremieres: UtilisateurMagasinsSaver[] | null
 }
 
 export class UtilisateurUpdater {
@@ -47,7 +50,10 @@ export class UtilisateurUpdater {
   roleId: string
 
   @ApiProperty()
-  magasins: UtilisateurMagasinsSaver[] | null
+  magasinsPrduitsFinis: UtilisateurMagasinsSaver[] | null
+
+  @ApiProperty()
+  magasinsMatieresPremieres: UtilisateurMagasinsSaver[] | null
 }
 
 // ============= RESPONSE
@@ -80,7 +86,14 @@ export class Utilisateur extends UtilisateurLight {
 export class UtilisateurFull extends Utilisateur {
 
   @ApiProperty()
-  accesMagasins: AccesMagasin[]
+  accesMagasinsProduitsFinis: AccesMagasin[]
+  accesMagasinsMatierePremieres: AccesMagasin[]
+
+  @ApiProperty()
+  archive: boolean
+
+  @ApiProperty()
+  removed: boolean
 
   @ApiProperty()
   updatedAt: Date

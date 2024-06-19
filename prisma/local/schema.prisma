@@ -102,7 +102,7 @@ model Devise {
   @@map("devises")
 }
 
-model Magasin {
+model MagasinProduitFini {
   id        String   @id @default(cuid())
   // numero    Int      @default(autoincrement())
   nom       String
@@ -113,9 +113,25 @@ model Magasin {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  accesUtilisateurs MagasinUtilisateur[]
+  accesUtilisateursProduitsFinis MagasinUtilisateurProduitFini[]
 
-  @@map("magasins")
+  @@map("magasins_produits_finis")
+}
+
+model MagasinMatierePremiere {
+  id        String   @id @default(cuid())
+  // numero    Int      @default(autoincrement())
+  nom       String
+  type      String
+  adresse   String
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accesUtilisateursMatieresPremieres MagasinUtilisateurMatierePremiere[]
+
+  @@map("magasins_matieres_premieres")
 }
 
 model Role {
@@ -178,23 +194,38 @@ model Utilisateur {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   traces        Trace[]
-  accesMagasins MagasinUtilisateur[]
+  accesMagasinsProduitsFinis MagasinUtilisateurProduitFini[]
+  accesMagasinsMatierePremieres MagasinUtilisateurMatierePremiere[]
 
   @@map("utilisateurs")
 }
 
-model MagasinUtilisateur {
+model MagasinUtilisateurProduitFini {
   id String @id @default(cuid())
 
   magasinId String  @map("magasin_id")
-  magasin   Magasin @relation(fields: [magasinId], references: [id])
+  magasin   MagasinProduitFini @relation(fields: [magasinId], references: [id])
 
   utilisateurId String      @map("utilisateur_id")
   utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
-  @@map("magasin_utilisateurs")
+  @@map("magasin_produit_fini_utilisateurs")
+}
+
+model MagasinUtilisateurMatierePremiere {
+  id String @id @default(cuid())
+
+  magasinId String  @map("magasin_id")
+  magasin   MagasinMatierePremiere @relation(fields: [magasinId], references: [id])
+
+  utilisateurId String      @map("utilisateur_id")
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("magasin_matiere_premiere_utilisateurs")
 }
 
 model Commande {
