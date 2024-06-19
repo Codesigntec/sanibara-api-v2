@@ -104,9 +104,8 @@ model Devise {
 
 model MagasinProduitFini {
   id        String   @id @default(cuid())
-  // numero    Int      @default(autoincrement())
+  numero    Int      @default(autoincrement())
   nom       String
-  type      String
   adresse   String
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
@@ -120,9 +119,8 @@ model MagasinProduitFini {
 
 model MagasinMatierePremiere {
   id        String   @id @default(cuid())
-  // numero    Int      @default(autoincrement())
+  numero    Int      @default(autoincrement())
   nom       String
-  type      String
   adresse   String
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
@@ -193,17 +191,16 @@ model Utilisateur {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  traces        Trace[]
-  accesMagasinsProduitsFinis MagasinUtilisateurProduitFini[]
+  traces                        Trace[]
+  accesMagasinsProduitsFinis    MagasinUtilisateurProduitFini[]
   accesMagasinsMatierePremieres MagasinUtilisateurMatierePremiere[]
 
   @@map("utilisateurs")
 }
 
 model MagasinUtilisateurProduitFini {
-  id String @id @default(cuid())
-
-  magasinId String  @map("magasin_id")
+  id        String             @id @default(cuid())
+  magasinId String             @map("magasin_id")
   magasin   MagasinProduitFini @relation(fields: [magasinId], references: [id])
 
   utilisateurId String      @map("utilisateur_id")
@@ -215,9 +212,8 @@ model MagasinUtilisateurProduitFini {
 }
 
 model MagasinUtilisateurMatierePremiere {
-  id String @id @default(cuid())
-
-  magasinId String  @map("magasin_id")
+  id        String                 @id @default(cuid())
+  magasinId String                 @map("magasin_id")
   magasin   MagasinMatierePremiere @relation(fields: [magasinId], references: [id])
 
   utilisateurId String      @map("utilisateur_id")

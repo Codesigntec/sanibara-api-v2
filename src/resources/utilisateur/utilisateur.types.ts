@@ -87,6 +87,8 @@ export class UtilisateurFull extends Utilisateur {
 
   @ApiProperty()
   accesMagasinsProduitsFinis: AccesMagasin[]
+
+  @ApiProperty()
   accesMagasinsMatierePremieres: AccesMagasin[]
 
   @ApiProperty()
@@ -99,7 +101,7 @@ export class UtilisateurFull extends Utilisateur {
   updatedAt: Date
 }
 
-class AccesMagasin {
+export class AccesMagasin {
   @ApiProperty()
   magasin: any//MagasinSelect
 }

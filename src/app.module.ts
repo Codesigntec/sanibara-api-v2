@@ -8,7 +8,7 @@ import { AuthModule } from './resources/auth/auth.module';
 import { UniteModule } from './resources/unite/unite.module';
 // import { TraceModule } from './resources/trace/trace.module';
 import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
-// import { MagasinModule } from './resources/magasin/magasin.module';
+import { MagasinProduitFiniModule } from './resources/magasin/produit-fini/magasin.module';
 // import { ClientModule } from './resources/client/client.module';
 // import { FournisseurModule } from './resources/fournisseur/fournisseur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
@@ -26,7 +26,7 @@ import { DepenseModule } from './resources/depense/depense.module';
     // CotegorieModule,
     // ClientModule,
     // FournisseurModule,
-    // MagasinModule,
+    MagasinProduitFiniModule,
     RoleModule,
     UniteModule,
     UtilisateurModule,
