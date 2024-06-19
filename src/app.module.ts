@@ -14,7 +14,7 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
 // import { RoleModule } from './resources/role/role.module';
 // import { ArticleModule } from './resources/article/article.module';
-// import { DepenseModule } from './resources/depense/depense.module';
+import { DepenseModule } from './resources/depense/depense.module';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
     // ArticleModule,
     AuthModule,
     // DeviseModule,
-    // DepenseModule,
+    DepenseModule,
     // CotegorieModule,
     // ClientModule,
     // FournisseurModule,
