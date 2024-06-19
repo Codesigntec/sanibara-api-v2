@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './resources/auth/auth.module';
 // import { CotegorieModule } from './resources/categorie/categorie.module';
-// import { UniteModule } from './resources/unite/unite.module';
+import { UniteModule } from './resources/unite/unite.module';
 // import { TraceModule } from './resources/trace/trace.module';
 import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
 // import { MagasinModule } from './resources/magasin/magasin.module';
@@ -28,7 +28,7 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
     // FournisseurModule,
     // MagasinModule,
     // RoleModule,
-    // UniteModule,
+    UniteModule,
     UtilisateurModule,
     // TraceModule
   ],
