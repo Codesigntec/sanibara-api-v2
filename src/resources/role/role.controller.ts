@@ -1,14 +1,15 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
-import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { ApiBody, ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { RoleService } from './role.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { AccessSaver, Role, RoleFetcher, RoleFull, RoleSaver, RoleSelect, accessSaverSchema, saverSchema } from './role.types';
+import { Access, AccessSaver, Role, RoleFetcher, RoleFull, RoleSaver, RoleSelect, accessSaverSchema, saverSchema } from './role.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
+import { UtilisateurLight } from '../utilisateur/utilisateur.types';
 
 @Controller('roles')
 @ApiTags('roles')
-@ApiExtraModels(Pagination, Role)
+@ApiExtraModels(Pagination, Role, RoleFull, Access, UtilisateurLight)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
@@ -19,7 +20,7 @@ export class RoleController {
     constructor(private service: RoleService) { }
 
     @Get('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ 
@@ -59,7 +60,7 @@ export class RoleController {
     }
 
     @Get('/select')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: [RoleSelect] })
@@ -68,16 +69,34 @@ export class RoleController {
     }
 
     @Get('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: RoleFull })
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(RoleFull) },
+                {
+                    properties: { 
+                        accesses: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(Access) }
+                        },
+                        users: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(UtilisateurLight) } 
+                        }
+                    } 
+                }
+            ]
+        }
+    })
     async findOne(@Param('id') id: string): Promise<RoleFull> {
         return await this.service.findById(id)
     }
 
     @Post('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -88,7 +107,7 @@ export class RoleController {
     }
 
     @Put('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -101,11 +120,15 @@ export class RoleController {
     }
 
     @Put('/:id/accesses')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(accessSaverSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Role })
+    @ApiBody({
+        isArray: true,
+        type: AccessSaver
+    })
     async accesses(@Body() data: AccessSaver[], @Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         const id = req.params.id
@@ -113,7 +136,7 @@ export class RoleController {
     }
 
     @Delete('/:id/archive')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Role })
@@ -124,7 +147,7 @@ export class RoleController {
     }
 
     @Delete('/:id/destroy')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Role })
@@ -135,7 +158,7 @@ export class RoleController {
     }
 
     @Delete('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Role })

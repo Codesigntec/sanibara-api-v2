@@ -19,7 +19,7 @@ export class DepenseController {
     constructor(private service: DepenseService) { }
 
     @Get('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ 
@@ -69,7 +69,7 @@ export class DepenseController {
     }
 
     @Post('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -81,7 +81,7 @@ export class DepenseController {
 
 
     @Put('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -93,7 +93,7 @@ export class DepenseController {
     }
 
     @Delete('/:id/archive')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Depense })
@@ -104,7 +104,7 @@ export class DepenseController {
     }
 
     @Delete('/:id/destroy')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Depense })
@@ -115,7 +115,7 @@ export class DepenseController {
     }
 
     @Delete('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Depense })
