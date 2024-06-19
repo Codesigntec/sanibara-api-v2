@@ -1,22 +1,23 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { UtilisateurService } from './utilisateur.service';
+import { UniteService } from './unite.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { Unite, UniteFetcher, UniteSaver, UniteSelect, saverSchema } from './unite.types';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { AccesMagasin, Utilisateur, UtilisateurFetcher, UtilisateurFull, UtilisateurSaver, UtilisateurSelect, saverSchema, updaterSchema } from './utilisateur.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
 
-@Controller('users')
-@ApiTags('users')
-@ApiExtraModels(Pagination, Utilisateur, UtilisateurFull, AccesMagasin)
+@Controller('unities')
+@ApiTags('unities')
+@ApiExtraModels(Pagination, Unite)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
 @ApiResponse({ status: 403, description: 'Forbidden.'})
 @ApiResponse({ status: 500, description: 'Internal server error.'})
-export class UtilisateurController {
+export class UniteController {
 
-    constructor(private service: UtilisateurService) { }
+
+    constructor(private service: UniteService) { }
 
     @Get('/')
     @Version('2')
@@ -30,7 +31,7 @@ export class UtilisateurController {
                     properties: { 
                         data: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(Utilisateur) }
+                            items: { $ref: getSchemaPath(Unite) }
                         }
                     } 
                 }
@@ -44,8 +45,8 @@ export class UtilisateurController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
-    ) : Promise<Pagination<Utilisateur>> {
-        const filter : UtilisateurFetcher = {
+    ) : Promise<Pagination<Unite>> {
+        const filter : UniteFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
         }
@@ -62,8 +63,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: UtilisateurSelect })
-    async select(): Promise<UtilisateurSelect[]> {
+    @ApiOkResponse({ type: [UniteSelect] })
+    async select(): Promise<UniteSelect[]> {
         return await this.service.select()
     }
 
@@ -71,28 +72,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: Utilisateur })
-    @ApiOkResponse({ 
-        schema: {
-            allOf: [
-                { $ref: getSchemaPath(UtilisateurFull) },
-                {
-                    properties: { 
-                        accesMagasinsProduitsFinis: {
-                            type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
-                        },
-                        accesMagasinsMatierePremieres: {
-                            type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
-                        }
-                    } 
-                }
-            ]
-        }
-    })
-    async findOne(@Param('id') id: string): Promise<UtilisateurFull> {
-        return await this.service.findById(id)
+    async findOne(@Param('id') id: string): Promise<UniteSelect[]> {
+        return await this.service.select()
     }
 
     @Post('/')
@@ -100,8 +81,8 @@ export class UtilisateurController {
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async save(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Unite })
+    async save(@Body() data: UniteSaver, @Req() req: AuthorizedRequest): Promise<Unite> {
         const userId = req.userId
         return await this.service.save(data, userId)
     }
@@ -110,10 +91,10 @@ export class UtilisateurController {
     @Put('/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(updaterSchema))
+    @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async update(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Unite })
+    async update(@Body() data: UniteSaver, @Req() req: AuthorizedRequest): Promise<Unite> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.update(id, data, userId)
@@ -123,8 +104,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async archive(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Unite })
+    async archive(@Req() req: AuthorizedRequest): Promise<Unite> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.archive(id, userId)
@@ -134,8 +115,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async destroy(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Unite })
+    async destroy(@Req() req: AuthorizedRequest): Promise<Unite> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.destroy(id, userId)
@@ -145,8 +126,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async remove(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Unite })
+    async remove(@Req() req: AuthorizedRequest): Promise<Unite> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.remove(id, userId)

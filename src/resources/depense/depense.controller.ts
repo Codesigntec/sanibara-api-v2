@@ -1,22 +1,22 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { UtilisateurService } from './utilisateur.service';
+import { DepenseService } from './depense.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { AccesMagasin, Utilisateur, UtilisateurFetcher, UtilisateurFull, UtilisateurSaver, UtilisateurSelect, saverSchema, updaterSchema } from './utilisateur.types';
+import { Depense, DepenseFetcher, DepenseSaver, saverSchema } from './depense.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
 
-@Controller('users')
-@ApiTags('users')
-@ApiExtraModels(Pagination, Utilisateur, UtilisateurFull, AccesMagasin)
+@Controller('charges')
+@ApiTags('depense')
+@ApiExtraModels(Pagination, Depense)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
 @ApiResponse({ status: 403, description: 'Forbidden.'})
 @ApiResponse({ status: 500, description: 'Internal server error.'})
-export class UtilisateurController {
+export class DepenseController {
 
-    constructor(private service: UtilisateurService) { }
+    constructor(private service: DepenseService) { }
 
     @Get('/')
     @Version('2')
@@ -30,7 +30,7 @@ export class UtilisateurController {
                     properties: { 
                         data: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(Utilisateur) }
+                            items: { $ref: getSchemaPath(Depense) }
                         }
                     } 
                 }
@@ -40,14 +40,24 @@ export class UtilisateurController {
     async list(
         @Query('archive') archive?: string | null, 
         @Query('removed') removed?: string | null,
+        @Query('motif') motif?: string | null,
+        @Query('min') min?: string | null,
+        @Query('max') max?: string | null,
+        @Query('debut') debut?: string | null,
+        @Query('fin') fin?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
-    ) : Promise<Pagination<Utilisateur>> {
-        const filter : UtilisateurFetcher = {
+    ) : Promise<Pagination<Depense>> {
+        const filter : DepenseFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            motif,
+            min: (min && !isNaN(parseInt(min))) ? parseInt(min) : 0,
+            max: (max && !isNaN(parseInt(max))) ? parseInt(max) : undefined,
+            debut,
+            fin
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),
@@ -58,50 +68,13 @@ export class UtilisateurController {
         return await this.service.list(filter, paginationQuery)
     }
 
-    @Get('/select')
-    @Version('2')
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: UtilisateurSelect })
-    async select(): Promise<UtilisateurSelect[]> {
-        return await this.service.select()
-    }
-
-    @Get('/:id')
-    @Version('2')
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: Utilisateur })
-    @ApiOkResponse({ 
-        schema: {
-            allOf: [
-                { $ref: getSchemaPath(UtilisateurFull) },
-                {
-                    properties: { 
-                        accesMagasinsProduitsFinis: {
-                            type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
-                        },
-                        accesMagasinsMatierePremieres: {
-                            type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
-                        }
-                    } 
-                }
-            ]
-        }
-    })
-    async findOne(@Param('id') id: string): Promise<UtilisateurFull> {
-        return await this.service.findById(id)
-    }
-
     @Post('/')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async save(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Depense })
+    async save(@Body() data: DepenseSaver, @Req() req: AuthorizedRequest): Promise<Depense> {
         const userId = req.userId
         return await this.service.save(data, userId)
     }
@@ -110,10 +83,10 @@ export class UtilisateurController {
     @Put('/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(updaterSchema))
+    @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async update(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Depense })
+    async update(@Body() data: DepenseSaver, @Req() req: AuthorizedRequest): Promise<Depense> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.update(id, data, userId)
@@ -123,8 +96,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async archive(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Depense })
+    async archive(@Req() req: AuthorizedRequest): Promise<Depense> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.archive(id, userId)
@@ -134,8 +107,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async destroy(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Depense })
+    async destroy(@Req() req: AuthorizedRequest): Promise<Depense> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.destroy(id, userId)
@@ -145,8 +118,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async remove(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Depense })
+    async remove(@Req() req: AuthorizedRequest): Promise<Depense> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.remove(id, userId)

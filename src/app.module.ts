@@ -5,16 +5,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './resources/auth/auth.module';
 // import { CotegorieModule } from './resources/categorie/categorie.module';
-// import { UniteModule } from './resources/unite/unite.module';
+import { UniteModule } from './resources/unite/unite.module';
 // import { TraceModule } from './resources/trace/trace.module';
 import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
-// import { MagasinModule } from './resources/magasin/magasin.module';
+import { MagasinProduitFiniModule } from './resources/magasin/produit-fini/magasin.module';
+import { MagasinMatierePremiereModule } from './resources/magasin/matiere-premiere/magasin.module';
 // import { ClientModule } from './resources/client/client.module';
 // import { FournisseurModule } from './resources/fournisseur/fournisseur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
-// import { RoleModule } from './resources/role/role.module';
+import { RoleModule } from './resources/role/role.module';
 // import { ArticleModule } from './resources/article/article.module';
-// import { DepenseModule } from './resources/depense/depense.module';
+import { DepenseModule } from './resources/depense/depense.module';
 
 @Module({
   imports: [
@@ -22,13 +23,14 @@ import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
     // ArticleModule,
     AuthModule,
     // DeviseModule,
-    // DepenseModule,
+    DepenseModule,
     // CotegorieModule,
     // ClientModule,
     // FournisseurModule,
-    // MagasinModule,
-    // RoleModule,
-    // UniteModule,
+    MagasinProduitFiniModule,
+    MagasinMatierePremiereModule,
+    RoleModule,
+    UniteModule,
     UtilisateurModule,
     // TraceModule
   ],

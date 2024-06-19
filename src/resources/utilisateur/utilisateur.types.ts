@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter, Pagination } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./utilisateur.constant"
+import { RoleSelect } from "../role/role.types"
 // import { MagasinSelect } from "../magasin/magasin.types"
 
 export class UtilisateurFetcher extends FetcherFilter {
@@ -29,7 +30,10 @@ export class UtilisateurSaver {
   roleId: string
 
   @ApiProperty()
-  magasins: UtilisateurMagasinsSaver[] | null
+  magasinsPrduitsFinis: UtilisateurMagasinsSaver[] | null
+
+  @ApiProperty()
+  magasinsMatieresPremieres: UtilisateurMagasinsSaver[] | null
 }
 
 export class UtilisateurUpdater {
@@ -46,7 +50,10 @@ export class UtilisateurUpdater {
   roleId: string
 
   @ApiProperty()
-  magasins: UtilisateurMagasinsSaver[] | null
+  magasinsPrduitsFinis: UtilisateurMagasinsSaver[] | null
+
+  @ApiProperty()
+  magasinsMatieresPremieres: UtilisateurMagasinsSaver[] | null
 }
 
 // ============= RESPONSE
@@ -67,13 +74,6 @@ export class UtilisateurLight extends UtilisateurSelect {
   @ApiProperty()
   status: boolean
 }
-export class RoleSelect {
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  libelle: string
-}
 export class Utilisateur extends UtilisateurLight {
 
   @ApiProperty()
@@ -86,13 +86,22 @@ export class Utilisateur extends UtilisateurLight {
 export class UtilisateurFull extends Utilisateur {
 
   @ApiProperty()
-  accesMagasins: AccesMagasin[]
+  accesMagasinsProduitsFinis: AccesMagasin[]
+
+  @ApiProperty()
+  accesMagasinsMatierePremieres: AccesMagasin[]
+
+  @ApiProperty()
+  archive: boolean
+
+  @ApiProperty()
+  removed: boolean
 
   @ApiProperty()
   updatedAt: Date
 }
 
-class AccesMagasin {
+export class AccesMagasin {
   @ApiProperty()
   magasin: any//MagasinSelect
 }

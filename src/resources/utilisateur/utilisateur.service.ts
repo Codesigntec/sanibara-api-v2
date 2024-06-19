@@ -77,6 +77,8 @@ export class UtilisateurService {
                 nom: true,
                 email: true,
                 status: true,
+                archive: true,
+                removed: true,
                 createdAt: true,
                 updatedAt: true,
                 role: {
@@ -85,7 +87,17 @@ export class UtilisateurService {
                         libelle: true
                     }
                 },
-                accesMagasins: {
+                accesMagasinsProduitsFinis: {
+                    select: {
+                        magasin: {
+                            select: {
+                                id: true,
+                                nom: true
+                            }
+                        },
+                    }
+                },
+                accesMagasinsMatierePremieres: {
                     select: {
                         magasin: {
                             select: {
@@ -140,12 +152,21 @@ export class UtilisateurService {
                         }
                     }
                 })
-                if (data.magasins) {
+                if (data.magasinsMatieresPremieres) {
                     const magasinUtilisateurs: { magasinId: string, utilisateurId: string }[] = []
-                    data.magasins.forEach(item => {
+                    data.magasinsMatieresPremieres.forEach(item => {
                         magasinUtilisateurs.push({ magasinId: item.value, utilisateurId: utilisateur.id })
                     });
-                    await tx.magasinUtilisateur.createMany({
+                    await tx.magasinUtilisateurMatierePremiere.createMany({
+                        data: magasinUtilisateurs
+                    })
+                }
+                if (data.magasinsPrduitsFinis) {
+                    const magasinUtilisateurs: { magasinId: string, utilisateurId: string }[] = []
+                    data.magasinsPrduitsFinis.forEach(item => {
+                        magasinUtilisateurs.push({ magasinId: item.value, utilisateurId: utilisateur.id })
+                    });
+                    await tx.magasinUtilisateurProduitFini.createMany({
                         data: magasinUtilisateurs
                     })
                 }
@@ -208,16 +229,28 @@ export class UtilisateurService {
                     }
                 })
 
-                await tx.magasinUtilisateur.deleteMany({
+                await tx.magasinUtilisateurMatierePremiere.deleteMany({
                     where: { utilisateurId: utilisateur.id }
                 })
-                console.log("=====================", data.magasins)
-                if (data.magasins) {
+                await tx.magasinUtilisateurProduitFini.deleteMany({
+                    where: { utilisateurId: utilisateur.id }
+                })
+
+                if (data.magasinsMatieresPremieres) {
                     const magasinUtilisateurs: { magasinId: string, utilisateurId: string }[] = []
-                    data.magasins.forEach(item => {
+                    data.magasinsMatieresPremieres.forEach(item => {
                         magasinUtilisateurs.push({ magasinId: item.value, utilisateurId: utilisateur.id })
                     });
-                    await tx.magasinUtilisateur.createMany({
+                    await tx.magasinUtilisateurMatierePremiere.createMany({
+                        data: magasinUtilisateurs
+                    })
+                }
+                if (data.magasinsPrduitsFinis) {
+                    const magasinUtilisateurs: { magasinId: string, utilisateurId: string }[] = []
+                    data.magasinsPrduitsFinis.forEach(item => {
+                        magasinUtilisateurs.push({ magasinId: item.value, utilisateurId: utilisateur.id })
+                    });
+                    await tx.magasinUtilisateurProduitFini.createMany({
                         data: magasinUtilisateurs
                     })
                 }

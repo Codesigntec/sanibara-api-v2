@@ -1,22 +1,23 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
-import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { UtilisateurService } from './utilisateur.service';
+import { ApiBody, ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { RoleService } from './role.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { AccesMagasin, Utilisateur, UtilisateurFetcher, UtilisateurFull, UtilisateurSaver, UtilisateurSelect, saverSchema, updaterSchema } from './utilisateur.types';
+import { Access, AccessSaver, Role, RoleFetcher, RoleFull, RoleSaver, RoleSelect, accessSaverSchema, saverSchema } from './role.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
+import { UtilisateurLight } from '../utilisateur/utilisateur.types';
 
-@Controller('users')
-@ApiTags('users')
-@ApiExtraModels(Pagination, Utilisateur, UtilisateurFull, AccesMagasin)
+@Controller('roles')
+@ApiTags('roles')
+@ApiExtraModels(Pagination, Role, RoleFull, Access, UtilisateurLight)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
 @ApiResponse({ status: 403, description: 'Forbidden.'})
 @ApiResponse({ status: 500, description: 'Internal server error.'})
-export class UtilisateurController {
+export class RoleController {
 
-    constructor(private service: UtilisateurService) { }
+    constructor(private service: RoleService) { }
 
     @Get('/')
     @Version('2')
@@ -30,7 +31,7 @@ export class UtilisateurController {
                     properties: { 
                         data: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(Utilisateur) }
+                            items: { $ref: getSchemaPath(Role) }
                         }
                     } 
                 }
@@ -44,8 +45,8 @@ export class UtilisateurController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
-    ) : Promise<Pagination<Utilisateur>> {
-        const filter : UtilisateurFetcher = {
+    ) : Promise<Pagination<Role>> {
+        const filter : RoleFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
         }
@@ -62,8 +63,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: UtilisateurSelect })
-    async select(): Promise<UtilisateurSelect[]> {
+    @ApiOkResponse({ type: [RoleSelect] })
+    async select(): Promise<RoleSelect[]> {
         return await this.service.select()
     }
 
@@ -71,27 +72,26 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: Utilisateur })
     @ApiOkResponse({ 
         schema: {
             allOf: [
-                { $ref: getSchemaPath(UtilisateurFull) },
+                { $ref: getSchemaPath(RoleFull) },
                 {
                     properties: { 
-                        accesMagasinsProduitsFinis: {
+                        accesses: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
+                            items: { $ref: getSchemaPath(Access) }
                         },
-                        accesMagasinsMatierePremieres: {
+                        users: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(AccesMagasin) }
+                            items: { $ref: getSchemaPath(UtilisateurLight) } 
                         }
                     } 
                 }
             ]
         }
     })
-    async findOne(@Param('id') id: string): Promise<UtilisateurFull> {
+    async findOne(@Param('id') id: string): Promise<RoleFull> {
         return await this.service.findById(id)
     }
 
@@ -100,31 +100,47 @@ export class UtilisateurController {
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async save(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Role })
+    async save(@Body() data: RoleSaver, @Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         return await this.service.save(data, userId)
     }
 
-
     @Put('/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(updaterSchema))
+    @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async update(@Body() data: UtilisateurSaver, @Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Role })
+    async update(@Body() data: RoleSaver, @Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         const id = req.params.id
+        console.log("hey")
         return await this.service.update(id, data, userId)
+    }
+
+    @Put('/:id/accesses')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UsePipes(new ZodPipe(accessSaverSchema))
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Role })
+    @ApiBody({
+        isArray: true,
+        type: AccessSaver
+    })
+    async accesses(@Body() data: AccessSaver[], @Req() req: AuthorizedRequest): Promise<Role> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.setAccesses(id, data, userId)
     }
 
     @Delete('/:id/archive')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async archive(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Role })
+    async archive(@Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.archive(id, userId)
@@ -134,8 +150,8 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async destroy(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Role })
+    async destroy(@Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.destroy(id, userId)
@@ -145,10 +161,14 @@ export class UtilisateurController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Utilisateur })
-    async remove(@Req() req: AuthorizedRequest): Promise<Utilisateur> {
+    @ApiOkResponse({ type: Role })
+    async remove(@Req() req: AuthorizedRequest): Promise<Role> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.remove(id, userId)
     }
+}
+
+interface AccessSetter {
+    accesses: AccessSaver[]
 }
