@@ -9,6 +9,8 @@ export class MagasinFetcher extends FetcherFilter {
 export class MagasinSaver {
   @ApiProperty()
   nom: string
+  
+  @ApiProperty()
   adresse: string
 }
 
