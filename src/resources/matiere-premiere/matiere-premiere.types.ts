@@ -19,7 +19,7 @@ export class MatiereSaver {
   designation: string
 
   @ApiProperty()
-  description: string
+  description: string | null
 
   @ApiProperty()
   uniteId: string
@@ -51,7 +51,7 @@ export class MatiereSelect {
 @ApiExtraModels(MatiereSelect)
 export class MatiereLight extends MatiereSelect {
   @ApiProperty()
-  description: string
+  description: string | null
 
   @ApiProperty()
   createdAt: Date
