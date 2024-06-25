@@ -13,6 +13,7 @@ datasource db {
 model MatierePremiere {
   id          String   @id @default(cuid())
   designation String
+  description String
   numero      Int      @default(autoincrement())
   uniteId     String   @map("unite_id")
   unite       Unite    @relation(fields: [uniteId], references: [id])

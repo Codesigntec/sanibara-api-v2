@@ -14,13 +14,13 @@ import { MagasinMatierePremiereModule } from './resources/magasin/matiere-premie
 // import { FournisseurModule } from './resources/fournisseur/fournisseur.module';
 // import { DeviseModule } from './resources/devise/devise.module';
 import { RoleModule } from './resources/role/role.module';
-// import { ArticleModule } from './resources/article/article.module';
+import { MatiereModule } from './resources/matiere-premiere/matiere-premiere.module';
 import { DepenseModule } from './resources/depense/depense.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    // ArticleModule,
+    MatiereModule,
     AuthModule,
     // DeviseModule,
     DepenseModule,
