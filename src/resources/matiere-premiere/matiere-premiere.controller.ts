@@ -79,6 +79,7 @@ export class MatiereController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: MatiereFull })
     async findOne(@Param('id') id: string): Promise<MatiereFull> {
         return await this.service.findById(id)
     }
@@ -88,6 +89,7 @@ export class MatiereController {
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Matiere })
     async save(@Body() data: MatiereSaver, @Req() req: AuthorizedRequest): Promise<Matiere> {
         const userId = req.userId
         return await this.service.save(data, userId)
@@ -108,6 +110,7 @@ export class MatiereController {
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Matiere })
     async update(@Body() data: MatiereSaver, @Req() req: AuthorizedRequest): Promise<Matiere> {
         const userId = req.userId
         const id = req.params.id
@@ -118,6 +121,7 @@ export class MatiereController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Matiere })
     async archive(@Req() req: AuthorizedRequest): Promise<Matiere> {
         const userId = req.userId
         const id = req.params.id
@@ -128,6 +132,7 @@ export class MatiereController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Matiere })
     async destroy(@Req() req: AuthorizedRequest): Promise<Matiere> {
         const userId = req.userId
         const id = req.params.id
@@ -138,6 +143,7 @@ export class MatiereController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Matiere })
     async remove(@Req() req: AuthorizedRequest): Promise<Matiere> {
         const userId = req.userId
         const id = req.params.id
