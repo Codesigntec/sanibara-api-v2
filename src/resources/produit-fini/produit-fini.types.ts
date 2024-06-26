@@ -1,11 +1,11 @@
 import { ApiExtraModels, ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter, Pagination } from "src/common/types"
 import { z } from "zod"
-import { errors } from "./matiere-premiere.constant"
+import { errors } from "./produit-fini.constant"
 import { Unite, UniteSelect } from "../unite/unite.types"
 // import { Categorie, CategorieSelect } from "../categorie/categorie.types"
 
-export class MatiereFetcher extends FetcherFilter {
+export class ProduitFetcher extends FetcherFilter {
   designation?: string | null
   description?: string | null
   debut?: string | null
@@ -14,7 +14,7 @@ export class MatiereFetcher extends FetcherFilter {
 }
 
 
-export class MatiereSaver {
+export class ProduitSaver {
   @ApiProperty()
   designation: string
 
@@ -27,7 +27,7 @@ export class MatiereSaver {
 }
 
 
-export class MatiereFilter {
+export class ProduitFilter {
   @ApiProperty()
   debut?: string | null
 
@@ -40,7 +40,7 @@ export class MatiereFilter {
 }
 
 // ============= RESPONSE
-export class MatiereSelect {
+export class ProduitSelect {
   @ApiProperty()
   id: string
 
@@ -48,8 +48,8 @@ export class MatiereSelect {
   designation: string
 }
 
-@ApiExtraModels(MatiereSelect)
-export class MatiereLight extends MatiereSelect {
+@ApiExtraModels(ProduitSelect)
+export class ProduitLight extends ProduitSelect {
   @ApiProperty()
   description: string | null
 
@@ -57,14 +57,14 @@ export class MatiereLight extends MatiereSelect {
   createdAt: Date
 }
 
-@ApiExtraModels(MatiereLight)
-export class Matiere extends MatiereLight {
+@ApiExtraModels(ProduitLight)
+export class Produit extends ProduitLight {
   @ApiProperty()
   unite: UniteSelect
 }
 
-@ApiExtraModels(Matiere)
-export class MatiereFull extends Matiere {
+@ApiExtraModels(Produit)
+export class ProduitFull extends Produit {
 
   @ApiProperty()
   unite: Unite
