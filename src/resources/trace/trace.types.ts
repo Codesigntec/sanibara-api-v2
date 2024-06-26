@@ -13,11 +13,15 @@ export class TraceSaver {
 export class TraceFetcher {
   action: string | null
   utilisateurId: string | null
-  start: Date | null
-  end: Date | null
+  debut: string | null
+  fin: string | null
 }
 
 // ============= RESPONSE
+class TraceUser {
+  @ApiProperty()
+  email: string
+}
 export class Trace {
   @ApiProperty()
   id: string
@@ -35,7 +39,3 @@ export class Trace {
   utilisateur: TraceUser
 }
 
-class TraceUser {
-  @ApiProperty()
-  email: string
-}

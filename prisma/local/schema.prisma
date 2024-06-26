@@ -27,6 +27,22 @@ model MatierePremiere {
   @@map("matieres_premieres")
 }
 
+model ProduitFini {
+  id          String   @id @default(cuid())
+  designation String
+  description String?
+  numero      Int      @default(autoincrement())
+  uniteId     String   @map("unite_id")
+  unite       Unite    @relation(fields: [uniteId], references: [id])
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("produits_finis")
+}
+
 // model Categorie {
 //   id        String   @id @default(cuid())
 //   numero    Int      @default(autoincrement())
@@ -173,6 +189,7 @@ model Unite {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   matieresPremieres MatierePremiere[]
+  produitsFini ProduitFini[]
 
   @@map("unites")
 }
