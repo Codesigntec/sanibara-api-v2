@@ -24,7 +24,7 @@ model MatierePremiere {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@map("Matieres_premieres")
+  @@map("matieres_premieres")
 }
 
 // model Categorie {
