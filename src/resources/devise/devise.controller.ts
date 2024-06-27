@@ -19,7 +19,7 @@ export class DeviseController {
     constructor(private service: DeviseService) { }
 
     @Get('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ 
@@ -59,7 +59,7 @@ export class DeviseController {
     }
 
     @Get('/select')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Devise })
@@ -68,7 +68,7 @@ export class DeviseController {
     }
 
     @Get('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: [DeviseSelect] })
@@ -77,7 +77,7 @@ export class DeviseController {
     }
 
     @Post('/')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -89,7 +89,7 @@ export class DeviseController {
 
 
     @Put('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(saverSchema))
     @UseGuards(AuthGuard)
@@ -101,7 +101,7 @@ export class DeviseController {
     }
 
     @Delete('/:id/archive')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Devise })
@@ -112,7 +112,7 @@ export class DeviseController {
     }
 
     @Delete('/:id/destroy')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Devise })
@@ -123,7 +123,7 @@ export class DeviseController {
     }
 
     @Delete('/:id')
-    @Version('1')
+    @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Devise })
