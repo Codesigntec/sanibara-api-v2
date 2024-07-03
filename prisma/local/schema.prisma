@@ -17,15 +17,76 @@ model MatierePremiere {
   numero      Int      @default(autoincrement())
   uniteId     String   @map("unite_id")
   unite       Unite    @relation(fields: [uniteId], references: [id])
+  ligneAchats    LigneAchat[]
   // categorieId String    @map("categorie_id")
   // categorie   Categorie @relation(fields: [categorieId], references: [id])
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-
   @@map("matieres_premieres")
 }
+
+model LigneAchat{
+  id             String                @id @default(cuid())
+  prixUnitaire   Float                 @map("prix_unitaire")
+  quantite       Int
+  datePeremption DateTime?             @map("date_peremption")
+  matiereId      String                @map("matiere_id")
+  matiere        MatierePremiere       @relation(fields: [matiereId], references: [id])
+  achatId        String                @map("achat_id")
+  achat          Achat                 @relation(fields: [achatId], references: [id], onDelete: Cascade)
+  magasinId      String                @map("magasin_id")
+  magasin        MagasinMatierePremiere @relation(fields: [magasinId], references: [id])
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  @@map("ligne_achats")
+}
+
+model Achat {
+  id             String        @id @default(cuid())
+  numero         Int           @default(autoincrement())
+  date           DateTime
+  fournisseurId  String?        @map("fournisseur_id")
+  fournisseur    Fournisseur?   @relation(fields: [fournisseurId], references: [id])
+ 
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+
+  ligneAchats    LigneAchat[]
+  couts          Cout[]
+  paiement        Paiement[]
+
+  @@map("achats")
+}
+
+model Cout {
+  id         String @id @default(cuid())
+  libelle    String
+  montant    Float
+  motif      String?
+  achatId    String @map("achat_id")
+  achat      Achat  @relation(fields: [achatId], references: [id], onDelete: Cascade)
+
+  @@map("couts")
+}
+
+model Paiement {
+  id         String @id @default(cuid())
+  montant    Float
+  achatId    String @map("achat_id")
+  achat      Achat  @relation(fields: [achatId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("paiements")
+}
+
+
 
 model ProduitFini {
   id          String   @id @default(cuid())
@@ -81,12 +142,14 @@ model Fournisseur {
   email     String?
   adresse   String?
   societe   String?
+ 
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   commandes Commande[]
+  achat     Achat[]
 
   @@map("fournisseurs")
 }
@@ -144,6 +207,7 @@ model MagasinMatierePremiere {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  ligneAchats    LigneAchat[]
   accesUtilisateursMatieresPremieres MagasinUtilisateurMatierePremiere[]
 
   @@map("magasins_matieres_premieres")
@@ -272,7 +336,6 @@ model CommandeCharge {
   @@map("commande_charges")
 }
 
-// 
 
 // this._id = uniqid.time();
 // this.fournisseur_id = achat.fournisseur_id;
@@ -308,3 +371,5 @@ model Structure {
 
   @@map("structures")
 }
+
+//================================== MODEL FOR ME ========================================
