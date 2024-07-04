@@ -5,6 +5,7 @@ import { errors } from "./achat.constant"
 import { LigneAchat, LigneAchatFull } from "./ligne-achat/ligne-achat.types"
 import { CoutFull } from "./cout/cout.types"
 import { PaiementFull } from "./paiement/paiement.types"
+import { Etat, StatutAchat } from "@prisma/client"
 
 export class AchatFetcher extends FetcherFilter {
 }
@@ -37,13 +38,22 @@ export class Achat extends AchatSelect {
 
 export class AchatFull extends Achat {
   @ApiProperty()
-  ligneAchat: LigneAchatFull[]
+  ligneAchats: LigneAchatFull[] | null
 
   @ApiProperty()
-  cout: CoutFull[]
+  date: string
 
   @ApiProperty()
-  paiement: PaiementFull[]
+  statutAchat: StatutAchat
+
+  @ApiProperty()
+  etat: Etat
+
+  @ApiProperty()
+  couts: CoutFull[] | null
+
+  @ApiProperty()
+  paiements: PaiementFull[] | null
 
   @ApiProperty()
   updatedAt: Date

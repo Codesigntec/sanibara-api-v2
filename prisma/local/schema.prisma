@@ -32,6 +32,8 @@ model LigneAchat{
   numero         Int                      @default(autoincrement())
   prixUnitaire   Float                    @map("prix_unitaire")
   quantite       Int
+  quantiteLivre  Int?
+  references     String?                  @map("references")
   datePeremption DateTime?                @map("date_peremption")
   matiereId      String                   @map("matiere_id")
   matiere        MatierePremiere          @relation(fields: [matiereId], references: [id])
@@ -45,23 +47,37 @@ model LigneAchat{
   @@map("ligne_achats")
 }
 
+enum Etat {
+  LIVREE
+  EN_COURS
+}
+
+enum StatutAchat {
+  ACHETER
+  COMMANDE
+}
+
 model Achat {
   id             String        @id @default(cuid())
   numero         Int           @default(autoincrement())
   libelle        String
   date           DateTime
+
+  statutAchat    StatutAchat   @default(ACHETER)
+  etat           Etat          @default(LIVREE)
+
   fournisseurId  String?        @map("fournisseur_id")
   fournisseur    Fournisseur?   @relation(fields: [fournisseurId], references: [id])
  
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  archive     Boolean  @default(false)
-  removed     Boolean  @default(false)
+  archive        Boolean  @default(false)
+  removed        Boolean  @default(false)
 
   ligneAchats    LigneAchat[]
   couts          Cout[]
-  paiement        Paiement[]
+  paiements       Paiement[]
 
   @@map("achats")
 }
@@ -152,7 +168,7 @@ model Fournisseur {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   commandes Commande[]
-  achat     Achat[]
+  achats     Achat[]
 
   @@map("fournisseurs")
 }
