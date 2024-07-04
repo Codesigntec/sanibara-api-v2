@@ -2,11 +2,12 @@ import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./paiement.constant"
+import { AchatFull } from "../achat.types"
 
-export class AchatFetcher extends FetcherFilter {
+export class PaiementFetcher extends FetcherFilter {
 }
 
-export class AchatSaver {
+export class PaiementSaver {
   @ApiProperty()
   libelle: string
 
@@ -15,36 +16,30 @@ export class AchatSaver {
 }
 
 // ============= RESPONSE ================
-export class AchatSelect {
+export class PaiementSelect {
   @ApiProperty()
   id: string
 
   @ApiProperty()
-  libelle: string
+  montant: number
 }
-export class Achat extends AchatSelect {
-  
+
+
+export class PaiementFull extends PaiementSelect {
+
   @ApiProperty()
   numero: number
 
   @ApiProperty()
   createdAt: Date
-}
-
-
-export class AchatFull extends Achat {
-  @ApiProperty()
-  ligneAchat: LigneAchatFull[]
 
   @ApiProperty()
-  cout: CoutFull[]
-
-  @ApiProperty()
-  paiement: Paiement[]
+  achat:    AchatFull
 
   @ApiProperty()
   updatedAt: Date
 }
+
 
 // ================VALIDATION
 

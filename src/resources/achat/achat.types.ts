@@ -2,6 +2,9 @@ import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./achat.constant"
+import { LigneAchat, LigneAchatFull } from "./ligne-achat/ligne-achat.types"
+import { CoutFull } from "./cout/cout.types"
+import { PaiementFull } from "./paiement/paiement.types"
 
 export class AchatFetcher extends FetcherFilter {
 }
@@ -34,13 +37,13 @@ export class Achat extends AchatSelect {
 
 export class AchatFull extends Achat {
   @ApiProperty()
-  ligneAchat: LigneAchat[]
+  ligneAchat: LigneAchatFull[]
 
   @ApiProperty()
-  cout: Cout[]
+  cout: CoutFull[]
 
   @ApiProperty()
-  paiement: Paiement[]
+  paiement: PaiementFull[]
 
   @ApiProperty()
   updatedAt: Date
