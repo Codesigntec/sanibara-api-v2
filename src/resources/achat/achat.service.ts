@@ -219,11 +219,36 @@ export class AchatService {
             }
         })
 
-        const description = `Suppression logique de la depense: ${check.libelle}`
+        const description = `Suppression logique de l'achat: ${check.libelle}`
         this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
 
         return achat
+    }
+    //=============================DESTROY====================================
+
+      destroy = async (id: string, userId: string): Promise<Achat> => {
+        const check = await this.db.achat.findUnique({ where: { id: id }, select: { libelle: true } })
+        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+        try {
+            const depense = await this.db.achat.delete({
+                where: { id },
+                select: {
+                  id: true,
+                  numero: true,
+                  libelle: true,
+                  createdAt: true,
+                }
+            })
+
+            const description = `Suppression physique de l'achat: ${check.libelle}`
+            this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+            return depense
+        } catch (_: any) {
+            throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
+        }
     }
 
 
