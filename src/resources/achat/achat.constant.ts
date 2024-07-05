@@ -10,6 +10,21 @@ const errors = {
 
     TVA_REQUIRED: "La tva est obligatoire.",
     TVA_BE_NUMBER: "La tva doit être un entier.",
+
+    UNIT_PRICE_REQUIRED: "Le prix unitaire est obligatoire.",
+    UNIT_PRICE_MUST_BE_NUMBER: "Le prix unitaire doit être un entier.",
+
+    QUANTITY_REQUIRED: "La quantité est obligatoire.",
+    QUANTITY_MUST_BE_NUMBER: "La quantité doit être un entier.",
+
+    REFERENCE_REQUIRED: "La reference est obligatoire.",
+    REFERENCE_MUST_BE_STRING: "La reference doit être en texte.",
+
+    MATIERE_REQUIRED: "La matière est obligatoire.",
+    MATIERE_MUST_BE_STRING: "La matière doit être en texte.",
+
+    MAGASIN_REQUIRED: "Le magasin est obligatoire.",
+    MAGASIN_MUST_BE_STRING: "Le magasin doit être en texte.",
 }
 
 

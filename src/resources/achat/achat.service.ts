@@ -70,25 +70,6 @@ export class AchatService {
 
      saveAchat = async (data: AchatSaver, userId: string): Promise<Achat> => {
 
-      console.log("Received data:", data);
-
-      // if (data.etat === 'en cours') {
-      //   data.etat = Etat.EN_COURS;
-      // } else if (data.etat === 'livre') {
-      //   data.etat = Etat.LIVREE;
-      // } else {
-      //   throw new Error("Invalid or missing 'etat'");
-      // }
-
-      // if (data.statutAchat === 'achat') {
-      //   data.statutAchat = StatutAchat.ACHETER;
-      // }else if (data.statutAchat === 'facture') {
-      //   data.statutAchat = StatutAchat.COMMANDE;
-      // }else{
-      //   throw new Error("Invalid or missing 'statutAchat'");
-      // }
-
-
       for (const ligne of data.ligneAchats) {
         if (!ligne.matiere || !ligne.matiere.id) {
           console.log("Invalid or missing 'matiere'", ligne.matiere);
@@ -119,8 +100,8 @@ export class AchatService {
           data: {
             libelle: data.libelle,
             date: new Date(data.date),
-            // statutAchat: data.statutAchat,
-            // etat: data.etat,
+            statutAchat: data.statutAchat,
+            etat: data.etat,
             tva: data.tva,
             ligneAchats: {
               create: data.ligneAchats.map((ligne) => ({

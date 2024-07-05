@@ -86,7 +86,6 @@ export class DepenseService {
         return pagination
     }
 
-
     save = async (data: DepenseSaver, userId: string): Promise<Depense> => {
         return await this.db.$transaction(async (tx) => {
             try {

@@ -1,5 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
-import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse } from "@nestjs/swagger";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
@@ -19,6 +19,28 @@ export class AchatController {
     
     constructor(private service: AchatService) { }
 
+
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(Pagination) },
+                {
+                    properties: { 
+                        data: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(AchatFull) }
+                        }
+                    } 
+                }
+            ]
+        }
+    })
+
+    
     @Post('/')
     @Version('2')
     @HttpCode(HttpStatus.OK)
@@ -26,8 +48,8 @@ export class AchatController {
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: AchatFull })
     async save(@Body() data: AchatSaver, @Req() req: AuthorizedRequest): Promise<Achat> {
-        console.log("==================",data);
-        // const userId = req.userId
+        console.log("==============Data Achat ==================");
+        console.log(data);
         return await this.service.saveAchat(data, req.userId)
     }
 

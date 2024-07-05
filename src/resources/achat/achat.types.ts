@@ -95,7 +95,7 @@ export class Cout extends CoutSelect {
   montant: number
 
   @ApiProperty()
-  motif: string
+  motif?: string
 }
 
 class CoutSaver {
@@ -106,7 +106,7 @@ class CoutSaver {
   montant: number;
 
   @ApiProperty()
-  motif: string;
+  motif?: string;
 
   @ApiProperty()
   achatId: string;
@@ -124,10 +124,10 @@ export class AchatSaver {
   tva?: number;
 
   @ApiProperty()
-  statutAchat?: string;
+  statutAchat?: StatutAchat;
 
   @ApiProperty()
-  etat?: string;
+  etat?: Etat;
 
   @ApiProperty()
   fournisseur?: FournisseurSelect;
@@ -192,18 +192,37 @@ export class AchatFull extends Achat {
 
 
 const MatiereInputSchema = z.object({
-  id: z.string(),
+  id: z.string(
+    {
+      required_error: errors.MATIERE_REQUIRED,
+      invalid_type_error: errors.MATIERE_MUST_BE_STRING,
+    }
+  ),
 });
 
 const MagasinInputSchema = z.object({
-  id: z.string(),
+  id: z.string({
+    required_error: errors.MAGASIN_REQUIRED,
+    invalid_type_error: errors.MAGASIN_MUST_BE_STRING,
+  }),
 });
 
 const LigneAchatInputSchema = z.object({
-  prixUnitaire: z.number(),
-  quantite: z.number(),
+  prixUnitaire: z.number({
+    required_error: errors.UNIT_PRICE_REQUIRED,
+    invalid_type_error: errors.UNIT_PRICE_MUST_BE_NUMBER,
+  }),
+  quantite: z.number({
+    required_error: errors.QUANTITY_REQUIRED,
+    invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
+  }),
   datePeremption: z.date().optional().nullable(),
-  references: z.string().optional(),
+  references: z.string(
+    {
+      required_error: errors.REFERENCE_REQUIRED,
+      invalid_type_error: errors.REFERENCE_MUST_BE_STRING,
+    }
+  ).optional(),
   matiere: MatiereInputSchema,
   magasin: MagasinInputSchema,
 });
@@ -211,7 +230,8 @@ const LigneAchatInputSchema = z.object({
 const CoutInputSchema = z.object({
   libelle: z.string(),
   montant: z.number(),
-  motif: z.string(),
+  //ça veut dire que cela est optionnel et peut etre vide
+  motif: z.string().optional().or(z.literal('')),
 });
 
 const PaiementInputSchema = z.object({
@@ -231,7 +251,10 @@ export const AchatSaverSchema = z.object({
     required_error: errors.DATE_REQUIRED,
     invalid_type_error: errors.DATE_BE_STRING,
   }),
-  tva: z.number(),
+  tva: z.number({
+    required_error: errors.TVA_REQUIRED,
+    invalid_type_error: errors.TVA_BE_NUMBER,
+  }),
   statutAchat: z.nativeEnum(StatutAchat),
   etat: z.nativeEnum(Etat),
   fournisseurId: z.string().optional(),
