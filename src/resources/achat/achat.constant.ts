@@ -25,6 +25,8 @@ const errors = {
 
     MAGASIN_REQUIRED: "Le magasin est obligatoire.",
     MAGASIN_MUST_BE_STRING: "Le magasin doit être en texte.",
+
+    invalid_type_error: "Le champ doit être en texte.",
 }
 
 

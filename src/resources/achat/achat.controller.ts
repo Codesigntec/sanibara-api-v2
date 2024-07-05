@@ -1,10 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
-import { AuthorizedRequest, Pagination } from "src/common/types";
+import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { Achat, AchatFull, AchatSaver, AchatSaverSchema } from "./achat.types";
+import { Achat, AchatFetcher, AchatFull, AchatSaver, AchatSaverSchema } from "./achat.types";
 
 
 @Controller('achats')
@@ -39,6 +39,26 @@ export class AchatController {
             ]
         }
     })
+    async list(
+        @Query('archive') archive?: string | null, 
+        @Query('removed') removed?: string | null,
+        @Query('page') page?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null,
+    ) : Promise<Pagination<AchatFull>> {
+        const filter : AchatFetcher = {
+            archive: (archive && archive === '1') ? true : false,
+            removed: (removed && removed === '1') ? true : false,
+        }
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+        return await this.service.list(filter, paginationQuery)
+    }
 
     
     @Post('/')
@@ -53,4 +73,7 @@ export class AchatController {
         return await this.service.saveAchat(data, req.userId)
     }
 
+
+
+  
 }

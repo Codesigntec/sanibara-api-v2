@@ -46,8 +46,26 @@ export class AchatService {
                         updatedAt: true,
                       }
                     },
-                    couts: true,
-                    paiements: true,
+                    fournisseur: {
+                      select: {
+                        id: true,
+                        nom: true,
+                      }
+                    },
+                    couts: {
+                      select:{
+                        id: true,
+                        libelle: true,
+                        montant: true,
+                        motif: true,
+                      }
+                    },
+                    paiements: {
+                      select:{
+                        id: true,
+                        montant: true,
+                      }
+                    },
                     updatedAt: true,
                     createdAt: true,
                 },
@@ -66,7 +84,7 @@ export class AchatService {
         return pagination
     }
 
-    //=====================SAVE====================================
+    //==============================SAVE====================================
 
      saveAchat = async (data: AchatSaver, userId: string): Promise<Achat> => {
 
@@ -95,6 +113,11 @@ export class AchatService {
         }
       }
 
+        const fournisseurData = data.fournisseur ? {
+          connect: {
+              id: data.fournisseur.id,
+          },
+        } : undefined;
       
         const achat = await this.db.achat.create({
           data: {
@@ -103,11 +126,12 @@ export class AchatService {
             statutAchat: data.statutAchat,
             etat: data.etat,
             tva: data.tva,
+            fournisseur: fournisseurData,
             ligneAchats: {
               create: data.ligneAchats.map((ligne) => ({
                 prixUnitaire: ligne.prixUnitaire,
                 quantite: ligne.quantite,
-                datePeremption: ligne.datePeremption,
+                datePeremption: new Date(ligne.datePeremption),
                 references: ligne.references,
                 matiere: {
                   connect: {

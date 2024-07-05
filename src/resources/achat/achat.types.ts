@@ -8,7 +8,6 @@ import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 export class AchatFetcher extends FetcherFilter {
 }
 
-
 class MatiereInput {
   @ApiProperty()
   id: string;
@@ -173,7 +172,10 @@ export class AchatFull extends Achat {
   etat: Etat
 
   @ApiProperty()
-  tva: number
+  tva?: number
+
+  @ApiProperty()
+  fournisseur?: FournisseurSelect
 
   @ApiProperty()
   couts: Cout[]| null
@@ -216,7 +218,7 @@ const LigneAchatInputSchema = z.object({
     required_error: errors.QUANTITY_REQUIRED,
     invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
   }),
-  datePeremption: z.date().optional().nullable(),
+  datePeremption: z.string(),
   references: z.string(
     {
       required_error: errors.REFERENCE_REQUIRED,
@@ -238,6 +240,11 @@ const PaiementInputSchema = z.object({
   montant: z.number(),
 });
 
+const frs = z.object({
+  id: z.string(), 
+});
+
+
 //===============Export=================
 
 export const AchatSaverSchema = z.object({
@@ -255,11 +262,12 @@ export const AchatSaverSchema = z.object({
     required_error: errors.TVA_REQUIRED,
     invalid_type_error: errors.TVA_BE_NUMBER,
   }),
-  statutAchat: z.nativeEnum(StatutAchat),
-  etat: z.nativeEnum(Etat),
-  fournisseurId: z.string().optional(),
+
+  statutAchat: z.nativeEnum(StatutAchat).optional(),
+  etat: z.nativeEnum(Etat).optional(),
+  fournisseur: frs.optional(),
   ligneAchats: z.array(LigneAchatInputSchema),
   couts: z.array(CoutInputSchema),
   paiements: z.array(PaiementInputSchema),
-}).required();
+});
 
