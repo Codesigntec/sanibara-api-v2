@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,23 +8,22 @@ datasource db {
 }
 
 model MatierePremiere {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   designation String
   description String?
-  numero      Int      @default(autoincrement())
-  uniteId     String   @map("unite_id")
-  unite       Unite    @relation(fields: [uniteId], references: [id])
-  ligneAchats    LigneAchat[]
-  // categorieId String    @map("categorie_id")
-  // categorie   Categorie @relation(fields: [categorieId], references: [id])
-  archive     Boolean  @default(false)
-  removed     Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  numero      Int                 @default(autoincrement())
+  uniteId     String              @map("unite_id")
+  unite       Unite               @relation(fields: [uniteId], references: [id])
+  ligneAchats LigneAchat[]
+  archive     Boolean             @default(false)
+  removed     Boolean             @default(false)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
   @@map("matieres_premieres")
 }
 
-model LigneAchat{
+model LigneAchat {
   id             String                   @id @default(cuid())
   numero         Int                      @default(autoincrement())
   prixUnitaire   Float                    @map("prix_unitaire")
@@ -35,12 +31,16 @@ model LigneAchat{
   quantiteLivre  Int?
   references     String?                  @map("references")
   datePeremption DateTime?                @map("date_peremption")
+  
   matiereId      String                   @map("matiere_id")
   matiere        MatierePremiere          @relation(fields: [matiereId], references: [id])
+
   achatId        String                   @map("achat_id")
   achat          Achat                    @relation(fields: [achatId], references: [id], onDelete: Cascade)
+
   magasinId      String                   @map("magasin_id")
   magasin        MagasinMatierePremiere   @relation(fields: [magasinId], references: [id])
+
   createdAt      DateTime                 @default(now()) @map("created_at")
   updatedAt      DateTime                 @updatedAt @map("updated_at")
 
@@ -62,50 +62,48 @@ model Achat {
   numero         Int           @default(autoincrement())
   libelle        String
   date           DateTime
+  tva            Int           @default(0)
 
   statutAchat    StatutAchat   @default(ACHETER)
   etat           Etat          @default(LIVREE)
 
-  fournisseurId  String?        @map("fournisseur_id")
-  fournisseur    Fournisseur?   @relation(fields: [fournisseurId], references: [id])
+  fournisseurId  String?       @map("fournisseur_id")
+  fournisseur    Fournisseur?  @relation(fields: [fournisseurId], references: [id])
  
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  archive        Boolean  @default(false)
-  removed        Boolean  @default(false)
+  archive        Boolean       @default(false)
+  removed        Boolean       @default(false)
 
   ligneAchats    LigneAchat[]
   couts          Cout[]
-  paiements       Paiement[]
+  paiements      Paiement[]
 
   @@map("achats")
 }
 
 model Cout {
-  id         String @id @default(cuid())
-  numero     Int           @default(autoincrement())
+  id         String   @id @default(cuid())
   libelle    String
   montant    Float
   motif      String?
-  achatId    String @map("achat_id")
-  achat      Achat  @relation(fields: [achatId], references: [id], onDelete: Cascade)
+  achatId    String   @map("achat_id")
+  achat      Achat    @relation(fields: [achatId], references: [id], onDelete: Cascade)
 
   @@map("couts")
 }
 
 model Paiement {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   montant    Float
-  achatId    String @map("achat_id")
-  achat      Achat  @relation(fields: [achatId], references: [id], onDelete: Cascade)
+  achatId    String   @map("achat_id")
+  achat      Achat    @relation(fields: [achatId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("paiements")
 }
-
-
 
 model ProduitFini {
   id          String   @id @default(cuid())
@@ -122,20 +120,6 @@ model ProduitFini {
 
   @@map("produits_finis")
 }
-
-// model Categorie {
-//   id        String   @id @default(cuid())
-//   numero    Int      @default(autoincrement())
-//   libelle   String
-//   archive   Boolean  @default(false)
-//   removed   Boolean  @default(false)
-//   createdAt DateTime @default(now()) @map("created_at")
-//   updatedAt DateTime @updatedAt @map("updated_at")
-
-//   // articles Article[]
-
-//   @@map("categories")
-// }
 
 model Client {
   id        String   @id @default(cuid())
@@ -167,8 +151,7 @@ model Fournisseur {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  commandes Commande[]
-  achats     Achat[]
+  achats    Achat[]
 
   @@map("fournisseurs")
 }
@@ -226,7 +209,7 @@ model MagasinMatierePremiere {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  ligneAchats    LigneAchat[]
+  ligneAchats LigneAchat[]
   accesUtilisateursMatieresPremieres MagasinUtilisateurMatierePremiere[]
 
   @@map("magasins_matieres_premieres")
@@ -325,48 +308,6 @@ model MagasinUtilisateurMatierePremiere {
   @@map("magasin_matiere_premiere_utilisateurs")
 }
 
-model Commande {
-  id             String          @id @default(cuid())
-  numero         Int             @default(autoincrement())
-  montant        Float
-  date           DateTime
-  tva            Int             @default(0)
-  statut         String          @default("EN COURS")
-  archive        Boolean         @default(false)
-  removed        Boolean         @default(false)
-  // commandeChargeId String?         @map("commande_charge_id")
-  commandeCharge CommandeCharge?
-  fournisseurId  String?         @map("fournisseur_id")
-  fournisseur    Fournisseur?    @relation(fields: [fournisseurId], references: [id])
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-
-  @@map("commandes")
-}
-
-model CommandeCharge {
-  id         String   @id @default(cuid())
-  montant    Float
-  motif      String   @db.Text
-  commandeId String   @unique @map("commande_id")
-  commande   Commande @relation(fields: [commandeId], references: [id])
-  // Commande Commande[]
-
-  @@map("commande_charges")
-}
-
-
-// this._id = uniqid.time();
-// this.fournisseur_id = achat.fournisseur_id;
-// this.montant = achat.montant;
-// this.date = achat.date;
-// this.devis = achat.devis;
-// this.type = achat.type;
-// this.tva = achat.tva;
-// this.charge = achat.charge;
-// this.motif = achat.motif;
-// this.etat = achat.etat;
-
 model Trace {
   id            String      @id @default(cuid())
   action        String
@@ -390,5 +331,3 @@ model Structure {
 
   @@map("structures")
 }
-
-//================================== MODEL FOR ME ========================================

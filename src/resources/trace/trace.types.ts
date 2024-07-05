@@ -22,19 +22,16 @@ class TraceUser {
   @ApiProperty()
   email: string
 }
+
 export class Trace {
   @ApiProperty()
   id: string
-
   @ApiProperty()
   action: string
-
   @ApiProperty()
   description: string
-
   @ApiProperty()
   createdAt: Date
-
   @ApiProperty()
   utilisateur: TraceUser
 }

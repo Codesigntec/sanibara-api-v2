@@ -37,6 +37,8 @@ export class AuthController {
     @ApiOkResponse({type: AuthResponse})
     async signin(@Body() credential: Credential, @Req() req: AuthRequest): Promise<AuthResponse> {
         const workspace = req.workspace
+        console.log(workspace);
+        
         return await this.auth.signin(credential, workspace)
     }
 

@@ -30,7 +30,7 @@ export class MatiereSaver {
 export class MatiereFilter {
   @ApiProperty()
   debut?: string | null
-
+  
   @ApiProperty()
   fin?: string | null
 

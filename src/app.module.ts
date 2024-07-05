@@ -17,6 +17,7 @@ import { RoleModule } from './resources/role/role.module';
 import { MatiereModule } from './resources/matiere-premiere/matiere-premiere.module';
 import { ProduitModule } from './resources/produit-fini/produit-fini.module';
 import { DepenseModule } from './resources/depense/depense.module';
+import { AchatsModule } from './resources/achat/achat.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { DepenseModule } from './resources/depense/depense.module';
     RoleModule,
     UniteModule,
     UtilisateurModule,
-    TraceModule
+    TraceModule,
+    AchatsModule
   ],
   controllers: [AppController],
   providers: [AppService],

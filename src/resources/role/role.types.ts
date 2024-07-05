@@ -11,6 +11,7 @@ export class RoleSaver {
   @ApiProperty()
   libelle: string
 }
+
 export class AccessSaver {
   @ApiProperty()
   module: string

@@ -34,6 +34,9 @@ export class FournisseurSelect {
   nom: string
 }
 
+
+
+
 export class Fournisseur extends FournisseurSelect {
   @ApiProperty()
   numero: number
@@ -46,9 +49,6 @@ export class Fournisseur extends FournisseurSelect {
 
   @ApiProperty()
   adresse: string | null
-
-  @ApiProperty()
-  achats: AchatFull[] | null
 
   @ApiProperty()
   societe: string | null

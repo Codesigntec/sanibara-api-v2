@@ -6,8 +6,13 @@ const errors = {
     LABEL_REQUIRED: "Le libellé est obligatoire.",
     LABEL_MUST_BE_STRING: "Le libellé doit être en texte.",
     DATE_REQUIRED: "La date d'achat est obligatoire.",
-    DATE_BE_STRING: "Le symbole doit être en texte."
+    DATE_BE_STRING: "Le symbole doit être en texte.",
+
+    TVA_REQUIRED: "La tva est obligatoire.",
+    TVA_BE_NUMBER: "La tva doit être un entier.",
 }
+
+
 const infos = {
 
 }
