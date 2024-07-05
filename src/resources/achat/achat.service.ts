@@ -200,5 +200,32 @@ export class AchatService {
         return achat
     }
 
+//=============================REMOVE====================================
+
+      remove = async (id: string, userId: string): Promise<Achat> => {
+        const check = await this.db.achat.findUnique({ where: { id: id }, select: { libelle: true, removed: true } })
+        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+        const achat = await this.db.achat.update({
+            where: { id },
+            data: {
+                removed: !check.removed
+            },
+            select: {
+                id: true,
+                numero: true,
+                libelle: true,
+                createdAt: true,
+            }
+        })
+
+        const description = `Suppression logique de la depense: ${check.libelle}`
+        this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+
+        return achat
+    }
+
+
 
 }
