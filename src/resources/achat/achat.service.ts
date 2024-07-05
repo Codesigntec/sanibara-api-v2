@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Etat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
 import { Achat, AchatFetcher, AchatFull, AchatSaver, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
+import { errors } from './achat.constant';
 
 @Injectable()
 export class AchatService {
@@ -172,6 +173,32 @@ export class AchatService {
       
         return achat;
       };
+
+
+
+      //============================ARCHIVER==============================
+      archive = async (id: string, userId: string): Promise<Achat> => {
+        const check = await this.db.achat.findUnique({ where: { id: id }, select: { libelle: true, archive: true } })
+        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+        const achat = await this.db.achat.update({
+            where: { id },
+            data: {
+                archive: !check.archive
+            },
+            select: {
+                id: true,
+                numero: true,
+                libelle: true,
+                createdAt: true,
+            }
+        })
+
+        const description = `Archivage de l'achat: ${check.libelle}`
+        this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+        return achat
+    }
 
 
 }
