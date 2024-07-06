@@ -23,7 +23,7 @@ export class PaiementController {
     @Post('/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(AchatSaverSchema))
+    @UsePipes(new ZodPipe(PaiementSaverSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: PaiementFull })
     async save(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
@@ -32,18 +32,30 @@ export class PaiementController {
         return await this.service.savePaiementToAchat(id, data)
     }
 
-    @Put('/:id')
+    @Put('/:id/achat/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(AchatSaverSchema))
+    @UsePipes(new ZodPipe(PaiementSaverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: AchatFull })
-    async update(@Body() data: AchatSaver, @Req() req: AuthorizedRequest): Promise<Achat> {
+    @ApiOkResponse({ type: PaiementFull })
+    async update(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.update(id, data, userId)
+        const achatId = req.params.achatId
+        return await this.service.updatePaiement(id, data, achatId, userId)
     }
 
+
+    @Delete('/:id/destroy')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: PaiementFull })
+    async destroy(@Req() req: AuthorizedRequest): Promise<PaiementFull> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.destroyPaiement(id, userId)
+    }
 
  
     

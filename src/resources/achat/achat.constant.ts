@@ -32,6 +32,16 @@ const errors = {
 
     ACHAT_NOT_EXIST: "Cet achat n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
     MONTANT_DEPASSE_RELIQUA: "Le montant du paiement dépasse le reliquat restant",
+
+    PAIEMENT_NOT_EXIST: "Ce paiement n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_EXIST_ACHAT: "Cet achat n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_REMOVABLE_ACHAT: "Vous ne pouvez pas supprimer cet achat car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
+
+    NOT_EXIST_PAIEMENT: "Ce paiement n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_REMOVABLE_PAIEMENT: "Vous ne pouvez pas supprimer ce paiement car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
 }
 
 
