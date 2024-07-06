@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { AchatService } from "./achat.service";
@@ -68,9 +68,21 @@ export class AchatController {
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: AchatFull })
     async save(@Body() data: AchatSaver, @Req() req: AuthorizedRequest): Promise<Achat> {
-        console.log("==============Data Achat ==================");
-        console.log(data);
         return await this.service.saveAchat(data, req.userId)
+    }
+
+    @Put('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UsePipes(new ZodPipe(AchatSaverSchema))
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async update(@Body() data: AchatSaver, @Req() req: AuthorizedRequest): Promise<Achat> {
+        console.log("==============Data Achat Update ==================");
+        console.log(data);
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.update(id, data, userId)
     }
 
 
@@ -86,5 +98,27 @@ export class AchatController {
     }
 
 
+    @Delete('/:id/destroy')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async destroy(@Req() req: AuthorizedRequest): Promise<Achat> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.destroy(id, userId)
+    }
+
+
+    @Delete('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async remove(@Req() req: AuthorizedRequest): Promise<Achat> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.remove(id, userId)
+    }
   
 }
