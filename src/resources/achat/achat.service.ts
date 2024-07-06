@@ -197,7 +197,7 @@ export class AchatService {
         const description = `Archivage de l'achat: ${check.libelle}`
         this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
-        return achat
+        return achat 
     }
 
 //=============================REMOVE====================================

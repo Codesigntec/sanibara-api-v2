@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { AchatService } from "./achat.service";
@@ -73,6 +73,17 @@ export class AchatController {
         return await this.service.saveAchat(data, req.userId)
     }
 
+
+    @Delete('/:id/archive')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async archive(@Req() req: AuthorizedRequest): Promise<Achat> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.archive(id, userId)
+    }
 
 
   
