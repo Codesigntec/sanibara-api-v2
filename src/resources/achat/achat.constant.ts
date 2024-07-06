@@ -27,6 +27,11 @@ const errors = {
     MAGASIN_MUST_BE_STRING: "Le magasin doit être en texte.",
 
     invalid_type_error: "Le champ doit être en texte.",
+
+    INVALID_PAIEMENT: "Les paiements dépassent le montant total de l'achat.",
+
+    ACHAT_NOT_EXIST: "Cet achat n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+    MONTANT_DEPASSE_RELIQUA: "Le montant du paiement dépasse le reliquat restant",
 }
 
 

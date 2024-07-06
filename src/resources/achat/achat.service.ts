@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Etat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
-import { Achat, AchatFetcher, AchatFull, AchatSaver, } from './achat.types';
+import { Achat, AchatFetcher, AchatFull, AchatSaver, PaiementFull, PaiementSave, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
 
@@ -227,6 +227,7 @@ export class AchatService {
         } })
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
+
       let ach = check;
 
         // Validation des données similaires à saveAchat
@@ -278,15 +279,17 @@ export class AchatService {
         
         // Ajout du montant total des matières premières au montant total de l'achat
         const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
-
+    
         // Calcul du montant total des paiements
         const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
-
+       
         // Vérification si les paiements dépassent le montant total de l'achat
         if (totalPaiements > totalAchat) {
-          throw new Error("Les paiements dépassent le montant total de l'achat.");
+          throw new HttpException(errors.INVALID_PAIEMENT, HttpStatus.BAD_REQUEST);
         }
 
+        
+        
 
         // Mettre à jour l'achat avec les nouvelles données
         const achat = await this.db.achat.update({
@@ -340,13 +343,12 @@ export class AchatService {
         });
 
           //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
-          ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } }));
-          ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } }));
-          ach.paiements.map((p) => this.db.paiement.delete({ where: { id: p.id } }));
 
-      console.log("===========================Achat============================");
-      console.log(ach);
-      
+          await Promise.all([
+            ...ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } })),
+            ...ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } })),
+            ...ach.paiements.map((p) => this.db.paiement.delete({ where: { id: p.id } })),
+          ]);
       
         const description = `Mise à jour de l'achat: ${data.libelle}`;
         this.trace.logger({ action: 'Mise à jour', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
@@ -431,6 +433,85 @@ export class AchatService {
         }
     }
 
+      //=============================================PAIEMENT===========================================
+
+      // Méthode pour ajouter un paiement à un achat existant
+      savePaiementToAchat = async (achatId: string, paiement: PaiementSave): Promise<PaiementFull> => {
+        // Récupérer l'achat existant par son ID avec les paiements associés
+        const achat = await this.db.achat.findUnique({
+          where: { id: achatId },
+          include: { 
+            ligneAchats: true, 
+            paiements: true,
+            couts: true,
+          },
+        });
+
+        if (!achat) {
+          throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
+        // Calculer le montant total déjà payé
+        const montantTotalPaye = achat.paiements.reduce((acc, p) => acc + p.montant, 0);
+
+
+          // Calcul du montant total des matières premières
+          const totalMatieresPremieres = achat.ligneAchats.reduce((acc, ligne) => {
+            const prixTotal = ligne.prixUnitaire * ligne.quantite;
+            return acc + prixTotal;
+          }, 0);
+  
+          // Calcul du montant total des coûts
+          const totalCouts = achat.couts.reduce((acc, cout) => acc + cout.montant, 0);
+  
+          // Calcul du montant de la TVA en fonction du taux
+          let montantTVA: number ;
+          if (achat.tva != null) {
+            montantTVA = (achat.tva / 100) * totalMatieresPremieres;
+          }
+          
+        // Ajout du montant total des matières premières au montant total de l'achat
+        const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
+    
+        // Calculer le reliquat restant à payer
+        const reliquat = (totalAchat ?? 0) - montantTotalPaye;
+
+        // Vérifier si le paiement proposé ne dépasse pas le reliquat
+        if (paiement.montant > reliquat) {
+          throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
+        }
+
+      
+       let newPaiement: PaiementFull | PromiseLike<PaiementFull>;
+
+      this.db.$transaction(async (tx) => {
+          // Ajouter le paiement à l'achat
+           newPaiement = await this.db.paiement.create({
+            data: {
+              montant: paiement.montant,
+              achat: { connect: { id: achatId } },
+            },
+          });
+
+             // Mettre à jour l'achat pour refléter le paiement ajouté
+          await this.db.achat.update({
+          where: { id: achatId },
+          data: {
+            paiements: {
+              connect: { id: newPaiement.id },
+            },
+          },
+          include: {
+            paiements: true, // Inclure les paiements mis à jour dans la réponse
+          },
+        });
+
+      });
+
+     
+
+        return newPaiement;
+      };
 
 
 }

@@ -18,7 +18,26 @@ class MagasinInput {
   id: string;
 }
 export class Paiement{
+  @ApiProperty()
   id: string
+  @ApiProperty()
+  montant: number
+}
+
+export class PaiementFull{
+  @ApiProperty()
+  id: string
+  @ApiProperty()
+  montant: number
+  @ApiProperty()
+  createdAt: Date
+  @ApiProperty()
+  updatedAt: Date
+}
+
+
+
+export class PaiementSave{
   @ApiProperty()
   montant: number
 }
