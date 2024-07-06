@@ -230,7 +230,8 @@ export class AchatService {
             id: data.fournisseur.id,
           },
         } : undefined;
-      
+
+
         // Mettre à jour l'achat avec les nouvelles données
         const achat = await this.db.achat.update({
           where: {
@@ -286,6 +287,10 @@ export class AchatService {
           ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } }));
           ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } }));
           ach.paiements.map((p) => this.db.paiement.delete({ where: { id: p.id } }));
+
+      console.log("===========================Achat============================");
+      console.log(ach);
+      
       
         const description = `Mise à jour de l'achat: ${data.libelle}`;
         this.trace.logger({ action: 'Mise à jour', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
