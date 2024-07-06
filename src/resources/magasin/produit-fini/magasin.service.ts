@@ -28,7 +28,13 @@ export class MagasinService {
             take: limit,
             skip: offset,
             where: conditions,
-            select: { id: true, numero: true, nom: true, adresse: true, createdAt: true, },
+            select: { 
+                id: true, 
+                numero: true, 
+                nom: true, 
+                adresse: true, 
+                createdAt: true, 
+            },
             orderBy: order
         })
 

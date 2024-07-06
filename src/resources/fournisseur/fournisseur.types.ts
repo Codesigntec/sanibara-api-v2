@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter, Pagination } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./fournisseur.constant"
+import { AchatFull } from "../achat/achat.types"
 
 export class FournisseurFetcher extends FetcherFilter {
 }
@@ -32,6 +33,9 @@ export class FournisseurSelect {
   @ApiProperty()
   nom: string
 }
+
+
+
 
 export class Fournisseur extends FournisseurSelect {
   @ApiProperty()

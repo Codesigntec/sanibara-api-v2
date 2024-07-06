@@ -18,3 +18,4 @@ import { AuthController } from './auth.controller';
       providers: [AuthService, PrismaService]
 })
 export class AuthModule {}
+

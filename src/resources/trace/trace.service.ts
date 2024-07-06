@@ -26,7 +26,11 @@ export class TraceService {
             }
         }
         // if (filter.categorieId) { conditions = { ...conditions, categorieId: filter.categorieId } }
-        if (filter.utilisateurId) { conditions = { ...conditions, utilisateurId: filter.utilisateurId } }
+        if (filter.utilisateurId) { 
+            conditions = { 
+                ...conditions, 
+                utilisateurId: filter.utilisateurId 
+            } }
         // if(filter.paymentMethode){ conditions = { ...conditions, paymentMethode: filter.paymentMethode } }
 
         if (filter.debut || filter.fin) {

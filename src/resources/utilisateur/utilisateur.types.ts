@@ -74,7 +74,7 @@ export class UtilisateurLight extends UtilisateurSelect {
   @ApiProperty()
   status: boolean
 }
-export class Utilisateur extends UtilisateurLight {
+export class  Utilisateur extends UtilisateurLight {
 
   @ApiProperty()
   role: RoleSelect

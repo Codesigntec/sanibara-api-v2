@@ -7,12 +7,13 @@ import { VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(helmet())
-  app.use(compression())
+  app.use(helmet())// utilise le middleware Helmet pour sécuriser l'application en configurant divers en-têtes HTTP
+  app.use(compression())//utilise le middleware de compression pour compresser les réponses HTTP et améliorer les performances.
 
   const port = Number(process.env.PORT) || 3002
   const host = process.env.HOST || 'localhost'
 
+  //==================SWAGGER===================x
   const config = new DocumentBuilder()
     .setTitle('Sanibara v2 api')
     .setDescription('La documentation officielle de la plateforme de gestion de production SANIBARA')
