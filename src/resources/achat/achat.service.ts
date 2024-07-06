@@ -174,6 +174,9 @@ export class AchatService {
         return achat;
       };
 
+
+      //==============================UPDATE====================================
+
       update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
 
         const check = await this.db.achat.findUnique({ where: { id: achatId }, select: { 
