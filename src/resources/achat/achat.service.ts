@@ -120,6 +120,33 @@ export class AchatService {
           },
         } : undefined;
       
+
+        // Calcul du montant total des matières premières
+        const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
+          const prixTotal = ligne.prixUnitaire * ligne.quantite;
+          return acc + prixTotal;
+        }, 0);
+
+        // Calcul du montant total des coûts
+        const totalCouts = data.couts.reduce((acc, cout) => acc + cout.montant, 0);
+
+        // Calcul du montant de la TVA en fonction du taux
+        let montantTVA: number ;
+        if (data.tva != null) {
+          montantTVA = (data.tva / 100) * totalMatieresPremieres;
+        }
+
+        // Ajout du montant total des matières premières au montant total de l'achat
+        const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
+
+        // Calcul du montant total des paiements
+        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
+
+        // Vérification si les paiements dépassent le montant total de l'achat
+        if (totalPaiements > totalAchat) {
+          throw new Error("Les paiements dépassent le montant total de l'achat.");
+        }
+
         const achat = await this.db.achat.create({
           data: {
             libelle: data.libelle,
@@ -233,6 +260,32 @@ export class AchatService {
             id: data.fournisseur.id,
           },
         } : undefined;
+
+        // Calcul du montant total des matières premières
+        const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
+          const prixTotal = ligne.prixUnitaire * ligne.quantite;
+          return acc + prixTotal;
+        }, 0);
+
+        // Calcul du montant total des coûts
+        const totalCouts = data.couts.reduce((acc, cout) => acc + cout.montant, 0);
+
+        // Calcul du montant de la TVA en fonction du taux
+        let montantTVA: number ;
+        if (data.tva != null) {
+          montantTVA = (data.tva / 100) * totalMatieresPremieres;
+        }
+        
+        // Ajout du montant total des matières premières au montant total de l'achat
+        const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
+
+        // Calcul du montant total des paiements
+        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
+
+        // Vérification si les paiements dépassent le montant total de l'achat
+        if (totalPaiements > totalAchat) {
+          throw new Error("Les paiements dépassent le montant total de l'achat.");
+        }
 
 
         // Mettre à jour l'achat avec les nouvelles données
