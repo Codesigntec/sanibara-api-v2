@@ -4,18 +4,18 @@ import { AuthorizedRequest, Pagination } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  Cout, CoutSaver, CoutSaverSchema } from "./achat.types";
+import {  PaiementFull, PaiementSave, PaiementSaverSchema } from "./achat.types";
 
 
-@Controller('couts')
+@Controller('paiements')
 @ApiTags('Achats ')
-@ApiExtraModels(Pagination, Cout)
+@ApiExtraModels(Pagination, PaiementFull)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
 @ApiResponse({ status: 403, description: 'Forbidden.'})
 @ApiResponse({ status: 500, description: 'Internal server error.'})
-export class CoutController {
+export class PaiementController {
     
     constructor(private service: AchatService) { }
 
@@ -23,26 +23,26 @@ export class CoutController {
     @Post('/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(CoutSaverSchema))
+    @UsePipes(new ZodPipe(PaiementSaverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Cout })
-    async save(@Body() data: CoutSaver, @Req() req: AuthorizedRequest): Promise<CoutSaver> {
+    @ApiOkResponse({ type: PaiementFull })
+    async save(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
         const userId = req.userId
         const id = req.params.achatId
-        return await this.service.saveCoutToAchat(id, data)
+        return await this.service.savePaiementToAchat(id, data)
     }
 
     @Put('/:id/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(CoutSaverSchema))
+    @UsePipes(new ZodPipe(PaiementSaverSchema))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Cout })
-    async update(@Body() data: CoutSaver, @Req() req: AuthorizedRequest): Promise<CoutSaver> {
+    @ApiOkResponse({ type: PaiementFull })
+    async update(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
         const userId = req.userId
         const id = req.params.id
         const achatId = req.params.achatId
-        return await this.service.updateCout(id, data, achatId, userId)
+        return await this.service.updatePaiement(id, data, achatId, userId)
     }
 
 
@@ -50,11 +50,11 @@ export class CoutController {
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: Cout })
-    async destroy(@Req() req: AuthorizedRequest): Promise<CoutSaver> {
+    @ApiOkResponse({ type: PaiementFull })
+    async destroy(@Req() req: AuthorizedRequest): Promise<PaiementFull> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.destroyCout(id, userId)
+        return await this.service.destroyPaiement(id, userId)
     }
 
  

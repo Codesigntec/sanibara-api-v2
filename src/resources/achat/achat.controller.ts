@@ -4,12 +4,12 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { Achat, AchatFetcher, AchatFull, AchatSaver, AchatSaverSchema, Cout, LigneAchat, Paiement } from "./achat.types";
+import { Achat, AchatFetcher, AchatFull, AchatSaver, AchatSaverSchema, Cout, LigneAchatFull, Paiement } from "./achat.types";
 
 
 @Controller('achats')
 @ApiTags('Achats ')
-@ApiExtraModels(Pagination, AchatFull, Paiement, Cout, LigneAchat)
+@ApiExtraModels(Pagination, AchatFull, Paiement, Cout, LigneAchatFull)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
