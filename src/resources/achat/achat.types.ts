@@ -116,7 +116,7 @@ export class Cout extends CoutSelect {
   motif?: string
 }
 
-class CoutSaver {
+export class CoutSaver {
   @ApiProperty()
   libelle: string;
 
@@ -126,8 +126,6 @@ class CoutSaver {
   @ApiProperty()
   motif?: string;
 
-  @ApiProperty()
-  achatId: string;
 }
 
 
@@ -290,3 +288,9 @@ export const AchatSaverSchema = z.object({
   paiements: z.array(PaiementInputSchema),
 });
 
+export const PaiementSaverSchema = z.object({
+  montant: z.number({
+    required_error: errors.MONTANT_REQUIRED,
+    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+  })
+});

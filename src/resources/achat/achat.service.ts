@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Etat, PrismaClient, StatutAchat } from '@prisma/client';
+import { Cout, Etat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
-import { Achat, AchatFetcher, AchatFull, AchatSaver, PaiementFull, PaiementSave, } from './achat.types';
+import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, PaiementFull, PaiementSave, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
 
@@ -600,4 +600,52 @@ export class AchatService {
               throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
           }
       }
+      //=============================================COUT=====================================================
+
+
+           // Méthode pour ajouter un cou à un achat existant
+           saveCoutToAchat = async (achatId: string, data: CoutSaver): Promise<CoutSaver> => {
+            // Récupérer l'achat existant par son ID avec les paiements associés
+            const achat = await this.db.achat.findUnique({
+              where: { id: achatId },
+              include: { 
+                couts: true,
+              },
+            });
+    
+            if (!achat) {
+              throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
+            }
+    
+          
+           let newCout: Cout | PromiseLike<Cout>;
+    
+          this.db.$transaction(async (tx) => {
+
+            // Ajouter le paiement à l'achat
+            newCout = await this.db.cout.create({
+                data: {
+                  libelle: data.libelle,
+                  motif: data.motif,
+                  montant: data.montant,
+                  achat: { connect: { id: achatId } },
+                },
+              });
+    
+                 // Mettre à jour l'achat pour refléter le paiement ajouté
+              await this.db.achat.update({
+              where: { id: achatId },
+              data: {
+                couts: {
+                  connect: { id: newCout.id },
+                },
+              },
+              include: {
+                paiements: true, // Inclure les paiements mis à jour dans la réponse
+              },
+            });
+    
+          });
+            return newCout;
+          };
 }

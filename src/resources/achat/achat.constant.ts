@@ -42,6 +42,10 @@ const errors = {
     NOT_EXIST_PAIEMENT: "Ce paiement n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
 
     NOT_REMOVABLE_PAIEMENT: "Vous ne pouvez pas supprimer ce paiement car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
+
+    MONTANT_MUST_BE_NUMBER: "Le montant doit être un entier.",
+
+    MONTANT_REQUIRED: "Le montant est obligatoire.",
 }
 
 
