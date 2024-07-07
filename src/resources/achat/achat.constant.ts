@@ -27,6 +27,33 @@ const errors = {
     MAGASIN_MUST_BE_STRING: "Le magasin doit être en texte.",
 
     invalid_type_error: "Le champ doit être en texte.",
+
+    INVALID_PAIEMENT: "Les paiements dépassent le montant total de l'achat.",
+
+    ACHAT_NOT_EXIST: "Cet achat n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+    MONTANT_DEPASSE_RELIQUA: "Le montant du paiement dépasse le reliquat restant",
+
+    PAIEMENT_NOT_EXIST: "Ce paiement n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_EXIST_ACHAT: "Cet achat n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_REMOVABLE_ACHAT: "Vous ne pouvez pas supprimer cet achat car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
+
+    NOT_EXIST_PAIEMENT: "Ce paiement n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    NOT_REMOVABLE_PAIEMENT: "Vous ne pouvez pas supprimer ce paiement car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
+
+    MONTANT_MUST_BE_NUMBER: "Le montant doit être un entier.",
+
+    MONTANT_REQUIRED: "Le montant est obligatoire.",
+
+    COUT_ERROR: "Le cout est invalide.",
+
+    NOT_EXIST_COUT: "Ce cout n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    QUANTITE_ERROR: "La quantité est invalide.",
+    
+    NOT_EXIST_LIGNE: "Cette ligne n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
 }
 
 
