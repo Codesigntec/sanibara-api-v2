@@ -648,4 +648,58 @@ export class AchatService {
           });
             return newCout;
           };
+
+
+
+          updateCout = async (id: string, data: CoutSaver, achatId: string ,userId: string): Promise<CoutSaver> => {
+            const check = await this.db.cout.findUnique({ where:  {id: id }, select: { libelle: true ,achatId: true} })
+            if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
+      
+            if (check.achatId !== achatId) {
+              throw new HttpException(errors.COUT_ERROR, HttpStatus.BAD_REQUEST);
+            }
+      
+
+            const coutSaver = await this.db.cout.update({
+                where: { id },
+                data: {
+                    montant: data.montant,
+                    libelle: data.libelle,
+                    motif: data.motif,
+                    
+                },
+                select: { id: true, montant: true, libelle: true, motif: true },
+            })
+      
+            const description = `Modification du coût: ${check.libelle} -> ${data.montant} pour l'achat ${achatId}`
+            this.trace.logger({action: 'Modification', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+      
+      
+            return coutSaver
+            }
+
+                //=============================DESTROY====================================
+
+        destroyCout = async (id: string, userId: string): Promise<CoutSaver> => {
+          const check = await this.db.cout.findUnique({ where: { id: id }, select: { montant: true } })
+          if (!check) throw new HttpException(errors.NOT_EXIST_COUT, HttpStatus.BAD_REQUEST);
+  
+          try {
+              const coutDestroy = await this.db.cout.delete({
+                  where: { id },
+                  select: {
+                    id: true,
+                    montant: true,
+                    libelle: true,
+                  }
+              })
+  
+              const description = `Suppression physique du paiement: ${check.montant}`
+              this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+  
+              return coutDestroy
+          } catch (_: any) {
+              throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
+          }
+      }
 }

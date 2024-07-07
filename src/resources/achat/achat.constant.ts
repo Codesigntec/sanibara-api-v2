@@ -46,6 +46,10 @@ const errors = {
     MONTANT_MUST_BE_NUMBER: "Le montant doit être un entier.",
 
     MONTANT_REQUIRED: "Le montant est obligatoire.",
+
+    COUT_ERROR: "Le cout est invalide.",
+
+    NOT_EXIST_COUT: "Ce cout n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
 }
 
 
