@@ -616,8 +616,7 @@ export class AchatService {
             if (!achat) {
               throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
             }
-    
-          
+  
            let newCout: Cout | PromiseLike<Cout>;
     
           this.db.$transaction(async (tx) => {
@@ -631,7 +630,6 @@ export class AchatService {
                   achat: { connect: { id: achatId } },
                 },
               });
-    
                  // Mettre à jour l'achat pour refléter le paiement ajouté
               await this.db.achat.update({
               where: { id: achatId },
@@ -648,9 +646,6 @@ export class AchatService {
           });
             return newCout;
           };
-
-
-
           updateCout = async (id: string, data: CoutSaver, achatId: string ,userId: string): Promise<CoutSaver> => {
             const check = await this.db.cout.findUnique({ where:  {id: id }, select: { libelle: true ,achatId: true} })
             if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
@@ -658,8 +653,6 @@ export class AchatService {
             if (check.achatId !== achatId) {
               throw new HttpException(errors.COUT_ERROR, HttpStatus.BAD_REQUEST);
             }
-      
-
             const coutSaver = await this.db.cout.update({
                 where: { id },
                 data: {
@@ -701,5 +694,50 @@ export class AchatService {
           } catch (_: any) {
               throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
           }
-      }
+        }
+
+
+          // Méthode pour ajouter un cou à un achat existant
+          saveLigneAchatToAchat = async (achatId: string, data: CoutSaver): Promise<CoutSaver> => {
+            // Récupérer l'achat existant par son ID avec les paiements associés
+            const achat = await this.db.achat.findUnique({
+              where: { id: achatId },
+              include: { 
+                ligneAchats: true,
+              },
+            });
+    
+            if (!achat) {
+              throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
+            }
+  
+           let newCout: Cout | PromiseLike<Cout>;
+    
+          this.db.$transaction(async (tx) => {
+
+            // Ajouter le paiement à l'achat
+            newCout = await this.db.cout.create({
+                data: {
+                  libelle: data.libelle,
+                  motif: data.motif,
+                  montant: data.montant,
+                  achat: { connect: { id: achatId } },
+                },
+              });
+                 // Mettre à jour l'achat pour refléter le paiement ajouté
+              await this.db.achat.update({
+              where: { id: achatId },
+              data: {
+                couts: {
+                  connect: { id: newCout.id },
+                },
+              },
+              include: {
+                paiements: true, // Inclure les paiements mis à jour dans la réponse
+              },
+            });
+    
+          });
+            return newCout;
+          };
 }

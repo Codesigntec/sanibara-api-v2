@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  PaiementFull, PaiementSave, PaiementSaverSchema } from "./achat.types";
+import {  CoutSaverSchema, PaiementFull, PaiementSave } from "./achat.types";
 
 
 @Controller('paiements')
@@ -23,7 +23,7 @@ export class PaiementController {
     @Post('/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(PaiementSaverSchema))
+    @UsePipes(new ZodPipe(CoutSaverSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: PaiementFull })
     async save(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
@@ -35,7 +35,7 @@ export class PaiementController {
     @Put('/:id/:achatId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(PaiementSaverSchema))
+    @UsePipes(new ZodPipe(CoutSaverSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: PaiementFull })
     async update(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {

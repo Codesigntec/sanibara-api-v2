@@ -294,3 +294,15 @@ export const PaiementSaverSchema = z.object({
     invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
   })
 });
+
+export const CoutSaverSchema = z.object({
+  libelle: z.string({
+    required_error: errors.LABEL_REQUIRED,
+    invalid_type_error: errors.LABEL_MUST_BE_STRING,
+  }),
+  montant: z.number({
+    required_error: errors.MONTANT_REQUIRED,
+    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+  }),
+  motif: z.string().optional().or(z.literal('')),
+});
