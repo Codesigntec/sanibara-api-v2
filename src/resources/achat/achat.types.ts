@@ -11,11 +11,15 @@ export class AchatFetcher extends FetcherFilter {
 class MatiereInput {
   @ApiProperty()
   id: string;
+  @ApiProperty()
+  designation: string;
 }
 
 class MagasinInput {
   @ApiProperty()
   id: string;
+  @ApiProperty()
+  nom: string;
 }
 export class Paiement{
   @ApiProperty()
@@ -51,13 +55,16 @@ export class LigneAchatSelect {
   references: string
 }
 
-export class LigneAchat extends LigneAchatSelect {
+export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
   prixUnitaire: number
 
   @ApiProperty()
   quantite: number
+
+  @ApiProperty()
+  quantiteLivre: number = 0
 
   @ApiProperty()
   datePeremption: Date | null
@@ -149,7 +156,7 @@ export class AchatSaver {
   fournisseur?: FournisseurSelect;
 
   @ApiProperty()
-  ligneAchats: LigneAchat[];
+  ligneAchats: LigneAchatFull[];
 
   @ApiProperty()
   couts: Cout[];
@@ -177,7 +184,7 @@ export class Achat extends AchatSelect {
 
 export class AchatFull extends Achat {
   @ApiProperty()
-  ligneAchats: LigneAchat[]
+  ligneAchats: LigneAchatFull[]
 
   @ApiProperty()
   date: Date
@@ -247,14 +254,22 @@ const LigneAchatInputSchema = z.object({
 });
 
 const CoutInputSchema = z.object({
-  libelle: z.string(),
-  montant: z.number(),
-  //ça veut dire que cela est optionnel et peut etre vide
+  libelle: z.string({
+    required_error: errors.LABEL_REQUIRED,
+    invalid_type_error: errors.LABEL_MUST_BE_STRING,
+  }),
+  montant: z.number({
+    required_error: errors.MONTANT_REQUIRED,
+    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+  }),
   motif: z.string().optional().or(z.literal('')),
 });
 
 const PaiementInputSchema = z.object({
-  montant: z.number(),
+  montant: z.number({
+    required_error: errors.MONTANT_REQUIRED,
+    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+  })
 });
 
 const frs = z.object({
@@ -288,21 +303,8 @@ export const AchatSaverSchema = z.object({
   paiements: z.array(PaiementInputSchema),
 });
 
-export const PaiementSaverSchema = z.object({
-  montant: z.number({
-    required_error: errors.MONTANT_REQUIRED,
-    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
-  })
-});
+export const PaiementSaverSchema = PaiementInputSchema;
 
-export const CoutSaverSchema = z.object({
-  libelle: z.string({
-    required_error: errors.LABEL_REQUIRED,
-    invalid_type_error: errors.LABEL_MUST_BE_STRING,
-  }),
-  montant: z.number({
-    required_error: errors.MONTANT_REQUIRED,
-    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
-  }),
-  motif: z.string().optional().or(z.literal('')),
-});
+export const CoutSaverSchema = CoutInputSchema;
+
+export const LigneAchatSchema = LigneAchatInputSchema;

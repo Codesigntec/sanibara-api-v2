@@ -50,6 +50,10 @@ const errors = {
     COUT_ERROR: "Le cout est invalide.",
 
     NOT_EXIST_COUT: "Ce cout n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    QUANTITE_ERROR: "La quantité est invalide.",
+    
+    NOT_EXIST_LIGNE: "Cette ligne n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
 }
 
 
