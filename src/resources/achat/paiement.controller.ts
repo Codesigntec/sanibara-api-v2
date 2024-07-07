@@ -29,7 +29,7 @@ export class PaiementController {
     async save(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementFull> {
         const userId = req.userId
         const id = req.params.achatId
-        return await this.service.savePaiementToAchat(id, data)
+        return await this.service.savePaiementToAchat(id, data, userId)
     }
 
     @Put('/:id/:achatId')

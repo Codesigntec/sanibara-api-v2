@@ -29,7 +29,7 @@ export class CoutController {
     async save(@Body() data: CoutSaver, @Req() req: AuthorizedRequest): Promise<CoutSaver> {
         const userId = req.userId
         const id = req.params.achatId
-        return await this.service.saveCoutToAchat(id, data)
+        return await this.service.saveCoutToAchat(id, data, userId)
     }
 
     @Put('/:id/:achatId')

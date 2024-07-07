@@ -436,7 +436,7 @@ export class AchatService {
       //=============================================PAIEMENT===========================================
 
       // Méthode pour ajouter un paiement à un achat existant
-      savePaiementToAchat = async (achatId: string, paiement: PaiementSave): Promise<PaiementFull> => {
+      savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
         const achat = await this.db.achat.findUnique({
           where: { id: achatId },
@@ -507,6 +507,10 @@ export class AchatService {
         });
 
       });
+
+      const description = `Paiement de ${paiement.montant} pour l'achat ${achatId}`
+      this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+
         return newPaiement;
       };
 
@@ -604,7 +608,7 @@ export class AchatService {
 
 
       // Méthode pour ajouter un cou à un achat existant
-      saveCoutToAchat = async (achatId: string, data: CoutSaver): Promise<CoutSaver> => {
+      saveCoutToAchat = async (achatId: string, data: CoutSaver, userId: string): Promise<CoutSaver> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
         const achat = await this.db.achat.findUnique({
           where: { id: achatId },
@@ -644,6 +648,10 @@ export class AchatService {
         });
 
       });
+
+      const description = `Ajout d'un cout de ${data.montant} pour l'achat ${achatId}`
+      this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+
         return newCout;
       };
 
@@ -699,7 +707,7 @@ export class AchatService {
 
 
       // Méthode pour ajouter un cou à un achat existant
-      saveLigneAchatToAchat = async (achatId: string, data: LigneAchatSave): Promise<LigneAchat> => {
+      saveLigneAchatToAchat = async (achatId: string, data: LigneAchatSave, userId: string): Promise<LigneAchat> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
         const achat = await this.db.achat.findUnique({
           where: { id: achatId },
@@ -751,6 +759,9 @@ export class AchatService {
         });
 
       });
+      const description = `Ajout d'une ligne d'achat ${data.references} pour l'achat ${achatId}`
+      this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+
         return newLigneAchat;
       };
 
