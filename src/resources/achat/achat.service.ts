@@ -66,6 +66,7 @@ export class AchatService {
                       select:{
                         id: true,
                         montant: true,
+                        createdAt: true,
                       }
                     },
                     updatedAt: true,
