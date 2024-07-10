@@ -260,7 +260,7 @@ const CoutInputSchema = z.object({
   }),
   montant: z.number({
     required_error: errors.MONTANT_REQUIRED,
-    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+    invalid_type_error: errors.MONTANT_MUST_BE_NUMBER_CHARGE,
   }),
   motif: z.string().optional().or(z.literal('')),
 });

@@ -43,7 +43,9 @@ const errors = {
 
     NOT_REMOVABLE_PAIEMENT: "Vous ne pouvez pas supprimer ce paiement car il est lié à un article\nVous pouvez proceder à une suppresion logique ou l'archivage.",
 
-    MONTANT_MUST_BE_NUMBER: "Le montant doit être un entier.",
+    MONTANT_MUST_BE_NUMBER_CHARGE: "Le montant de la charge doit être un entier.",
+
+    MONTANT_MUST_BE_NUMBER: "Le montant du paiement doit être un entier.",
 
     MONTANT_REQUIRED: "Le montant est obligatoire.",
 
@@ -54,6 +56,16 @@ const errors = {
     QUANTITE_ERROR: "La quantité est invalide.",
     
     NOT_EXIST_LIGNE: "Cette ligne n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    MONTANT_DEPASSE_MONTANT_A_PAYE: "Les paiements dépassent le montant total de l'achat.",
+
+    MONTANT_PAIEMENT_INVALID : "Invalid or missing 'paiement'",
+
+    MONTANT_COUT_INVALID : "Invalid or missing 'cout.montant'",
+
+    MAGASIN_INVALID: "Invalid or missing 'magasin'",
+
+    MATIERE_INVALID: "Invalid or missing 'matiere'"
 }
 
 
