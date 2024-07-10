@@ -56,6 +56,16 @@ const errors = {
     QUANTITE_ERROR: "La quantité est invalide.",
     
     NOT_EXIST_LIGNE: "Cette ligne n'existe pas ou son ID n'est pas valide\nSi le problème persiste, veuillez contacter Codesign.",
+
+    MONTANT_DEPASSE_MONTANT_A_PAYE: "Les paiements dépassent le montant total de l'achat.",
+
+    MONTANT_PAIEMENT_INVALID : "Invalid or missing 'paiement'",
+
+    MONTANT_COUT_INVALID : "Invalid or missing 'cout.montant'",
+
+    MAGASIN_INVALID: "Invalid or missing 'magasin'",
+
+    MATIERE_INVALID: "Invalid or missing 'matiere'"
 }
 
 

@@ -93,36 +93,18 @@ export class AchatService {
 
       for (const ligne of data.ligneAchats) {
         if (!ligne.matiere || !ligne.matiere.id) {
-          console.log("Invalid or missing 'matiere'", ligne.matiere);
-            throw new Error("Invalid or missing 'matiere'");
+          throw new HttpException(errors.MATIERE_INVALID, HttpStatus.BAD_REQUEST);
         }
         if (!ligne.magasin || !ligne.magasin.id) {
-          console.log("Invalid or missing 'magasin'", ligne.magasin);
-            throw new Error("Invalid or missing 'magasin'");
+          throw new HttpException(errors.MAGASIN_INVALID, HttpStatus.BAD_REQUEST);
         }
       }
-
-      for(const cout of data.couts) {
-        if (!cout.montant) {
-          console.log("Invalid or missing 'cout.montant'", cout.montant);
-            throw new Error("Invalid or missing 'cout.montant'");
-        }
-      }
-
-      for(const paiement of data.paiements) {
-        if (!paiement.montant) {
-          console.log("Invalid or missing 'paiement.montant'", paiement.montant);
-            throw new Error("Invalid or missing 'paiement.montant'");
-        }
-      }
-
-        const fournisseurData = data.fournisseur ? {
+        const fournisseurData = data.fournisseur.id ? {
           connect: {
-              id: data.fournisseur.id,
+            id: data.fournisseur.id,
           },
         } : undefined;
-      
-
+    
         // Calcul du montant total des matières premières
         const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
           const prixTotal = ligne.prixUnitaire * ligne.quantite;
@@ -137,16 +119,14 @@ export class AchatService {
         if (data.tva != null) {
           montantTVA = (data.tva / 100) * totalMatieresPremieres;
         }
-
         // Ajout du montant total des matières premières au montant total de l'achat
         const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
 
         // Calcul du montant total des paiements
-        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
-
+        const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
         // Vérification si les paiements dépassent le montant total de l'achat
         if (totalPaiements > totalAchat) {
-          throw new Error("Les paiements dépassent le montant total de l'achat.");
+          throw new HttpException(errors.MONTANT_DEPASSE_MONTANT_A_PAYE, HttpStatus.BAD_REQUEST);
         }
 
         const achat = await this.db.achat.create({
@@ -185,11 +165,11 @@ export class AchatService {
             },
             paiements: {
               create: data.paiements.map((paiement) => ({
-                montant: paiement.montant,
+                montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
               })),
             },
           },
-          //=========SELECT================
+          //=================SELECT================
           select: {
             id: true,
             libelle: true,
@@ -206,7 +186,6 @@ export class AchatService {
 
 
       //==============================UPDATE====================================
-
       update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
 
         const check = await this.db.achat.findUnique({ where: { id: achatId }, select: { 
@@ -252,14 +231,8 @@ export class AchatService {
           }
         }
       
-        for(const paiement of data.paiements) {
-          if (!paiement.montant) {
-            console.log("Invalid or missing 'paiement.montant'", paiement.montant);
-            throw new Error("Invalid or missing 'paiement.montant'");
-          }
-        }
-
-        const fournisseurData = data.fournisseur ? {
+      
+        const fournisseurData = data.fournisseur.id ? {
           connect: {
             id: data.fournisseur.id,
           },
@@ -290,10 +263,7 @@ export class AchatService {
         if (totalPaiements > totalAchat) {
           throw new HttpException(errors.INVALID_PAIEMENT, HttpStatus.BAD_REQUEST);
         }
-
-        
-        
-
+    
         // Mettre à jour l'achat avec les nouvelles données
         const achat = await this.db.achat.update({
           where: {
@@ -333,7 +303,7 @@ export class AchatService {
             },
             paiements: {
               create: data.paiements.map((paiement) => ({
-                montant: paiement.montant,
+                montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
               })),
             },
           },
