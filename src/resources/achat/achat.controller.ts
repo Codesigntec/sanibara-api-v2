@@ -73,6 +73,15 @@ export class AchatController {
         return await this.service.saveAchat(data, req.userId)
     }
 
+    @Get('/findByid/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async findById(@Req() req: AuthorizedRequest): Promise<AchatFull> {
+        return await this.service.findById(req.params.id)
+    }
+
     @Put('/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)

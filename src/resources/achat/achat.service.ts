@@ -13,6 +13,111 @@ export class AchatService {
         private trace: TraceService
     ) { }
 
+   
+    findById = async (id: string): Promise<AchatFull> => {
+      return await this.db.achat.findUnique({
+          where: { id },
+          select: {
+              id: true,
+              numero: true,
+              libelle: true,
+              date: true,
+              tva: true,
+              statutAchat: true,
+              etat: true,
+              ligneAchats: {
+                  select: {
+                      id: true,
+                      references: true,
+                      prixUnitaire: true,
+                      quantiteLivre: true,
+                      quantite: true,
+                      datePeremption: true,
+                      matiere: true,
+                      magasin: true,
+                      createdAt: true,
+                      updatedAt: true,
+                  }
+              },
+              fournisseur: {
+                  select: {
+                      id: true,
+                      nom: true,
+                  }
+              },
+              couts: {
+                  select: {
+                      id: true,
+                      libelle: true,
+                      montant: true,
+                      motif: true,
+                  }
+              },
+              paiements: {
+                  select: {
+                      id: true,
+                      montant: true,
+                      createdAt: true,
+                  }
+              },
+              updatedAt: true,
+              createdAt: true,
+          },
+      });
+  }
+  
+
+    // findById = async (id: string): Promise<AchatFull> => {
+    //     return await this.db.achat.findUnique(
+    //       { where: { id }, include: {
+    //         id: true,
+    //         numero: true,
+    //         libelle: true,
+    //         date: true,
+    //         tva: true,
+    //         statutAchat: true,
+    //         etat: true,
+    //         ligneAchats: {
+    //           select:{
+    //             id: true,
+    //             references: true,
+    //             prixUnitaire: true,
+    //             quantiteLivre: true,
+    //             quantite: true,
+    //             datePeremption: true,
+    //             matiere: true,
+    //             magasin: true,
+    //             createdAt: true,
+    //             updatedAt: true,
+    //           }
+    //         },
+    //         fournisseur: {
+    //           select: {
+    //             id: true,
+    //             nom: true,
+    //           }
+    //         },
+    //         couts: {
+    //           select:{
+    //             id: true,
+    //             libelle: true,
+    //             montant: true,
+    //             motif: true,
+    //           }
+    //         },
+    //         paiements: {
+    //           select:{
+    //             id: true,
+    //             montant: true,
+    //             createdAt: true,
+    //           }
+    //         },
+    //         updatedAt: true,
+    //         createdAt: true,
+    //       },
+    //     });
+    // }
+
     list = async (filter: AchatFetcher, query: PaginationQuery): Promise<Pagination<AchatFull>> => {
         const conditions = { ...filter }
         const limit = query.size ? query.size : 10;
@@ -203,6 +308,7 @@ export class AchatService {
           paiements: {
             select:{
               id: true,
+              montant: true,
             }
           },
 
@@ -212,26 +318,6 @@ export class AchatService {
 
       let ach = check;
 
-        // Validation des données similaires à saveAchat
-        for (const ligne of data.ligneAchats) {
-          if (!ligne.matiere || !ligne.matiere.id) {
-            console.log("Invalid or missing 'matiere'", ligne.matiere);
-            throw new Error("Invalid or missing 'matiere'");
-          }
-          if (!ligne.magasin || !ligne.magasin.id) {
-            console.log("Invalid or missing 'magasin'", ligne.magasin);
-            throw new Error("Invalid or missing 'magasin'");
-          }
-        }
-      
-        for(const cout of data.couts) {
-          if (!cout.montant) {
-            console.log("Invalid or missing 'cout.montant'", cout.montant);
-            throw new Error("Invalid or missing 'cout.montant'");
-          }
-        }
-      
-      
         const fournisseurData = data.fournisseur.id ? {
           connect: {
             id: data.fournisseur.id,
@@ -257,13 +343,13 @@ export class AchatService {
         const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
     
         // Calcul du montant total des paiements
-        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
+        const oldPaiements = ach.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
+        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0) + oldPaiements;
        
         // Vérification si les paiements dépassent le montant total de l'achat
         if (totalPaiements > totalAchat) {
           throw new HttpException(errors.INVALID_PAIEMENT, HttpStatus.BAD_REQUEST);
         }
-    
         // Mettre à jour l'achat avec les nouvelles données
         const achat = await this.db.achat.update({
           where: {
@@ -302,10 +388,18 @@ export class AchatService {
               })),
             },
             paiements: {
-              create: data.paiements.map((paiement) => ({
-                montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
-              })),
+              create: data.paiements
+                .filter((paiement) => Number(paiement.montant) !== 0)
+                .map((paiement) => ({
+                  montant: Number(paiement.montant),
+                })),
             },
+            
+            // paiements: {
+            //   create: data.paiements.map((paiement) => ({
+            //     montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
+            //   })),
+            // },
           },
           select: {
             id: true,
@@ -320,7 +414,11 @@ export class AchatService {
           await Promise.all([
             ...ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } })),
             ...ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } })),
-            ...ach.paiements.map((p) => this.db.paiement.delete({ where: { id: p.id } })),
+            //====================delete tout les pay inferieur a 0============================
+            // Supprimez les paiements dont le montant est égal à zéro
+            ach.paiements
+            .filter((p) => p.montant === 0)
+            .forEach((p) => this.db.paiement.delete({ where: { id: p.id } }))
           ]);
       
         const description = `Mise à jour de l'achat: ${data.libelle}`;
