@@ -6,6 +6,7 @@ import { Etat, StatutAchat } from "@prisma/client"
 import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 
 export class AchatFetcher extends FetcherFilter {
+  statutAchat?: StatutAchat
 }
 
 class MatiereInput {

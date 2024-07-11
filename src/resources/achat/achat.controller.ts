@@ -20,7 +20,7 @@ export class AchatController {
     constructor(private service: AchatService) { }
 
 
-    @Get('/')
+    @Get('/:statutAchat')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
@@ -48,6 +48,8 @@ export class AchatController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
+        @Req() req?: AuthorizedRequest
+        
     ) : Promise<Pagination<AchatFull>> {
         const filter : AchatFetcher = {
             archive: (archive && archive === '1') ? true : false,
@@ -57,9 +59,9 @@ export class AchatController {
             page: Number(page),
             size: Number(size),
             orderBy: order,
-            orderDirection: direction
+            orderDirection: direction,
         }
-        return await this.service.list(filter, paginationQuery)
+        return await this.service.list(filter,req.params.statutAchat, paginationQuery)
     }
 
     

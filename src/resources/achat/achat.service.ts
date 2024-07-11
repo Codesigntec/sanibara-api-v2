@@ -67,61 +67,18 @@ export class AchatService {
   }
   
 
-    // findById = async (id: string): Promise<AchatFull> => {
-    //     return await this.db.achat.findUnique(
-    //       { where: { id }, include: {
-    //         id: true,
-    //         numero: true,
-    //         libelle: true,
-    //         date: true,
-    //         tva: true,
-    //         statutAchat: true,
-    //         etat: true,
-    //         ligneAchats: {
-    //           select:{
-    //             id: true,
-    //             references: true,
-    //             prixUnitaire: true,
-    //             quantiteLivre: true,
-    //             quantite: true,
-    //             datePeremption: true,
-    //             matiere: true,
-    //             magasin: true,
-    //             createdAt: true,
-    //             updatedAt: true,
-    //           }
-    //         },
-    //         fournisseur: {
-    //           select: {
-    //             id: true,
-    //             nom: true,
-    //           }
-    //         },
-    //         couts: {
-    //           select:{
-    //             id: true,
-    //             libelle: true,
-    //             montant: true,
-    //             motif: true,
-    //           }
-    //         },
-    //         paiements: {
-    //           select:{
-    //             id: true,
-    //             montant: true,
-    //             createdAt: true,
-    //           }
-    //         },
-    //         updatedAt: true,
-    //         createdAt: true,
-    //       },
-    //     });
-    // }
 
-    list = async (filter: AchatFetcher, query: PaginationQuery): Promise<Pagination<AchatFull>> => {
-        const conditions = { ...filter }
+    list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatFull>> => {
+        let conditions = {...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
+
+
+            // Correction du filtrage par statut
+            if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
+              conditions.statutAchat = statutAchat;
+          }
+
 
         let order = {}
         if (query.orderBy) {
@@ -874,27 +831,72 @@ export class AchatService {
         return ligneUpdate
       }
 
-          //=============================DESTROY====================================
+        //=============================DESTROY====================================
 
-        destroyLigneAchat = async (id: string, userId: string): Promise<LigneAchatSelect> => {
-            const check = await this.db.ligneAchat.findUnique({ where: { id: id }, select: { references: true } })
-            if (!check) throw new HttpException(errors.NOT_EXIST_LIGNE, HttpStatus.BAD_REQUEST);
-    
-            try {
-                const coutDestroy = await this.db.ligneAchat.delete({
-                    where: { id },
-                    select: {
-                      id: true,
-                      references: true
-                    }
-                })
-    
-                const description = `Suppression physique de la ligne d'achat: ${check.references}`
-                this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
-    
-                return coutDestroy
-            } catch (_: any) {
-                throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
-            }
+      destroyLigneAchat = async (id: string, userId: string): Promise<LigneAchatSelect> => {
+          const check = await this.db.ligneAchat.findUnique({ where: { id: id }, select: { references: true } })
+          if (!check) throw new HttpException(errors.NOT_EXIST_LIGNE, HttpStatus.BAD_REQUEST);
+  
+          try {
+              const coutDestroy = await this.db.ligneAchat.delete({
+                  where: { id },
+                  select: {
+                    id: true,
+                    references: true
+                  }
+              })
+  
+              const description = `Suppression physique de la ligne d'achat: ${check.references}`
+              this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+  
+              return coutDestroy
+          } catch (_: any) {
+              throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
+          }
+      }
+
+
+
+      updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, achatId: string, userId: string): Promise<LigneAchatFull> => {
+        const check = await this.db.ligneAchat.findUnique({ 
+          where: { id }, 
+          select: { references: true, achatId: true, quantite: true } 
+        });
+      
+        if (!check) {
+          throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
         }
+      
+        if (check.achatId !== achatId) {
+          throw new HttpException(errors.COUT_ERROR, HttpStatus.BAD_REQUEST);
+        }
+      
+        if (quantiteLivre > check.quantite) {
+          throw new HttpException(errors.QUANTITE_ERROR, HttpStatus.BAD_REQUEST);
+        }
+      
+        const ligneUpdate = await this.db.ligneAchat.update({
+          where: { id },
+          data: { quantiteLivre },
+          select: {
+            id: true,
+            numero: true,
+            references: true,
+            quantite: true,
+            prixUnitaire: true,
+            magasin: true,
+            quantiteLivre: true,
+            matiere: true,
+            datePeremption: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+      
+        const description = `Modification de la quantité livrée pour la ligne d'achat: ${check.references}`;
+        await this.trace.logger({ action: 'Modification', description, userId });
+      
+        return ligneUpdate;
+      }
+      
 }
