@@ -855,8 +855,6 @@ export class AchatService {
           }
       }
 
-
-
       updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, achatId: string, userId: string): Promise<LigneAchatFull> => {
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 

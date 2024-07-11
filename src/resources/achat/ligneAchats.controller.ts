@@ -58,6 +58,19 @@ export class LigneAchatController {
         return await this.service.destroyLigneAchat(id, userId)
     }
 
+
+    @Put('/:id/:achatId')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UsePipes(new ZodPipe(LigneAchatSchema))
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: LigneAchatFull })
+    async updateQuantiteLivre(@Body() quantiteLivre: number, @Req() req: AuthorizedRequest): Promise<LigneAchatFull> {
+        const userId = req.userId
+        const id = req.params.id
+        const achatId = req.params.achatId
+        return await this.service.updateQuantiteLivreAchat(id, quantiteLivre, achatId, userId)
+    }
  
     
 }
