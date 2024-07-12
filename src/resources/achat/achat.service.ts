@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Cout, Etat, LigneAchat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
-import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatFull, LigneAchatSave, LigneAchatSelect, PaiementFull, PaiementSave, } from './achat.types';
+import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
 
@@ -793,7 +793,7 @@ export class AchatService {
 
       updateLigneAchat = async (id: string, data: LigneAchatSave, achatId: string ,userId: string): Promise<LigneAchatFull> => {
         const check = await this.db.ligneAchat.findUnique({ where:  {id: id }, select: { references: true ,achatId: true} })
-        if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
+        if (!check) throw new HttpException(errors.MATIERE_INVALID, HttpStatus.BAD_REQUEST);
   
         if (check.achatId !== achatId) {
           throw new HttpException(errors.COUT_ERROR, HttpStatus.BAD_REQUEST);
@@ -831,6 +831,33 @@ export class AchatService {
         return ligneUpdate
       }
 
+
+      getAllLigneAchats = async (filter: LigneAchatFetcher, query: PaginationQuery): Promise<LigneAchatFull[]> => {
+        console.log("GET ALL LIGNE ACHATS");
+        console.log("test");
+
+        const conditions = { ...filter }
+        const limit = query.size ? query.size : 10;
+        const offset = query.page ? (query.page - 1) * limit : 0;
+
+        let order = {}
+        if (query.orderBy) {
+            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+        }
+        
+        
+        const ligneAchats = await this.db.ligneAchat.findMany({
+          include: {
+            matiere: true, // Inclure les détails de la matière associée si nécessaire
+            magasin: true, // Inclure les détails du magasin associé si nécessaire
+            // achat: true, // Inclure les détails de l'achat associé si nécessaire
+          },
+        });
+      
+        return ligneAchats;
+      };
+      
+      
         //=============================DESTROY====================================
 
       destroyLigneAchat = async (id: string, userId: string): Promise<LigneAchatSelect> => {
@@ -855,39 +882,28 @@ export class AchatService {
           }
       }
 
-      updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, achatId: string, userId: string): Promise<LigneAchatFull> => {
+      updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, userId: string): Promise<ligneLivraison> => {
+        console.log("==========================VOIR===================================");
+        
+        console.log(id);
+        console.log(quantiteLivre);
+        console.log(userId);
+        
+        
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 
           select: { references: true, achatId: true, quantite: true } 
         });
-      
-        if (!check) {
-          throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
-        }
-      
-        if (check.achatId !== achatId) {
-          throw new HttpException(errors.COUT_ERROR, HttpStatus.BAD_REQUEST);
-        }
-      
+
         if (quantiteLivre > check.quantite) {
           throw new HttpException(errors.QUANTITE_ERROR, HttpStatus.BAD_REQUEST);
         }
-      
         const ligneUpdate = await this.db.ligneAchat.update({
           where: { id },
           data: { quantiteLivre },
           select: {
-            id: true,
-            numero: true,
-            references: true,
-            quantite: true,
-            prixUnitaire: true,
-            magasin: true,
             quantiteLivre: true,
-            matiere: true,
-            datePeremption: true,
-            createdAt: true,
-            updatedAt: true,
+         
           },
         });
       

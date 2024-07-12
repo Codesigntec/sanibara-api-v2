@@ -9,6 +9,10 @@ export class AchatFetcher extends FetcherFilter {
   statutAchat?: StatutAchat
 }
 
+export class LigneAchatFetcher extends FetcherFilter{
+  
+}
+
 class MatiereInput {
   @ApiProperty()
   id: string;
@@ -55,7 +59,10 @@ export class LigneAchatSelect {
   @ApiProperty()
   references: string
 }
-
+export class ligneLivraison {
+  @ApiProperty()
+  quantiteLivre: number = 0
+}
 export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
@@ -278,6 +285,13 @@ const frs = z.object({
 });
 
 
+const MagasinQuantiteLivreShema = z.object({
+  quantiteLivre: z.number({
+    required_error: errors.QUANTITY_REQUIRED,
+    invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
+  }),
+});
+
 //===============Export=================
 
 export const AchatSaverSchema = z.object({
@@ -309,3 +323,5 @@ export const PaiementSaverSchema = PaiementInputSchema;
 export const CoutSaverSchema = CoutInputSchema;
 
 export const LigneAchatSchema = LigneAchatInputSchema;
+
+ export const MagasinQuantiteLivre = MagasinQuantiteLivreShema;

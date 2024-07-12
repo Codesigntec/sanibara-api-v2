@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, HttpCode, HttpStatus, Post, Put, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, PaiementFull, PaiementSave, PaiementSaverSchema } from "./achat.types";
+import {  LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
 import { LigneAchat } from "@prisma/client";
 
 
@@ -59,18 +59,31 @@ export class LigneAchatController {
     }
 
 
-    @Put('/:id/:achatId')
+    @Put('/livraisons/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(LigneAchatSchema))
+    @UsePipes(new ZodPipe(MagasinQuantiteLivre))
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: LigneAchatFull })
-    async updateQuantiteLivre(@Body() quantiteLivre: number, @Req() req: AuthorizedRequest): Promise<LigneAchatFull> {
+    @ApiOkResponse({ type: ligneLivraison })
+    async updateQuantiteLivre(@Body() quantiteLivre: LigneAchatFull, @Req() req: AuthorizedRequest): Promise<ligneLivraison> {
         const userId = req.userId
         const id = req.params.id
-        const achatId = req.params.achatId
-        return await this.service.updateQuantiteLivreAchat(id, quantiteLivre, achatId, userId)
+
+        console.log(quantiteLivre);
+        console.log(id);
+        console.log(userId);
+        
+
+        return await this.service.updateQuantiteLivreAchat(id, quantiteLivre.quantiteLivre, userId)
     }
  
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: LigneAchatFull })
+    async findById(@Req() req: AuthorizedRequest): Promise<LigneAchatFull[]> {
+        return await this.service.getAllLigneAchats()
+    }
     
 }
