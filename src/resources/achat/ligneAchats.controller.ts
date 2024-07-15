@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse } from "@nestjs/swagger";
-import { AuthorizedRequest, Pagination } from "src/common/types";
+import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
+import {  LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
 import { LigneAchat } from "@prisma/client";
 
 
@@ -82,8 +82,21 @@ export class LigneAchatController {
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: LigneAchatFull })
-    async findById(@Req() req: AuthorizedRequest): Promise<LigneAchatFull[]> {
-        return await this.service.getAllLigneAchats()
+
+
+    async list(
+        @Query('page') page?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null,
+    ) : Promise<Pagination<LigneAchatFull>> {
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+        return await this.service.getAllLigneAchats(paginationQuery)
     }
     
 }

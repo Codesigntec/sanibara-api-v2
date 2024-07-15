@@ -9,8 +9,8 @@ export class AchatFetcher extends FetcherFilter {
   statutAchat?: StatutAchat
 }
 
-export class LigneAchatFetcher extends FetcherFilter{
-  
+export class LigneAchatFetcher{
+
 }
 
 class MatiereInput {

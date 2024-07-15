@@ -197,6 +197,7 @@ export class AchatService {
             date: new Date(data.date),
             statutAchat: data.statutAchat,
             etat: data.etat,
+            createdAt: new Date(),
             tva: data.tva,
             fournisseur: fournisseurData,
             ligneAchats: {
@@ -317,6 +318,7 @@ export class AchatService {
             date: new Date(data.date),
             statutAchat: data.statutAchat,
             etat: data.etat,
+            updatedAt: new Date(),
             tva: data.tva,
             fournisseur: fournisseurData,
             ligneAchats: {
@@ -461,84 +463,86 @@ export class AchatService {
 
       //=============================================PAIEMENT===========================================
 
-      // Méthode pour ajouter un paiement à un achat existant
-      savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
-        // Récupérer l'achat existant par son ID avec les paiements associés
-        const achat = await this.db.achat.findUnique({
-          where: { id: achatId },
-          include: { 
-            ligneAchats: true, 
-            paiements: true,
-            couts: true,
-          },
-        });
+    // Méthode pour ajouter un paiement à un achat existant
+        savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
+          // Récupérer l'achat existant par son ID avec les paiements associés
+          const achat = await this.db.achat.findUnique({
+            where: { id: achatId },
+            include: { 
+              ligneAchats: true, 
+              paiements: true,
+              couts: true,
+            },
+          });
 
-        if (!achat) {
-          throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }
+          if (!achat) {
+            throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
+          }
 
-        // Calculer le montant total déjà payé
-        const montantTotalPaye = achat.paiements.reduce((acc, p) => acc + p.montant, 0);
-
+          // Calculer le montant total déjà payé
+          const montantTotalPaye = achat.paiements.reduce((acc, p) => acc + p.montant, 0);
 
           // Calcul du montant total des matières premières
           const totalMatieresPremieres = achat.ligneAchats.reduce((acc, ligne) => {
             const prixTotal = ligne.prixUnitaire * ligne.quantite;
             return acc + prixTotal;
           }, 0);
-  
+
           // Calcul du montant total des coûts
           const totalCouts = achat.couts.reduce((acc, cout) => acc + cout.montant, 0);
-  
+
           // Calcul du montant de la TVA en fonction du taux
-          let montantTVA: number ;
+          let montantTVA: number = 0;
           if (achat.tva != null) {
             montantTVA = (achat.tva / 100) * totalMatieresPremieres;
           }
-          
-        // Ajout du montant total des matières premières au montant total de l'achat
-        const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
-    
-        // Calculer le reliquat restant à payer
-        const reliquat = (totalAchat ?? 0) - montantTotalPaye;
 
-        // Vérifier si le paiement proposé ne dépasse pas le reliquat
-        if (paiement.montant > reliquat) {
-          throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
-        }
+          // Ajout du montant total des matières premières au montant total de l'achat
+          const totalAchat = totalMatieresPremieres + totalCouts + montantTVA;
 
-      
-       let newPaiement: PaiementFull | PromiseLike<PaiementFull>;
+          // Calculer le reliquat restant à payer
+          const reliquat = totalAchat - montantTotalPaye;
 
-      this.db.$transaction(async (tx) => {
-          // Ajouter le paiement à l'achat
-           newPaiement = await this.db.paiement.create({
-            data: {
-              montant: paiement.montant,
-              achat: { connect: { id: achatId } },
-            },
+          // Vérifier si le paiement proposé ne dépasse pas le reliquat
+          if (paiement.montant > reliquat) {
+            throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
+          }
+
+          let newPaiement: PaiementFull;
+
+          await this.db.$transaction(async (tx) => {
+            // Ajouter le paiement à l'achat
+            newPaiement = await tx.paiement.create({
+              data: {
+                montant: paiement.montant,
+                achat: { connect: { id: achatId } },
+              },
+            });
+
+            // Mettre à jour l'achat pour refléter le paiement ajouté
+            await tx.achat.update({
+              where: { id: achatId },
+              data: {
+                paiements: {
+                  connect: { id: newPaiement.id },
+                },
+              },
+              include: {
+                paiements: true, // Inclure les paiements mis à jour dans la réponse
+              },
+            });
           });
 
-             // Mettre à jour l'achat pour refléter le paiement ajouté
-          await this.db.achat.update({
-          where: { id: achatId },
-          data: {
-            paiements: {
-              connect: { id: newPaiement.id },
-            },
-          },
-          include: {
-            paiements: true, // Inclure les paiements mis à jour dans la réponse
-          },
-        });
+          const description = `Paiement de ${paiement.montant} pour l'achat ${achatId}`
+          this.trace.logger({action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res));
 
-      });
+          console.log('==========================data=================');
+          console.log(newPaiement);
 
-      const description = `Paiement de ${paiement.montant} pour l'achat ${achatId}`
-      this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+          return newPaiement;
+        };
 
-        return newPaiement;
-      };
+
 
     
 
@@ -647,7 +651,7 @@ export class AchatService {
           throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
-        let newCout: Cout | PromiseLike<Cout>;
+        let newCout: Cout ;
 
       this.db.$transaction(async (tx) => {
 
@@ -746,7 +750,7 @@ export class AchatService {
           throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
-        let newLigneAchat: LigneAchat | PromiseLike<LigneAchat>;
+        let newLigneAchat: LigneAchat ;
 
       this.db.$transaction(async (tx) => {
 
@@ -832,29 +836,41 @@ export class AchatService {
       }
 
 
-      getAllLigneAchats = async (filter: LigneAchatFetcher, query: PaginationQuery): Promise<LigneAchatFull[]> => {
+      getAllLigneAchats = async (query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
+
         console.log("GET ALL LIGNE ACHATS");
         console.log("test");
 
-        const conditions = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
-
         let order = {}
         if (query.orderBy) {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
         
-        
         const ligneAchats = await this.db.ligneAchat.findMany({
+          take: limit,
+          skip: offset,
           include: {
-            matiere: true, // Inclure les détails de la matière associée si nécessaire
-            magasin: true, // Inclure les détails du magasin associé si nécessaire
+            matiere: true, 
+            magasin: true,
             // achat: true, // Inclure les détails de l'achat associé si nécessaire
           },
-        });
+          orderBy: order
+      })
       
-        return ligneAchats;
+        const totalCount = await this.db.ligneAchat.count();
+
+        const totalPages = Math.ceil(totalCount / limit);
+        const pagination: Pagination<LigneAchatFull> = {
+            data: ligneAchats,
+            totalPages,
+            totalCount,
+            currentPage: query.page ? query.page : 1,
+            size: limit
+        }
+      
+        return pagination;
       };
       
       
