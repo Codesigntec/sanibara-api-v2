@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './resources/auth/auth.module';
-// import { CotegorieModule } from './resources/categorie/categorie.module';
 import { UniteModule } from './resources/unite/unite.module';
 import { TraceModule } from './resources/trace/trace.module';
 import { UtilisateurModule } from './resources/utilisateur/utilisateur.module';
@@ -18,6 +17,7 @@ import { MatiereModule } from './resources/matiere-premiere/matiere-premiere.mod
 import { ProduitModule } from './resources/produit-fini/produit-fini.module';
 import { DepenseModule } from './resources/depense/depense.module';
 import { AchatsModule } from './resources/achat/achat.module';
+import { ProductionModule } from './resources/production/production.module';
 
 @Module({
   imports: [
@@ -27,7 +27,6 @@ import { AchatsModule } from './resources/achat/achat.module';
     AuthModule,
     DeviseModule,
     DepenseModule,
-    // CotegorieModule,
     ClientModule,
     FournisseurModule,
     MagasinProduitFiniModule,
@@ -36,7 +35,8 @@ import { AchatsModule } from './resources/achat/achat.module';
     UniteModule,
     UtilisateurModule,
     TraceModule,
-    AchatsModule
+    AchatsModule,
+    ProductionModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -41,6 +41,8 @@ model LigneAchat {
   magasinId      String                   @map("magasin_id")
   magasin        MagasinMatierePremiere   @relation(fields: [magasinId], references: [id])
 
+  productionLigneAchat ProductionLigneAchat[]
+
   createdAt      DateTime                 @default(now()) @map("created_at")
   updatedAt      DateTime                 @updatedAt @map("updated_at")
 
@@ -110,8 +112,11 @@ model ProduitFini {
   designation String
   description String?
   numero      Int      @default(autoincrement())
+
   uniteId     String   @map("unite_id")
   unite       Unite    @relation(fields: [uniteId], references: [id])
+
+  stockProdFini StockProduiFini[]
 
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
@@ -120,6 +125,64 @@ model ProduitFini {
 
   @@map("produits_finis")
 }
+
+
+model ProductionLigneAchat {
+  id          String   @id @default(cuid())
+
+  lignneAchatId   String   @map("ligne_achat_id")
+  ligneAchat    LigneAchat    @relation(fields: [lignneAchatId], references: [id])
+
+  productionId   String   @map("production_id")
+  productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@map("production_ligne_achat")
+}
+
+
+model Productions {
+  id          String   @id @default(cuid())
+  reference   String
+  description String
+  numero      Int      @default(autoincrement())
+  dateDebut   DateTime
+  dateFin    DateTime? 
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  stockProdFini StockProduiFini[]
+  productionLigneAchat  ProductionLigneAchat[]
+
+  @@map("productions")
+}
+
+model StockProduiFini {
+  id             String   @id @default(cuid())
+  reference      String
+  numero         Int      @default(autoincrement())
+  pu_gros        Float
+  pu_detail      Float
+  qt_produit     Int
+
+  prodFiniId     String   @map("produit_fini_id")
+  produitFini    ProduitFini    @relation(fields: [prodFiniId], references: [id])
+
+  productionId   String   @map("produition__id")
+  productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)
+
+  magasinId      String   @map("magasin_id")
+  magasin        MagasinProduitFini    @relation(fields: [magasinId], references: [id])
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+
+  @@map("stock_produi_fini")
+}
+
 
 model Client {
   id        String   @id @default(cuid())
@@ -195,6 +258,7 @@ model MagasinProduitFini {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   accesUtilisateursProduitsFinis MagasinUtilisateurProduitFini[]
+  stockProdFini StockProduiFini[]
 
   @@map("magasins_produits_finis")
 }

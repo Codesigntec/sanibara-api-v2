@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
-import { string, z } from "zod"
+import {  z } from "zod"
 import { errors } from "./achat.constant"
 import { Etat, StatutAchat } from "@prisma/client"
 import { FournisseurSelect } from "../fournisseur/fournisseur.types"
