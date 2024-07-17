@@ -1,10 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
-import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse } from "@nestjs/swagger";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { ProductionService } from "./production.service";
-import { AuthorizedRequest } from "src/common/types";
+import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { ProdReturn, ProdSave, Productions, ProdSaveSchema } from "./production.type";
+import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher } from "./production.type";
 
 
 @Controller('productions')
@@ -18,6 +18,54 @@ import { ProdReturn, ProdSave, Productions, ProdSaveSchema } from "./production.
 export class ProductionController {
 
     constructor(private service: ProductionService) { }
+
+
+
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(Pagination) },
+                {
+                    properties: { 
+                        data: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(ProductionsReturn) }
+                        }
+                    } 
+                }
+            ]
+        }
+    })
+    async list(
+        @Query('archive') archive?: string | null, 
+        @Query('removed') removed?: string | null,
+        @Query('page') page?: string | null,
+        @Query('debut') debut?: string | null,
+        @Query('fin') fin?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null,
+    ) : Promise<Pagination<ProductionsReturn>> {
+        const filter : ProductionFetcher = {
+            archive: (archive && archive === '1') ? true : false,
+            removed: (removed && removed === '1') ? true : false,
+            debut,
+            fin
+        }
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+        return await this.service.list(filter, paginationQuery)
+    }
+
+
 
     @Post('/')
     @Version('2')

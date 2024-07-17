@@ -167,7 +167,7 @@ model StockProduiFini {
   pu_gros        Float
   pu_detail      Float
   qt_produit     Int
-  datePeremption DateTime
+  datePeremption DateTime?
 
   prodFiniId     String   @map("produit_fini_id")
   produitFini    ProduitFini    @relation(fields: [prodFiniId], references: [id])

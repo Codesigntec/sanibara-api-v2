@@ -4,6 +4,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { MagasinSelect } from "../magasin/magasin.types";
 import { Produit } from "../produit-fini/produit-fini.types";
 import {  LigneAchatFull1 } from "../achat/achat.types";
+import { FetcherFilter } from "src/common/types";
 
 // =======================PRODUCTIONReturn===============================
 export class ProdReturn{
@@ -53,7 +54,7 @@ export class ProductionLigneAchatDto {
 // =======================PRODUCTION-SAVE===============================
 export class ProdSave {
   @ApiProperty()
-  description: string;
+  description?: string;
 
   @ApiProperty()
   reference: string;
@@ -62,7 +63,7 @@ export class ProdSave {
   dateDebut: Date;
 
   @ApiProperty()
-  dateFin: Date;
+  dateFin?: Date;
 
   @ApiProperty({ type: [StockProduiFiniDto] })
   stockProdFini: StockProduiFiniDto[];
@@ -70,6 +71,98 @@ export class ProdSave {
   @ApiProperty({ type: [ProductionLigneAchatDto] })
   productionLigneAchat: ProductionLigneAchatDto[];
 }
+
+//================================FLITRE===============================
+
+export class ProductionFetcher extends FetcherFilter {
+  debut?: string | null
+  fin?: string | null
+}
+
+//======================================RETURN PRODUCTION===============================
+export class ProductionsReturn{
+
+  @ApiProperty()
+  id: string
+  
+  @ApiProperty()
+  numero: number
+
+  @ApiProperty()
+  description: string
+
+  @ApiProperty()
+  reference: string
+
+  @ApiProperty()
+  dateDebut: Date
+
+  @ApiProperty()
+  dateFin: Date
+
+  @ApiProperty()
+  stockProdFini: StockProduiFini[]
+
+  @ApiProperty()
+  productionLigneAchat: ProductionLigneAchat[]
+
+  @ApiProperty()
+  createdAt: Date
+}
+
+
+export class ProductionLigneAchat{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  ligneAchat: LigneAchatFull1
+
+  @ApiProperty()
+  productionId: string
+}
+
+// =========================== StockProduiFini ===============================
+export class StockProduiFiniSaver{
+
+  @ApiProperty()
+  reference: string
+
+  @ApiProperty()
+  pu_gros: number
+
+  @ApiProperty()
+  pu_detail: number
+
+  @ApiProperty()
+  datePeremption: Date
+
+  @ApiProperty()
+  qt_produit: number
+
+  @ApiProperty()
+  produitFini : ProduitDto
+
+  @ApiProperty()
+  magasin: MagasinProduitFiniDto
+}
+
+
+
+export class StockProduiFini extends StockProduiFiniSaver{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  numero: number
+}
+
+
 
 
 
@@ -98,20 +191,7 @@ export class LigneAchatFull{
   @ApiProperty()
   id: string
 }
-export class ProductionLigneAchat{
 
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  createdAt: Date
-
-  @ApiProperty()
-  ligneAchat: LigneAchatFull1
-
-  @ApiProperty()
-  productionId: string
-}
 
 
 // export class ProductionLigneAchatDto{
@@ -177,35 +257,7 @@ export class ProductionLigneAchatSave{
 }
 
 
-export class ProductionsReturn{
 
-  @ApiProperty()
-  id: string
-  
-  @ApiProperty()
-  numero: number
-
-  @ApiProperty()
-  description: string
-
-  @ApiProperty()
-  reference: string
-
-  @ApiProperty()
-  dateDebut: Date
-
-  @ApiProperty()
-  dateFin: Date
-
-  @ApiProperty()
-  stockProdFini: StockProduiFini[]
-
-  @ApiProperty()
-  productionLigneAchat: ProductionLigneAchat[]
-
-  @ApiProperty()
-  createdAt: Date
-}
 
 
 export class ProductionLigneAchatFull extends ProductionLigneAchat{
@@ -214,41 +266,10 @@ export class ProductionLigneAchatFull extends ProductionLigneAchat{
 }
 
 
-// =========================== StockProduiFini ===============================
-export class StockProduiFiniSaver{
-
-    @ApiProperty()
-    reference: string
- 
-    @ApiProperty()
-    pu_gros: number
-
-    @ApiProperty()
-    pu_detail: number
-
-    @ApiProperty()
-    datePeremption: Date
-
-    @ApiProperty()
-    qt_produit: number
-
-    @ApiProperty()
-    produitFini : ProduitDto
-
-    @ApiProperty()
-    magasin: MagasinProduitFiniDto
-}
 
 
 
-export class StockProduiFini extends StockProduiFiniSaver{
 
-    @ApiProperty()
-    id: string
-  
-    @ApiProperty()
-    numero: number
-}
 
 export class StockProduiFiniFull extends StockProduiFini{
 

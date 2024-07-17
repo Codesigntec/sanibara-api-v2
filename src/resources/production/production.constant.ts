@@ -11,7 +11,8 @@ const errors = {
     QT_PRODUIT_MUST_BE_NUMBER: 'qt_produit doit être un nombre.',
     PRODUIT_FIN_ID_MUST_BE_STRING: 'produitFini.id doit être en texte.',
     MAGASIN_ID_MUST_BE_STRING: 'magasin.id doit être en texte.',
-    PRODUCTION_LIGNE_ACHAT_ID_MUST_BE_STRING: 'productionLigneAchat.id doit être en texte.'
+    PRODUCTION_LIGNE_ACHAT_ID_MUST_BE_STRING: 'productionLigneAchat.id doit être en texte.',
+    DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN: 'La date de fin ne peut pas être inferieur à la date de debut.',
   };
   
   
