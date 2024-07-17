@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import helmet from 'helmet';
 import * as compression from 'compression'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +12,16 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT) || 3002
   const host = process.env.HOST || 'localhost'
+
+  
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //   }),
+  // );
+
 
   //==================SWAGGER===================x
   const config = new DocumentBuilder()
@@ -45,3 +55,5 @@ async function bootstrap() {
   await app.listen(port);
 }
 bootstrap();
+
+

@@ -60,8 +60,10 @@ export class LigneAchatSelect {
   references: string
 }
 export class ligneLivraison {
+
   @ApiProperty()
   quantiteLivre: number = 0
+
 }
 export class LigneAchatFull extends LigneAchatSelect {
 
@@ -88,8 +90,38 @@ export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
   updatedAt: Date
-
 }
+
+
+export class LigneAchatFull1 extends LigneAchatSelect {
+  @ApiProperty()
+  prixUnitaire: number;
+
+  @ApiProperty()
+  quantite: number;
+
+  @ApiProperty()
+  quantiteLivre: number = 0;
+
+  @ApiProperty()
+  datePeremption: Date | null;
+
+  @ApiProperty()
+  matiere: MatiereInput;
+
+  @ApiProperty()
+  magasin: MagasinInput;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  references: string; // Ajout de la propriété manquante
+}
+
 
 
 export class LigneAchatSave {
@@ -116,7 +148,7 @@ export class LigneAchatSave {
   magasinId: string
 }
 
-// =============COUT================
+// ================COUT==================
 export class CoutSelect {
   @ApiProperty()
   id: string
@@ -174,8 +206,6 @@ export class AchatSaver {
 }
 
 
-
-
 // ============= RESPONSE ACHAT ================
 export class AchatSelect {
   @ApiProperty()
@@ -218,7 +248,6 @@ export class AchatFull extends Achat {
   @ApiProperty()
   updatedAt: Date
 }
-
 
 
 

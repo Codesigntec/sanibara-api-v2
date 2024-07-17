@@ -145,10 +145,10 @@ model ProductionLigneAchat {
 model Productions {
   id          String   @id @default(cuid())
   reference   String
-  description String
+  description String?
   numero      Int      @default(autoincrement())
   dateDebut   DateTime
-  dateFin    DateTime? 
+  dateFin     DateTime? 
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at")
@@ -167,6 +167,7 @@ model StockProduiFini {
   pu_gros        Float
   pu_detail      Float
   qt_produit     Int
+  datePeremption DateTime
 
   prodFiniId     String   @map("produit_fini_id")
   produitFini    ProduitFini    @relation(fields: [prodFiniId], references: [id])

@@ -543,9 +543,6 @@ export class AchatService {
         };
 
 
-
-    
-
       updatePaiement = async (id: string, data: PaiementSave, achatId: string ,userId: string): Promise<PaiementFull> => {
       const check = await this.db.paiement.findUnique({ where:  {id: id }, select: { montant: true } })
       if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
@@ -559,7 +556,6 @@ export class AchatService {
             couts: true,
           },
         });
-
 
         if (!achat) {
           throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
