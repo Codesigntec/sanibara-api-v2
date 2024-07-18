@@ -25,6 +25,9 @@ export class ProduitDto {
 
 export class StockProduiFiniDto {
   @ApiProperty()
+  id?: string;
+  
+  @ApiProperty()
   reference: string;
 
   @ApiProperty()

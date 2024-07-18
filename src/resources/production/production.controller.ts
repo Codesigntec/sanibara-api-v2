@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { ProductionService } from "./production.service";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
@@ -78,6 +78,25 @@ export class ProductionController {
         return await this.service.save(data, userId)
     }
 
-    
-    
+
+    @Get('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: ProductionsReturn })
+    async findOne(@Param('id') id: string): Promise<ProductionsReturn> {
+        return await this.service.findById(id)
+    }
+
+    @Put('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UsePipes(new ZodPipe(ProdSaveSchema))
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Productions })
+    async update(@Body() data: ProdSave, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.update(id, data, userId)
+    }
 }

@@ -90,154 +90,151 @@ export class ProductionService {
   }
 
 
-    async save(data: ProdSave, userId: string): Promise<ProdReturn> {
-      console.log('Service Data:', data);  // Ajoutez cette ligne pour vérifier ce que le service reçoit
-  
-      return await this.db.$transaction(async (tx) => {
-        try {
-          const check = await tx.productions.findFirst({
-            where: {
-              reference: {
-                equals: data.reference,
-                mode: 'insensitive',
-              },
+  async save(data: ProdSave, userId: string): Promise<ProdReturn> {
+    console.log('Service Data:', data);  // Ajoutez cette ligne pour vérifier ce que le service reçoit
+
+    return await this.db.$transaction(async (tx) => {
+      try {
+        const check = await tx.productions.findFirst({
+          where: {
+            reference: {
+              equals: data.reference,
+              mode: 'insensitive',
             },
-          });
-          if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-  
-          const dateDebut = new Date(data.dateDebut);
-          const dateFin = new Date(data.dateFin);
-          
-      
-          
-          if (dateDebut > dateFin) {
-            throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
-          }
-  
-          const production = await tx.productions.create({
-            data: {
-              reference: data.reference,
-              dateDebut: dateDebut,
-              description: data.description,
-              dateFin: dateFin,
-              stockProdFini: {
-                create: data.stockProdFini.map((stock) => ({
-                  reference: stock.reference,
-                  pu_gros: stock.pu_gros,
-                  pu_detail: stock.pu_detail,
-                  qt_produit: stock.qt_produit,
-                  datePeremption: new Date(stock.datePeremption),
-                  produitFini: {
-                    connect: {
-                      id: stock.produitFini.id,
-                    },
+          },
+        });
+        if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+
+        const dateDebut = new Date(data.dateDebut);
+        const dateFin = new Date(data.dateFin);
+        
+    
+        
+        if (dateDebut > dateFin) {
+          throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
+        }
+
+        const production = await tx.productions.create({
+          data: {
+            reference: data.reference,
+            dateDebut: dateDebut,
+            description: data.description,
+            dateFin: dateFin,
+            stockProdFini: {
+              create: data.stockProdFini.map((stock) => ({
+                reference: stock.reference,
+                pu_gros: stock.pu_gros,
+                pu_detail: stock.pu_detail,
+                qt_produit: stock.qt_produit,
+                datePeremption: new Date(stock.datePeremption),
+                produitFini: {
+                  connect: {
+                    id: stock.produitFini.id,
                   },
-                  magasin: {
-                    connect: {
-                      id: stock.magasin.id,
-                    },
+                },
+                magasin: {
+                  connect: {
+                    id: stock.magasin.id,
                   },
-                })),
-              },
-              productionLigneAchat: {
-                create: data.productionLigneAchat.map((ligne) => ({
-                  ligneAchat: {
-                    connect: {
-                      id: ligne.id,
-                    },
-                  },
-                })),
-              },
+                },
+              })),
             },
-            select: {
-              id: true,
-              numero: true,
-              reference: true,
-              description: true,
-              dateDebut: true,
-              dateFin: true,
-              createdAt: true,
-              updatedAt: true,
-              stockProdFini: {
-                select: {
-                  id: true,
-                  reference: true,
-                  numero: true,
-                  pu_gros: true,
-                  pu_detail: true,
-                  datePeremption: true,
-                  qt_produit: true,
-                  produitFini: {
-                    select: {
-                      id: true,
-                      designation: true,
-                      description: true,
-                      createdAt: true,
-                      unite: {
-                        select: {
-                          id: true,
-                          libelle: true
-                        }
+            productionLigneAchat: {
+              create: data.productionLigneAchat.map((ligne) => ({
+                ligneAchat: {
+                  connect: {
+                    id: ligne.id,
+                  },
+                },
+              })),
+            },
+          },
+          select: {
+            id: true,
+            numero: true,
+            reference: true,
+            description: true,
+            dateDebut: true,
+            dateFin: true,
+            createdAt: true,
+            updatedAt: true,
+            stockProdFini: {
+              select: {
+                id: true,
+                reference: true,
+                numero: true,
+                pu_gros: true,
+                pu_detail: true,
+                datePeremption: true,
+                qt_produit: true,
+                produitFini: {
+                  select: {
+                    id: true,
+                    designation: true,
+                    description: true,
+                    createdAt: true,
+                    unite: {
+                      select: {
+                        id: true,
+                        libelle: true
                       }
                     }
-                  },
-                  magasin: {
-                    select: {
-                      id: true,
-                      nom: true
-                    }
+                  }
+                },
+                magasin: {
+                  select: {
+                    id: true,
+                    nom: true
                   }
                 }
-              },
-              productionLigneAchat: {
-                select: {
-                  id: true,
-                  createdAt: true,
-                  productionId: true,
-                  ligneAchat: {
-                    select: {
-                      id: true,
-                      numero: true,
-                      createdAt: true,
-                      updatedAt: true,
-                      datePeremption: true,
-                      magasin: {
-                        select: {
-                          id: true,
-                          nom: true
-                        }
-                      },
-                      prixUnitaire: true,
-                      quantite: true,
-                      quantiteLivre: true,
-                      matiere: {
-                        select: {
-                          id: true,
-                          designation: true
-                        }
-                      },
-                      references: true // Ajout du select pour la propriété references
-                    }
+              }
+            },
+            productionLigneAchat: {
+              select: {
+                id: true,
+                createdAt: true,
+                productionId: true,
+                ligneAchat: {
+                  select: {
+                    id: true,
+                    numero: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    datePeremption: true,
+                    magasin: {
+                      select: {
+                        id: true,
+                        nom: true
+                      }
+                    },
+                    prixUnitaire: true,
+                    quantite: true,
+                    quantiteLivre: true,
+                    matiere: {
+                      select: {
+                        id: true,
+                        designation: true
+                      }
+                    },
+                    references: true // Ajout du select pour la propriété references
                   }
                 }
               }
             }
-          });
-  
-          const description = `Ajout du produit fini: ${data.description}`;
-          this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-  
-          return production;
-        } catch (error: any) {
-          if (error.status) throw new HttpException(error.message, error.status);
-          else 
-          throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.BAD_REQUEST);
-        }
-      });
-    }
+          }
+        });
 
+        const description = `Ajout du produit fini: ${data.description}`;
+        this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
 
-
+        return production;
+      } catch (error: any) {
+        if (error.status) throw new HttpException(error.message, error.status);
+        else 
+        throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.BAD_REQUEST);
+      }
+    });
+  }
 
     findById = async (id: string): Promise<ProductionsReturn> => {
       const production = await this.db.productions.findUnique({
@@ -264,6 +261,127 @@ export class ProductionService {
       if (production === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
       return production
   }
+
+  update = async (id: string, data: ProdSave, userId: string): Promise<ProdReturn> => {
+    return await this.db.$transaction(async (tx) => {
+        try {
+            const check = await tx.productions.findUnique({ where: { id: id }, select: { description: true } })
+            if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+            const checkFirst = await tx.productions.findFirst({
+                where: {
+                    id: {
+                        not: id
+                    },
+                    reference: {
+                        equals: data.reference,
+                        mode: 'insensitive'
+                    }
+                }
+            })
+            if (checkFirst !== null && checkFirst !== check) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+
+            const dateDebut = new Date(data.dateDebut);
+            const dateFin = new Date(data.dateFin);
+            
+            if (dateDebut > dateFin) {
+              throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
+            }
+            const matiere = await tx.productions.update({
+                where: { id },
+                data: {
+                  reference: data.reference,
+                  dateDebut: dateDebut,
+                  description: data.description,
+                  dateFin: dateFin,   
+                  stockProdFini: {
+                    upsert: data.stockProdFini.map((stock) => ({
+                      where: { id: stock.id },
+                       create:{
+                        reference: stock.reference,
+                        pu_gros: stock.pu_gros,
+                        pu_detail: stock.pu_detail,
+                        qt_produit: stock.qt_produit,
+                        datePeremption: new Date(stock.datePeremption),
+                        produitFini: {
+                          connect: {
+                            id: stock.produitFini.id,
+                          },
+                        },
+                        magasin: {
+                          connect: {
+                            id: stock.magasin.id,
+                          },
+                        },
+                       },
+                       update: {
+                        reference: stock.reference,
+                        pu_gros: stock.pu_gros,
+                        pu_detail: stock.pu_detail,
+                        qt_produit: stock.qt_produit,
+                        datePeremption: new Date(stock.datePeremption),
+                        produitFini: {
+                          connect: {
+                            id: stock.produitFini.id,
+                          },
+                        },
+                        magasin: {
+                          connect: {
+                            id: stock.magasin.id,
+                          },
+                        },
+                      },
+                    })),
+                  },
+                  productionLigneAchat: {
+                    upsert: data.productionLigneAchat.map((ligne) => ({
+                      where: { id: ligne.id },
+                      create: {
+                        ligneAchat: {
+                          connect: {
+                            id: ligne.id,
+                          },
+                        },
+                      },
+                      update:{
+                        ligneAchat: {
+                          connect: {
+                            id: ligne.id,
+                          },
+                        },
+                      },
+                    })),
+                  },
+                },
+                include: {
+                  stockProdFini: {
+                    include: {
+                      produitFini: true,
+                      magasin: true,
+                    },
+                  },
+                  productionLigneAchat: {
+                    include: {
+                      ligneAchat: {
+                        include: {
+                          matiere: true,
+                          magasin: true,
+                        },
+                      },
+                    },
+                  },
+                },
+            })
+            const description = `Modification du production: ${check.description} -> ${data.description}`
+            this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+            return matiere
+        } catch (error: any) {
+            if (error.status) throw new HttpException(error.message, error.status);
+            else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    })
+}
+
 
 
 
