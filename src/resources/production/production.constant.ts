@@ -13,6 +13,7 @@ const errors = {
     MAGASIN_ID_MUST_BE_STRING: 'magasin.id doit être en texte.',
     PRODUCTION_LIGNE_ACHAT_ID_MUST_BE_STRING: 'productionLigneAchat.id doit être en texte.',
     DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN: 'La date de fin ne peut pas être inferieur à la date de debut.',
+    NOT_EXIST: 'Cette production n\'existe pas ou son ID n\'est pas valide\nSi le problème persiste, veuillez contacter Codesign.',
   };
   
   

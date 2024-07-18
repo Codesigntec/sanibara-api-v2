@@ -90,10 +90,6 @@ export class ProductionService {
   }
 
 
-
-
-
-
     async save(data: ProdSave, userId: string): Promise<ProdReturn> {
       console.log('Service Data:', data);  // Ajoutez cette ligne pour vérifier ce que le service reçoit
   
@@ -239,4 +235,37 @@ export class ProductionService {
         }
       });
     }
+
+
+
+
+    findById = async (id: string): Promise<ProductionsReturn> => {
+      const production = await this.db.productions.findUnique({
+          where: { id },
+          include: {
+            stockProdFini: {
+              include: {
+                produitFini: true,
+                magasin: true,
+              },
+            },
+            productionLigneAchat: {
+              include: {
+                ligneAchat: {
+                  include: {
+                    matiere: true,
+                    magasin: true,
+                  },
+                },
+              },
+            },
+          },
+      })
+      if (production === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+      return production
+  }
+
+
+
+
 }
