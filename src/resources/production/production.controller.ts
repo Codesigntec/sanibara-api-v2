@@ -4,7 +4,7 @@ import { ProductionService } from "./production.service";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher } from "./production.type";
+import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher, ProdUpdate } from "./production.type";
 
 
 @Controller('productions')
@@ -94,7 +94,7 @@ export class ProductionController {
     @UsePipes(new ZodPipe(ProdSaveSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Productions })
-    async update(@Body() data: ProdSave, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
+    async update(@Body() data: ProdUpdate, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
         const userId = req.userId
         const id = req.params.id
         return await this.service.update(id, data, userId)

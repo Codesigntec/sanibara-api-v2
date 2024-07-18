@@ -24,9 +24,7 @@ export class ProduitDto {
 }
 
 export class StockProduiFiniDto {
-  @ApiProperty()
-  id?: string;
-  
+
   @ApiProperty()
   reference: string;
 
@@ -49,6 +47,33 @@ export class StockProduiFiniDto {
   magasin: MagasinProduitFiniDto;
 }
 
+
+export class StockProduiFiniDtoUpdate {
+
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  reference: string;
+
+  @ApiProperty()
+  pu_gros: number;
+
+  @ApiProperty()
+  pu_detail: number;
+
+  @ApiProperty()
+  datePeremption: Date;
+
+  @ApiProperty()
+  qt_produit: number;
+
+  @ApiProperty()
+  produitFini: ProduitDto;
+
+  @ApiProperty()
+  magasin: MagasinProduitFiniDto;
+}
 export class ProductionLigneAchatDto {
   @ApiProperty()
   id: string;
@@ -70,6 +95,27 @@ export class ProdSave {
 
   @ApiProperty({ type: [StockProduiFiniDto] })
   stockProdFini: StockProduiFiniDto[];
+
+  @ApiProperty({ type: [ProductionLigneAchatDto] })
+  productionLigneAchat: ProductionLigneAchatDto[];
+}
+
+// =======================PRODUCTION-Update===============================
+export class ProdUpdate {
+  @ApiProperty()
+  description?: string;
+
+  @ApiProperty()
+  reference: string;
+
+  @ApiProperty()
+  dateDebut: Date;
+
+  @ApiProperty()
+  dateFin?: Date;
+
+  @ApiProperty({ type: [StockProduiFiniDtoUpdate] })
+  stockProdFini: StockProduiFiniDtoUpdate[];
 
   @ApiProperty({ type: [ProductionLigneAchatDto] })
   productionLigneAchat: ProductionLigneAchatDto[];
@@ -299,6 +345,9 @@ const ProduitDtoSchema = z.object({
 });
 
 const StockProduiFiniDtoSchema = z.object({
+  id: z.string({
+    invalid_type_error: errors.ID_MUST_BE_STRING,
+  }).optional(),
   reference: z.string({
     invalid_type_error: errors.REFERENCE_MUST_BE_STRING,
   }),

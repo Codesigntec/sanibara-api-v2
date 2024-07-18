@@ -63,6 +63,7 @@ model Achat {
   id             String        @id @default(cuid())
   numero         Int           @default(autoincrement())
   libelle        String
+  reference      String?
   date           DateTime
   tva            Int           @default(0)
 
@@ -130,8 +131,8 @@ model ProduitFini {
 model ProductionLigneAchat {
   id          String   @id @default(cuid())
 
-  lignneAchatId   String   @map("ligne_achat_id")
-  ligneAchat    LigneAchat    @relation(fields: [lignneAchatId], references: [id])
+  ligneAchatId   String   @map("ligne_achat_id")
+  ligneAchat    LigneAchat    @relation(fields: [ligneAchatId], references: [id])
 
   productionId   String   @map("production_id")
   productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)

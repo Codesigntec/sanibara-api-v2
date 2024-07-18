@@ -376,7 +376,7 @@ export class AchatService {
             //====================delete tout les pay inferieur a 0============================
             // Supprimez les paiements dont le montant est égal à zéro
             ach.paiements
-            .filter((p) => p.montant === 0)
+            .filter((p) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined) 
             .forEach((p) => this.db.paiement.delete({ where: { id: p.id } }))
           ]);
       

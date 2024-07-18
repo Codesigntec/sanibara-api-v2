@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { ProdReturn, ProdSave, ProductionFetcher, Productions, ProductionsReturn, ProductionsSaver } from "./production.type";
+import { ProdReturn, ProdSave, ProductionFetcher, Productions, ProductionsReturn, ProductionsSaver, ProdUpdate } from "./production.type";
 import { errors } from "./production.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
 
@@ -108,12 +108,9 @@ export class ProductionService {
         const dateDebut = new Date(data.dateDebut);
         const dateFin = new Date(data.dateFin);
         
-    
-        
         if (dateDebut > dateFin) {
           throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
         }
-
         const production = await tx.productions.create({
           data: {
             reference: data.reference,
@@ -262,10 +259,11 @@ export class ProductionService {
       return production
   }
 
-  update = async (id: string, data: ProdSave, userId: string): Promise<ProdReturn> => {
+  update = async (id: string, data: ProdUpdate, userId: string): Promise<ProdReturn> => {
+
     return await this.db.$transaction(async (tx) => {
         try {
-            const check = await tx.productions.findUnique({ where: { id: id }, select: { description: true } })
+            const check = await tx.productions.findUnique({ where: { id: id }, select: { reference: true, description: true, stockProdFini: true, productionLigneAchat: true } })
             if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
             const checkFirst = await tx.productions.findFirst({
@@ -279,7 +277,12 @@ export class ProductionService {
                     }
                 }
             })
-            if (checkFirst !== null && checkFirst !== check) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+            if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+
+            let productionOld = check;
+
+            console.log(check);
+            
 
             const dateDebut = new Date(data.dateDebut);
             const dateFin = new Date(data.dateFin);
@@ -287,7 +290,8 @@ export class ProductionService {
             if (dateDebut > dateFin) {
               throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
             }
-            const matiere = await tx.productions.update({
+
+            const productions = await tx.productions.update({
                 where: { id },
                 data: {
                   reference: data.reference,
@@ -295,59 +299,29 @@ export class ProductionService {
                   description: data.description,
                   dateFin: dateFin,   
                   stockProdFini: {
-                    upsert: data.stockProdFini.map((stock) => ({
-                      where: { id: stock.id },
-                       create:{
-                        reference: stock.reference,
-                        pu_gros: stock.pu_gros,
-                        pu_detail: stock.pu_detail,
-                        qt_produit: stock.qt_produit,
-                        datePeremption: new Date(stock.datePeremption),
-                        produitFini: {
-                          connect: {
-                            id: stock.produitFini.id,
-                          },
+                    create: data.stockProdFini.map((stock) => ({
+                      reference: stock.reference,
+                      pu_gros: stock.pu_gros,
+                      pu_detail: stock.pu_detail,
+                      qt_produit: stock.qt_produit,
+                      datePeremption: new Date(stock.datePeremption),
+                      produitFini: {
+                        connect: {
+                          id: stock.produitFini.id,
                         },
-                        magasin: {
-                          connect: {
-                            id: stock.magasin.id,
-                          },
-                        },
-                       },
-                       update: {
-                        reference: stock.reference,
-                        pu_gros: stock.pu_gros,
-                        pu_detail: stock.pu_detail,
-                        qt_produit: stock.qt_produit,
-                        datePeremption: new Date(stock.datePeremption),
-                        produitFini: {
-                          connect: {
-                            id: stock.produitFini.id,
-                          },
-                        },
-                        magasin: {
-                          connect: {
-                            id: stock.magasin.id,
-                          },
+                      },
+                      magasin: {
+                        connect: {
+                          id: stock.magasin.id,
                         },
                       },
                     })),
                   },
                   productionLigneAchat: {
-                    upsert: data.productionLigneAchat.map((ligne) => ({
-                      where: { id: ligne.id },
-                      create: {
-                        ligneAchat: {
-                          connect: {
-                            id: ligne.id,
-                          },
-                        },
-                      },
-                      update:{
-                        ligneAchat: {
-                          connect: {
-                            id: ligne.id,
-                          },
+                    create: data.productionLigneAchat.map((ligne) => ({
+                      ligneAchat: {
+                        connect: {
+                          id: ligne.id,
                         },
                       },
                     })),
@@ -372,14 +346,63 @@ export class ProductionService {
                   },
                 },
             })
+
+
+            productionOld.productionLigneAchat.map( async (c) => {
+              const check = await tx.productionLigneAchat.findUnique({ where: { id: c.id } })
+              if (check) {
+                const description = `Suppression de la production: ${check.ligneAchatId} -> ${check.ligneAchatId}`  
+                console.log(description);
+                
+            }})
+  
+            productionOld.stockProdFini.map( async (c) => {
+              const check = await tx.stockProduiFini.findUnique({ where: { id: c.id } })
+              if (check) {
+                const description = `Suppression de la production: ${check.prodFiniId} -> ${check.prodFiniId}`
+                console.log(description);
+                
+            }})
+  
+
+
+          //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+          await Promise.all([
+            ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
+            ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
+          ]);
+
+      
+          console.log(productions);
+          
+
             const description = `Modification du production: ${check.description} -> ${data.description}`
             this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
-            return matiere
+            return productions
         } catch (error: any) {
             if (error.status) throw new HttpException(error.message, error.status);
             else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     })
+}
+
+
+archive = async (id: string, userId: string): Promise<ProdReturn> => {
+  const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, archive: true } })
+  if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+  const magasin = await this.db.productions.update({
+      where: { id },
+      data: {
+          archive: !check.archive
+      },
+      select: { id: true }
+  })
+
+  const description = `Archivage du'une production: ${check.description}`
+  this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+  return magasin
 }
 
 

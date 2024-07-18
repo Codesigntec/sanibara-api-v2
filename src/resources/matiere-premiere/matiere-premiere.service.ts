@@ -43,6 +43,7 @@ export class MatiereService {
             }
             conditions = { ...conditions, createdAt: dateFilter };
         }
+        
         conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         let order = {}
