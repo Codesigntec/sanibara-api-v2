@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { ProductionService } from "./production.service";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
@@ -99,4 +99,27 @@ export class ProductionController {
         const id = req.params.id
         return await this.service.update(id, data, userId)
     }
+
+    @Delete('/:id/archive')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Productions })
+    async archive(@Req() req: AuthorizedRequest): Promise<ProdReturn> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.archive(id, userId)
+    }
+
+    @Delete('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Productions })
+    async remove(@Req() req: AuthorizedRequest): Promise<ProdReturn> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.remove(id, userId)
+    }
+
 }

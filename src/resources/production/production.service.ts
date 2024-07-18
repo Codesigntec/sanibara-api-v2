@@ -399,8 +399,27 @@ archive = async (id: string, userId: string): Promise<ProdReturn> => {
       select: { id: true }
   })
 
-  const description = `Archivage du'une production: ${check.description}`
+  const description = `Archivage d'une production: ${check.description}`
   this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+  return magasin
+}
+
+remove = async (id: string, userId: string): Promise<ProdReturn> => {
+  const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, removed: true } })
+  if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+  const magasin = await this.db.productions.update({
+      where: { id },
+      data: {
+          removed: !check.removed
+      },
+      select: { id: true }
+  })
+
+  const description = `Suppression logique d'une production: ${check.description}`
+  this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
 
   return magasin
 }
