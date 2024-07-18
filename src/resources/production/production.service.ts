@@ -280,8 +280,6 @@ export class ProductionService {
             if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
             let productionOld = check;
-
-            console.log(check);
             
 
             const dateDebut = new Date(data.dateDebut);
@@ -347,35 +345,20 @@ export class ProductionService {
                 },
             })
 
-
-            productionOld.productionLigneAchat.map( async (c) => {
-              const check = await tx.productionLigneAchat.findUnique({ where: { id: c.id } })
-              if (check) {
-                const description = `Suppression de la production: ${check.ligneAchatId} -> ${check.ligneAchatId}`  
-                console.log(description);
-                
-            }})
-  
-            productionOld.stockProdFini.map( async (c) => {
-              const check = await tx.stockProduiFini.findUnique({ where: { id: c.id } })
-              if (check) {
-                const description = `Suppression de la production: ${check.prodFiniId} -> ${check.prodFiniId}`
-                console.log(description);
-                
-            }})
-  
-
-
           //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
           await Promise.all([
             ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
             ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
           ]);
 
-      
-          console.log(productions);
-          
-
+          // Filtrer et supprimer les entités supprimées avant de retourner la production
+          productions.stockProdFini = productions.stockProdFini.filter(stock =>
+            !check.stockProdFini.some(oldStock => oldStock.id === stock.id)
+          );
+          productions.productionLigneAchat = productions.productionLigneAchat.filter(ligne =>
+              !check.productionLigneAchat.some(oldLigne => oldLigne.id === ligne.id)
+          );
+    
             const description = `Modification du production: ${check.description} -> ${data.description}`
             this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
             return productions
@@ -424,6 +407,26 @@ remove = async (id: string, userId: string): Promise<ProdReturn> => {
   return magasin
 }
 
+
+
+destroy = async (id: string, userId: string): Promise<ProdReturn> => {
+  const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true } })
+  if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+  try {
+      const magasin = await this.db.productions.delete({
+          where: { id },
+          select: { id: true }
+      })
+
+      const description = `Suppression physique du magasin des produits finis: ${check.description}`
+      this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+      return magasin
+  } catch (_: any) {
+      throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
+  }
+}
 
 
 

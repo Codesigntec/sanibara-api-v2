@@ -17,6 +17,7 @@ const errors = {
     NOT_EXIST: 'Cette production n\'existe pas ou son ID n\'est pas valide\nSi le problème persiste, veuillez contacter Codesign.',
     NOT_STOCK_EXIST: 'Cet article n\'est plus en stock.',
     NOT_LIGNE_EXIST: 'Cette ligne d\'achat n\'existe pas ou son ID n\'est pas valid, si le problème persiste, veuillez contacter Codesign.',
+    NOT_REMOVABLE: 'Vous ne pouvez pas supprimer cette production car elle peut être liée à un article\nVous pouvez proceder à une suppresion logique ou l\'archivage.',
   };
   
   

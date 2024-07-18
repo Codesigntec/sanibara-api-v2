@@ -122,4 +122,15 @@ export class ProductionController {
         return await this.service.remove(id, userId)
     }
 
+    @Delete('/:id/destroy')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Productions })
+    async destroy(@Req() req: AuthorizedRequest): Promise<ProdReturn> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.destroy(id, userId)
+    }
+
 }
