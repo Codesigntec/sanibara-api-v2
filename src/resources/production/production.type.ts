@@ -16,11 +16,17 @@ export class ProdReturn{
 export class MagasinProduitFiniDto {
   @ApiProperty()
   id: string;
+
+  @ApiProperty()
+  nom?: string;
 }
 
 export class ProduitDto {
   @ApiProperty()
   id: string;
+
+  @ApiProperty()
+  designation?: string;
 }
 
 export class StockProduiFiniDto {
@@ -329,7 +335,46 @@ export class coutProduction extends coutProdSave{
 
 
 
-// =======================PRODUCTION===============================
+// =======================STOCKS PRODUIT FINI===============================
+
+export class StockReturn{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  numero: number
+
+  @ApiProperty()
+  reference: string
+
+  @ApiProperty()
+  pu_gros: number 
+
+  @ApiProperty()
+  pu_detail: number 
+
+  @ApiProperty()
+  datePeremption: Date
+
+  @ApiProperty()
+  qt_produit: number
+  
+  @ApiProperty()
+  magasin: MagasinProduitFiniDto
+
+  @ApiProperty()
+  produitFini: ProduitDto
+
+}
+
+
+//================================FLITRE===============================
+
+export class StockFetcher extends FetcherFilter {
+  prodFiniId?: string | null
+  magasinId?: string | null
+}
 
 
 

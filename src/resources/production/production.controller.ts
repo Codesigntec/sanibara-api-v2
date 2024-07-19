@@ -4,7 +4,8 @@ import { ProductionService } from "./production.service";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher, ProdUpdate, tableReturn } from "./production.type";
+import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher, ProdUpdate, tableReturn, StockReturn, StockFetcher } from "./production.type";
+import { StocksService } from "./stock-produit-fini";
 
 
 @Controller('productions')
@@ -17,7 +18,7 @@ import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, P
 @ApiResponse({ status: 500, description: 'Internal server error.'})
 export class ProductionController {
 
-    constructor(private service: ProductionService) { }
+    constructor(private service: ProductionService, private service_stock: StocksService) { }
 
 
 
@@ -175,4 +176,50 @@ export class ProductionController {
         return await this.service.destroy(id, userId)
     }
 
+//==================================================================STOCKS==================================================================================
+
+
+@Get('/')
+@Version('2')
+@HttpCode(HttpStatus.OK)
+@UseGuards(AuthGuard)
+@ApiOkResponse({ 
+    schema: {
+        allOf: [
+            { $ref: getSchemaPath(Pagination) },
+            {
+                properties: { 
+                    data: {
+                        type: 'array',
+                        items: { $ref: getSchemaPath(StockReturn) }
+                    }
+                } 
+            }
+        ]
+    }
+})
+async listStock(
+    @Query('archive') archive?: string | null, 
+    @Query('removed') removed?: string | null,
+    @Query('page') page?: string | null,
+    @Query('prodFiniId') prodFiniId?: string | null,
+    @Query('magasinId') magasinId?: string | null,
+    @Query('size') size?: string | null,
+    @Query('order') order?: string | null,
+    @Query('direction') direction?: string | null,
+) : Promise<Pagination<StockReturn>> {
+    const filter : StockFetcher = {
+        archive: (archive && archive === '1') ? true : false,
+        removed: (removed && removed === '1') ? true : false,
+        prodFiniId,
+        magasinId
+    }
+    const paginationQuery : PaginationQuery = {
+        page: Number(page),
+        size: Number(size),
+        orderBy: order,
+        orderDirection: direction
+    }
+    return await this.service_stock.listStock(filter, paginationQuery)
+}
 }
