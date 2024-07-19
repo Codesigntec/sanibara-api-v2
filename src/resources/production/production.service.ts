@@ -115,6 +115,25 @@ export class ProductionService {
         if (dateDebut > dateFin) {
           throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
         }
+       //NOUS ALLONS VERIFIER S'IL Y A PAS DUPLICATION DE PRODUIT FINIS
+
+        let ListIdProduitFini: string[] = [];
+        let idSet = new Set<string>();
+        let hasDuplicates = false;
+        
+        data.stockProdFini.forEach((stock) => {
+          if (idSet.has(stock.produitFini.id)) {
+            hasDuplicates = true;
+          } else {
+            idSet.add(stock.produitFini.id);
+            ListIdProduitFini.push(stock.produitFini.id);
+          }
+        });
+        
+        if (hasDuplicates) {
+          throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
+        } 
+
         const production = await tx.productions.create({
           data: {
             reference: data.reference,
@@ -310,6 +329,24 @@ export class ProductionService {
                   throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
                 }
 
+             //NOUS ALLONS VERIFIER S'IL Y A PAS DUPLICATION DE PRODUIT FINIS
+
+                let ListIdProduitFini: string[] = [];
+                let idSet = new Set<string>();
+                let hasDuplicates = false;
+                
+                data.stockProdFini.forEach((stock) => {
+                  if (idSet.has(stock.produitFini.id)) {
+                    hasDuplicates = true;
+                  } else {
+                    idSet.add(stock.produitFini.id);
+                    ListIdProduitFini.push(stock.produitFini.id);
+                  }
+                });
+                
+                if (hasDuplicates) {
+                  throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
+                } 
                 const productions = await tx.productions.update({
                     where: { id },
                     data: {

@@ -19,7 +19,8 @@ const errors = {
     NOT_LIGNE_EXIST: 'Cette ligne d\'achat n\'existe pas ou son ID n\'est pas valid, si le problème persiste, veuillez contacter Codesign.',
     NOT_REMOVABLE: 'Vous ne pouvez pas supprimer cette production car elle peut être liée à un article\nVous pouvez proceder à une suppresion logique ou l\'archivage.',
     MONTANT_COUT_MUST_BE_NUMBER: 'Le montant du cout doit être un nombre.',
-    LIBELLE_COUT_MUST_BE_STRING: 'Le libéllé du cout doit être en texte.'
+    LIBELLE_COUT_MUST_BE_STRING: 'Le libéllé du cout doit être en texte.',
+    DUPLICATION_PRODUIT_FINIS: 'La production de ce produit est duppliquée',
   };
   
   
