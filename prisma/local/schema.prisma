@@ -142,6 +142,16 @@ model ProductionLigneAchat {
   @@map("production_ligne_achat")
 }
 
+model CoutProduction {
+  id         String   @id @default(cuid())
+  libelle    String
+  montant    Float
+  motif      String?
+  prodId     String   @map("prod_id")
+  production Productions    @relation(fields: [prodId], references: [id], onDelete: Cascade)
+
+  @@map("couts_productions")
+}
 
 model Productions {
   id          String   @id @default(cuid())
@@ -156,6 +166,7 @@ model Productions {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   stockProdFini StockProduiFini[]
+  coutProduction CoutProduction[]
   productionLigneAchat  ProductionLigneAchat[]
 
   @@map("productions")

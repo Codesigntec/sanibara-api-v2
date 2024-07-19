@@ -4,7 +4,7 @@ import { ProductionService } from "./production.service";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher, ProdUpdate } from "./production.type";
+import { ProdReturn, ProdSave, Productions, ProdSaveSchema, ProductionsReturn, ProductionFetcher, ProdUpdate, tableReturn } from "./production.type";
 
 
 @Controller('productions')
@@ -65,12 +65,54 @@ export class ProductionController {
         return await this.service.list(filter, paginationQuery)
     }
 
-
+    @Get('/tableReturn')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(Pagination) },
+                {
+                    properties: { 
+                        data: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(tableReturn) }
+                        }
+                    } 
+                }
+            ]
+        }
+    })
+    async listTable(
+        @Query('archive') archive?: string | null, 
+        @Query('removed') removed?: string | null,
+        @Query('page') page?: string | null,
+        @Query('debut') debut?: string | null,
+        @Query('fin') fin?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null,
+    ) : Promise<Pagination<tableReturn>> {
+        const filter : ProductionFetcher = {
+            archive: (archive && archive === '1') ? true : false,
+            removed: (removed && removed === '1') ? true : false,
+            debut,
+            fin
+        }
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+        return await this.service.listTable(filter, paginationQuery)
+    }
 
     @Post('/')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ZodPipe(ProdSaveSchema))
+    // @UsePipes(new ZodPipe(ProdSaveSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Productions })
     async save(@Body() data: ProdSave, @Req() req: AuthorizedRequest): Promise<ProdReturn> {

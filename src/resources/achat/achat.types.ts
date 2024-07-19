@@ -92,8 +92,23 @@ export class LigneAchatFull extends LigneAchatSelect {
   updatedAt: Date
 }
 
+export class AchatAvecTva{
+  @ApiProperty()
+  id: string
 
-export class LigneAchatFull1 extends LigneAchatSelect {
+  @ApiProperty()
+  libelle: string;
+
+  @ApiProperty()
+  tva?: number;
+
+  @ApiProperty()
+  couts?: Cout[];
+
+}
+
+
+export class LigneAchatProduction extends LigneAchatSelect {
   @ApiProperty()
   prixUnitaire: number;
 
@@ -119,8 +134,12 @@ export class LigneAchatFull1 extends LigneAchatSelect {
   updatedAt: Date;
 
   @ApiProperty()
+  achat: AchatAvecTva
+
+  @ApiProperty()
   references: string; // Ajout de la propriété manquante
 }
+
 
 
 

@@ -3,7 +3,7 @@ import { errors } from "./production.constant";
 import { ApiProperty } from "@nestjs/swagger";
 import { MagasinSelect } from "../magasin/magasin.types";
 import { Produit } from "../produit-fini/produit-fini.types";
-import {  LigneAchatFull1 } from "../achat/achat.types";
+import {  LigneAchatProduction } from "../achat/achat.types";
 import { FetcherFilter } from "src/common/types";
 
 // =======================PRODUCTIONReturn===============================
@@ -98,6 +98,9 @@ export class ProdSave {
 
   @ApiProperty({ type: [ProductionLigneAchatDto] })
   productionLigneAchat: ProductionLigneAchatDto[];
+
+  @ApiProperty()
+  coutProduction: coutProdSave[]
 }
 
 // =======================PRODUCTION-Update===============================
@@ -119,6 +122,9 @@ export class ProdUpdate {
 
   @ApiProperty({ type: [ProductionLigneAchatDto] })
   productionLigneAchat: ProductionLigneAchatDto[];
+
+  @ApiProperty()
+  coutProduction: coutProdSave[]
 }
 
 //================================FLITRE===============================
@@ -156,6 +162,9 @@ export class ProductionsReturn{
   productionLigneAchat: ProductionLigneAchat[]
 
   @ApiProperty()
+  coutProduction: coutProdSave[]
+
+  @ApiProperty()
   createdAt: Date
 }
 
@@ -169,7 +178,7 @@ export class ProductionLigneAchat{
   createdAt: Date
 
   @ApiProperty()
-  ligneAchat: LigneAchatFull1
+  ligneAchat: LigneAchatProduction
 
   @ApiProperty()
   productionId: string
@@ -200,8 +209,6 @@ export class StockProduiFiniSaver{
   magasin: MagasinProduitFiniDto
 }
 
-
-
 export class StockProduiFini extends StockProduiFiniSaver{
 
   @ApiProperty()
@@ -211,12 +218,100 @@ export class StockProduiFini extends StockProduiFiniSaver{
   numero: number
 }
 
+// =========================== RETOUR TABLE ===============================
+
+export class tableReturn{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  numero: number
+
+  @ApiProperty()
+  reference: string
+  
+  @ApiProperty()
+  produiFini: string[]
+
+  @ApiProperty()
+  description: string
+
+  @ApiProperty()
+  dateDebut: Date
+
+  @ApiProperty()
+  dateFin: Date
+
+  @ApiProperty()
+  coutTotal : number
+}
+
+
+export class coutProdSave{
+
+  @ApiProperty()
+  libelle: string
+
+  @ApiProperty()
+  montant: number
+
+  @ApiProperty()
+  motif?: string
+
+}
+
+export class ProductionsSaver{
+
+  @ApiProperty()
+  description: string
+
+  @ApiProperty()
+  reference: string
+
+  @ApiProperty()
+  dateDebut: Date
+
+  @ApiProperty()
+  dateFin: Date
+
+  @ApiProperty()
+  stockProdFini: StockProduiFini[]
+
+  @ApiProperty()
+  productionLigneAchat: ProductionLigneAchatDto[]
+}
+
+
+export class Productions extends ProductionsSaver{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  numero: number
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  updatedAt: Date
+} 
 
 
 
+export class coutProduction extends coutProdSave{
 
+  @ApiProperty()
+  id: string
 
+  @ApiProperty()
+  prodId: string
 
+  @ApiProperty()
+  production: Productions 
+
+}
 
 
 
@@ -236,96 +331,7 @@ export class StockProduiFini extends StockProduiFiniSaver{
 
 // =======================PRODUCTION===============================
 
-export class LigneAchatFull{
-  @ApiProperty()
-  id: string
-}
 
-
-
-// export class ProductionLigneAchatDto{
-
-//   @ApiProperty()
-//   id: string
-
-//   @ApiProperty()
-//   createdAt: Date
-
-//   @ApiProperty()
-//   ligneAchat: LigneAchatFull
-
-//   @ApiProperty()
-//   productionId: string
-// }
-
-export class ProductionsSaver{
-
-    @ApiProperty()
-    description: string
-
-    @ApiProperty()
-    reference: string
-
-    @ApiProperty()
-    dateDebut: Date
-
-    @ApiProperty()
-    dateFin: Date
-
-    @ApiProperty()
-    stockProdFini: StockProduiFini[]
-
-    @ApiProperty()
-    productionLigneAchat: ProductionLigneAchatDto[]
-}
-
-export class Productions extends ProductionsSaver{
-
-    @ApiProperty()
-    id: string
-  
-    @ApiProperty()
-    numero: number
-
-    @ApiProperty()
-    createdAt: Date
-  
-    @ApiProperty()
-    updatedAt: Date
-} 
-
-// ============================= LIGNE ACHAT ===============================
-export class ProductionLigneAchatSave{
-
-    @ApiProperty()
-    productionId: string
-
-    @ApiProperty()
-    ligneAchatId: string
-
-}
-
-
-
-
-
-export class ProductionLigneAchatFull extends ProductionLigneAchat{
-    @ApiProperty()
-    production: Productions
-}
-
-
-
-
-
-
-
-export class StockProduiFiniFull extends StockProduiFini{
-
-      @ApiProperty()
-      productions: Productions
-
-}
 
 
 
@@ -373,6 +379,15 @@ const ProductionLigneAchatDtoSchema = z.object({
   }),
 });
 
+const CoutProduction = z.object({
+  montant: z.number({
+    invalid_type_error: errors.MONTANT_COUT_MUST_BE_NUMBER,
+  }),
+  libelle: z.string({
+    invalid_type_error: errors.LIBELLE_COUT_MUST_BE_STRING,
+  }),
+  motif: z.string().optional(),
+});
 
 const ProdSaveSchema = z.object({
   description: z.string({
@@ -387,6 +402,7 @@ const ProdSaveSchema = z.object({
   dateFin: z.string({
     invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
   }),
+  coutProduction: z.array(CoutProduction),
   stockProdFini: z.array(StockProduiFiniDtoSchema),
   productionLigneAchat: z.array(ProductionLigneAchatDtoSchema),
 }).required();

@@ -4,12 +4,13 @@ import { TraceService } from '../trace/trace.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { ProductionService } from './production.service';
 import { ProductionController } from './production.controller';
+import { StocksService } from './stock-produit-fini';
 
 @Module({
   imports: [
     DatabaseModule,
   ],
   controllers: [ProductionController],
-  providers: [ ProductionService, TraceService, PrismaService]
+  providers: [ ProductionService, StocksService, TraceService, PrismaService]
 })
-export class ProductionModule { }
+export class ProductionModule {}
