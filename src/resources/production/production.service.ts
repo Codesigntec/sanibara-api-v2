@@ -48,8 +48,6 @@ export class ProductionService {
       if (query.orderBy) {
           order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
       }
-
-
       const production = await this.db.productions.findMany({
           take: limit,
           skip: offset,
@@ -95,7 +93,6 @@ export class ProductionService {
 
 
    save = async(data: ProdSave, userId: string): Promise<ProdReturn> =>{
-    console.log('Service Data:', data);  // Ajoutez cette ligne pour vérifier ce que le service reçoit
 
     return await this.db.$transaction(async (tx) => {
       try {
@@ -161,6 +158,7 @@ export class ProductionService {
             },
             productionLigneAchat: {
               create: data.productionLigneAchat.map((ligne) => ({
+                qt_Utilise: ligne.qt_Utilise,
                 ligneAchat: {
                   connect: {
                     id: ligne.id,
@@ -219,6 +217,7 @@ export class ProductionService {
             productionLigneAchat: {
               select: {
                 id: true,
+                qt_Utilise: true,
                 createdAt: true,
                 productionId: true,
                 ligneAchat: {
@@ -261,9 +260,13 @@ export class ProductionService {
 
         const description = `Ajout du produit fini: ${data.description}`;
         this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-
+        console.log("==========================");
+        
+       console.log(production);
+       
         return production;
       } catch (error: any) {
+        console.log(error);
         if (error.status) throw new HttpException(error.message, error.status);
         else 
         throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.BAD_REQUEST);
@@ -277,7 +280,11 @@ export class ProductionService {
           include: {
             stockProdFini: {
               include: {
-                produitFini: true,
+                produitFini: {
+                  include: {
+                    unite: true
+                  }
+                },
                 magasin: true,
               },
             },
@@ -375,6 +382,7 @@ export class ProductionService {
                       },
                       productionLigneAchat: {
                         create: data.productionLigneAchat.map((ligne) => ({
+                          qt_Utilise: ligne.qt_Utilise,
                           ligneAchat: {
                             connect: {
                               id: ligne.id,

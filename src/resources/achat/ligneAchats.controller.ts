@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
+import {  LigneAchatByStore, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
 import { LigneAchat } from "@prisma/client";
 
 
@@ -68,12 +68,6 @@ export class LigneAchatController {
     async updateQuantiteLivre(@Body() quantiteLivre: LigneAchatFull, @Req() req: AuthorizedRequest): Promise<ligneLivraison> {
         const userId = req.userId
         const id = req.params.id
-
-        console.log(quantiteLivre);
-        console.log(id);
-        console.log(userId);
-        
-
         return await this.service.updateQuantiteLivreAchat(id, quantiteLivre.quantiteLivre, userId)
     }
  
@@ -98,5 +92,13 @@ export class LigneAchatController {
         }
         return await this.service.getAllLigneAchats(paginationQuery)
     }
-    
+
+    @Get('/matierePremiereByStore/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: [LigneAchatByStore] })
+    async ligneAchatByStore(@Query('magasinId') magasinId: string): Promise<LigneAchatByStore[]> {
+        return await this.service.matierePremiereByStore(magasinId)
+    }
 }

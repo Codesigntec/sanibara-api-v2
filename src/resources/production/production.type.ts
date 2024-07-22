@@ -13,6 +13,11 @@ export class ProdReturn{
 }
 
 // =======================DTOS===============================
+
+
+
+
+
 export class MagasinProduitFiniDto {
   @ApiProperty()
   id: string;
@@ -21,13 +26,18 @@ export class MagasinProduitFiniDto {
   nom?: string;
 }
 
+
+
+
 export class ProduitDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
   designation?: string;
+
 }
+
 
 export class StockProduiFiniDto {
 
@@ -83,6 +93,9 @@ export class StockProduiFiniDtoUpdate {
 export class ProductionLigneAchatDto {
   @ApiProperty()
   id: string;
+  
+  @ApiProperty()
+  qt_Utilise: number;
 }
 
 // =======================PRODUCTION-SAVE===============================
@@ -141,6 +154,27 @@ export class ProductionFetcher extends FetcherFilter {
 }
 
 //======================================RETURN PRODUCTION===============================
+
+export class ProductionLigneAchat{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  qt_Utilise: number
+
+  @ApiProperty()
+  ligneAchat: LigneAchatProduction
+
+  @ApiProperty()
+  productionId: string
+}
+
+
+
 export class ProductionsReturn{
 
   @ApiProperty()
@@ -175,20 +209,6 @@ export class ProductionsReturn{
 }
 
 
-export class ProductionLigneAchat{
-
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  createdAt: Date
-
-  @ApiProperty()
-  ligneAchat: LigneAchatProduction
-
-  @ApiProperty()
-  productionId: string
-}
 
 // =========================== StockProduiFini ===============================
 export class StockProduiFiniSaver{
@@ -337,6 +357,27 @@ export class coutProduction extends coutProdSave{
 
 // =======================STOCKS PRODUIT FINI===============================
 
+export class UniteSelect{
+
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  libelle: string;
+}
+
+export class ProduitDtoStock {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  designation?: string;
+
+  @ApiProperty()
+  unite: UniteSelect;
+}
+
+
 export class StockReturn{
 
   @ApiProperty()
@@ -359,12 +400,12 @@ export class StockReturn{
 
   @ApiProperty()
   qt_produit: number
-  
+
   @ApiProperty()
   magasin: MagasinProduitFiniDto
 
   @ApiProperty()
-  produitFini: ProduitDto
+  produitFini: ProduitDtoStock
 
 }
 

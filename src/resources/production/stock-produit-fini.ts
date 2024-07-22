@@ -16,9 +16,7 @@ export class StocksService {
 
 
 
-
-
-    list = async (filter: StockFetcher, query: PaginationQuery): Promise<Pagination<StockReturn>> => {
+    listStock = async (filter: StockFetcher, query: PaginationQuery): Promise<Pagination<StockReturn>> => {
         let conditions = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
@@ -57,11 +55,15 @@ export class StocksService {
             where: conditions,
             include: {
                 magasin: true,
-                produitFini: true
+                produitFini: {
+                    include: {
+                        unite: true
+                    }
+                }
             },
             orderBy: order
         })
-        const totalCount = await this.db.productions.count({ where: conditions });
+        const totalCount = await this.db.stockProduiFini.count({ where: conditions });
   
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<StockReturn> = {

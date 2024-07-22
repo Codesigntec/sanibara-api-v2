@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Cout, Etat, LigneAchat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
-import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave, } from './achat.types';
+import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatByStore, LigneAchatFull, LigneAchatSave,
+   LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
 
@@ -31,6 +32,7 @@ export class AchatService {
                       references: true,
                       prixUnitaire: true,
                       quantiteLivre: true,
+                      qt_Utilise: true,
                       quantite: true,
                       datePeremption: true,
                       matiere: true,
@@ -66,8 +68,6 @@ export class AchatService {
       });
   }
   
-
-
     list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatFull>> => {
         let conditions = {...filter }
         const limit = query.size ? query.size : 10;
@@ -102,6 +102,7 @@ export class AchatService {
                         references: true,
                         prixUnitaire: true,
                         quantiteLivre: true,
+                        qt_Utilise: true,
                         quantite: true,
                         datePeremption: true,
                         matiere: true,
@@ -204,6 +205,7 @@ export class AchatService {
               create: data.ligneAchats.map((ligne) => ({
                 prixUnitaire: ligne.prixUnitaire,
                 quantite: ligne.quantite,
+                qt_Utilise: 0,
                 quantiteLivre: StatutAchat.ACHETER === data.statutAchat ? ligne.quantite: 0,
                 datePeremption: new Date(ligne.datePeremption),
                 references: ligne.references,
@@ -464,83 +466,80 @@ export class AchatService {
       //=============================================PAIEMENT===========================================
 
     // Méthode pour ajouter un paiement à un achat existant
-        savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
-          // Récupérer l'achat existant par son ID avec les paiements associés
-          const achat = await this.db.achat.findUnique({
-            where: { id: achatId },
-            include: { 
-              ligneAchats: true, 
-              paiements: true,
-              couts: true,
+      savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
+        // Récupérer l'achat existant par son ID avec les paiements associés
+        const achat = await this.db.achat.findUnique({
+          where: { id: achatId },
+          include: { 
+            ligneAchats: true, 
+            paiements: true,
+            couts: true,
+          },
+        });
+
+        if (!achat) {
+          throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
+        // Calculer le montant total déjà payé
+        const montantTotalPaye = achat.paiements.reduce((acc, p) => acc + p.montant, 0);
+
+        // Calcul du montant total des matières premières
+        const totalMatieresPremieres = achat.ligneAchats.reduce((acc, ligne) => {
+          const prixTotal = ligne.prixUnitaire * ligne.quantite;
+          return acc + prixTotal;
+        }, 0);
+
+        // Calcul du montant total des coûts
+        const totalCouts = achat.couts.reduce((acc, cout) => acc + cout.montant, 0);
+
+        // Calcul du montant de la TVA en fonction du taux
+        let montantTVA: number = 0;
+        if (achat.tva != null) {
+          montantTVA = (achat.tva / 100) * totalMatieresPremieres;
+        }
+
+        // Ajout du montant total des matières premières au montant total de l'achat
+        const totalAchat = totalMatieresPremieres + totalCouts + montantTVA;
+
+        // Calculer le reliquat restant à payer
+        const reliquat = totalAchat - montantTotalPaye;
+
+        // Vérifier si le paiement proposé ne dépasse pas le reliquat
+        if (paiement.montant > reliquat) {
+          throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        let newPaiement: PaiementFull;
+
+        await this.db.$transaction(async (tx) => {
+          // Ajouter le paiement à l'achat
+          newPaiement = await tx.paiement.create({
+            data: {
+              montant: paiement.montant,
+              achat: { connect: { id: achatId } },
             },
           });
 
-          if (!achat) {
-            throw new HttpException(errors.ACHAT_NOT_EXIST, HttpStatus.NOT_FOUND);
-          }
-
-          // Calculer le montant total déjà payé
-          const montantTotalPaye = achat.paiements.reduce((acc, p) => acc + p.montant, 0);
-
-          // Calcul du montant total des matières premières
-          const totalMatieresPremieres = achat.ligneAchats.reduce((acc, ligne) => {
-            const prixTotal = ligne.prixUnitaire * ligne.quantite;
-            return acc + prixTotal;
-          }, 0);
-
-          // Calcul du montant total des coûts
-          const totalCouts = achat.couts.reduce((acc, cout) => acc + cout.montant, 0);
-
-          // Calcul du montant de la TVA en fonction du taux
-          let montantTVA: number = 0;
-          if (achat.tva != null) {
-            montantTVA = (achat.tva / 100) * totalMatieresPremieres;
-          }
-
-          // Ajout du montant total des matières premières au montant total de l'achat
-          const totalAchat = totalMatieresPremieres + totalCouts + montantTVA;
-
-          // Calculer le reliquat restant à payer
-          const reliquat = totalAchat - montantTotalPaye;
-
-          // Vérifier si le paiement proposé ne dépasse pas le reliquat
-          if (paiement.montant > reliquat) {
-            throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
-          }
-
-          let newPaiement: PaiementFull;
-
-          await this.db.$transaction(async (tx) => {
-            // Ajouter le paiement à l'achat
-            newPaiement = await tx.paiement.create({
-              data: {
-                montant: paiement.montant,
-                achat: { connect: { id: achatId } },
+          // Mettre à jour l'achat pour refléter le paiement ajouté
+          await tx.achat.update({
+            where: { id: achatId },
+            data: {
+              paiements: {
+                connect: { id: newPaiement.id },
               },
-            });
-
-            // Mettre à jour l'achat pour refléter le paiement ajouté
-            await tx.achat.update({
-              where: { id: achatId },
-              data: {
-                paiements: {
-                  connect: { id: newPaiement.id },
-                },
-              },
-              include: {
-                paiements: true, // Inclure les paiements mis à jour dans la réponse
-              },
-            });
+            },
+            include: {
+              paiements: true, // Inclure les paiements mis à jour dans la réponse
+            },
           });
+        });
 
-          const description = `Paiement de ${paiement.montant} pour l'achat ${achatId}`
-          this.trace.logger({action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res));
+        const description = `Paiement de ${paiement.montant} pour l'achat ${achatId}`
+        this.trace.logger({action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res));
 
-          console.log('==========================data=================');
-          console.log(newPaiement);
-
-          return newPaiement;
-        };
+        return newPaiement;
+      };
 
 
       updatePaiement = async (id: string, data: PaiementSave, achatId: string ,userId: string): Promise<PaiementFull> => {
@@ -630,8 +629,7 @@ export class AchatService {
               throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
           }
       }
-      //=============================================COUT=====================================================
-
+      //=============================================COUT====================================================
 
       // Méthode pour ajouter un cou à un achat existant
       saveCoutToAchat = async (achatId: string, data: CoutSaver, userId: string): Promise<CoutSaver> => {
@@ -822,7 +820,7 @@ export class AchatService {
                     },
                 },
             },
-            select: { id: true, numero: true, references: true, quantite: true, prixUnitaire: true, magasin: true,quantiteLivre: true, matiere: true, datePeremption: true, createdAt: true, updatedAt: true },
+            select: { id: true, numero: true, references: true, quantite: true, prixUnitaire: true, magasin: true,quantiteLivre: true, qt_Utilise: true, matiere: true, datePeremption: true, createdAt: true, updatedAt: true },
         })
   
         const description = `Modification de la ligne d'achat: ${check.references}`
@@ -833,9 +831,6 @@ export class AchatService {
 
 
       getAllLigneAchats = async (query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
-
-        console.log("GET ALL LIGNE ACHATS");
-        console.log("test");
 
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
@@ -895,12 +890,7 @@ export class AchatService {
       }
 
       updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, userId: string): Promise<ligneLivraison> => {
-        console.log("==========================VOIR===================================");
-        
-        console.log(id);
-        console.log(quantiteLivre);
-        console.log(userId);
-        
+
         
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 
@@ -925,4 +915,27 @@ export class AchatService {
         return ligneUpdate;
       }
       
+
+      // ================================GET ALL LIGNE ACHAT BY STORE ID ===========================
+
+
+      matierePremiereByStore = async (idMagasin: string): Promise<LigneAchatByStore[]> => {
+        const ligneAchat = await this.db.ligneAchat.findMany({
+            where: { magasinId: idMagasin },
+            select: {
+                id: true,
+                quantite: true,
+                prixUnitaire: true,
+                quantiteLivre: true,
+                matiere: {
+                    select: {
+                        id: true,
+                        designation: true
+                    }
+                }
+            }
+        })
+        if (ligneAchat === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+        return ligneAchat
+    }
 }

@@ -29,6 +29,7 @@ model LigneAchat {
   prixUnitaire   Float                    @map("prix_unitaire")
   quantite       Int
   quantiteLivre  Int?
+  qt_Utilise     Int?
   references     String?                  @map("references")
   datePeremption DateTime?                @map("date_peremption")
   
@@ -130,6 +131,7 @@ model ProduitFini {
 
 model ProductionLigneAchat {
   id          String   @id @default(cuid())
+  qt_Utilise  Int?
 
   ligneAchatId   String   @map("ligne_achat_id")
   ligneAchat    LigneAchat    @relation(fields: [ligneAchatId], references: [id])

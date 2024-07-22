@@ -77,6 +77,9 @@ export class LigneAchatFull extends LigneAchatSelect {
   quantiteLivre: number = 0
 
   @ApiProperty()
+  qt_Utilise: number = 0
+
+  @ApiProperty()
   datePeremption: Date | null
 
   @ApiProperty()
@@ -107,6 +110,24 @@ export class AchatAvecTva{
 
 }
 
+export class LigneAchatByStore{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  prixUnitaire: number;
+
+  @ApiProperty()
+  quantite: number;
+
+  @ApiProperty()
+  quantiteLivre: number = 0;
+
+  @ApiProperty()
+  matiere: MatiereInput
+}
+
 
 export class LigneAchatProduction extends LigneAchatSelect {
   @ApiProperty()
@@ -117,6 +138,9 @@ export class LigneAchatProduction extends LigneAchatSelect {
 
   @ApiProperty()
   quantiteLivre: number = 0;
+
+  @ApiProperty()
+  qt_Utilise: number = 0;
 
   @ApiProperty()
   datePeremption: Date | null;

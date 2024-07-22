@@ -86,6 +86,7 @@ export class MatiereService {
         return pagination
     }
 
+
     select = async (): Promise<MatiereSelect[]> => {
         const matieres = await this.db.matierePremiere.findMany({
             where: { removed: false, archive: false },

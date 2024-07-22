@@ -179,47 +179,47 @@ export class ProductionController {
 //==================================================================STOCKS==================================================================================
 
 
-@Get('/')
-@Version('2')
-@HttpCode(HttpStatus.OK)
-@UseGuards(AuthGuard)
-@ApiOkResponse({ 
-    schema: {
-        allOf: [
-            { $ref: getSchemaPath(Pagination) },
-            {
-                properties: { 
-                    data: {
-                        type: 'array',
-                        items: { $ref: getSchemaPath(StockReturn) }
-                    }
-                } 
-            }
-        ]
+    @Get('/stocks/produit-fini')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(Pagination) },
+                {
+                    properties: { 
+                        data: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(StockReturn) }
+                        }
+                    } 
+                }
+            ]
+        }
+    })
+    async listStock(
+        @Query('archive') archive?: string | null, 
+        @Query('removed') removed?: string | null,
+        @Query('page') page?: string | null,
+        @Query('prodFiniId') prodFiniId?: string | null,
+        @Query('magasinId') magasinId?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null,
+    ) : Promise<Pagination<StockReturn>> {
+        const filter : StockFetcher = {
+            archive: (archive && archive === '1') ? true : false,
+            removed: (removed && removed === '1') ? true : false,
+            prodFiniId,
+            magasinId
+        }
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+        return await this.service_stock.listStock(filter, paginationQuery)
     }
-})
-async listStock(
-    @Query('archive') archive?: string | null, 
-    @Query('removed') removed?: string | null,
-    @Query('page') page?: string | null,
-    @Query('prodFiniId') prodFiniId?: string | null,
-    @Query('magasinId') magasinId?: string | null,
-    @Query('size') size?: string | null,
-    @Query('order') order?: string | null,
-    @Query('direction') direction?: string | null,
-) : Promise<Pagination<StockReturn>> {
-    const filter : StockFetcher = {
-        archive: (archive && archive === '1') ? true : false,
-        removed: (removed && removed === '1') ? true : false,
-        prodFiniId,
-        magasinId
-    }
-    const paginationQuery : PaginationQuery = {
-        page: Number(page),
-        size: Number(size),
-        orderBy: order,
-        orderDirection: direction
-    }
-    return await this.service_stock.listStock(filter, paginationQuery)
-}
 }

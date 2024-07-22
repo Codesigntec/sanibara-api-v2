@@ -167,4 +167,7 @@ export class MagasinService {
             throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
         }
     }
+
+
+
 }
