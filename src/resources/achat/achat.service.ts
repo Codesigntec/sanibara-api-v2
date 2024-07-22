@@ -748,7 +748,7 @@ export class AchatService {
 
       this.db.$transaction(async (tx) => {
 
-        // Ajouter le ligne achat à l'achat
+        // Ajouter la ligne achat à l'achat
         newLigneAchat = await this.db.ligneAchat.create({
             data: {
               prixUnitaire: data.prixUnitaire,

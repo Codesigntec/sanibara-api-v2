@@ -258,9 +258,41 @@ export class ProductionService {
           }
         });
 
+        data.productionLigneAchat.forEach(async (ligne) => {
+          const check = await this.db.ligneAchat.findUnique(
+            { 
+            where:  {id: ligne.id }, 
+            select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
+            quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
+
+          const ligneUpdate = await this.db.ligneAchat.update({
+            where: { id: check.id },
+            data: {
+                prixUnitaire: check.prixUnitaire,
+                quantite: check.quantite,
+                datePeremption: new Date(check.datePeremption),
+                references: check.references,
+                quantiteLivre: check.quantiteLivre,
+                qt_Utilise: check.qt_Utilise + ligne.qt_Utilise ,
+                matiere: {
+                    connect: {
+                        id: check.matiereId,
+                    },
+                },
+                magasin: {
+                    connect: {
+                        id: check.magasinId,
+                    },
+                },
+            },
+            select: { id: true, numero: true, references: true, quantite: true, prixUnitaire: true, magasin: true,quantiteLivre: true, qt_Utilise: true, matiere: true, datePeremption: true, createdAt: true, updatedAt: true },
+        })
+        })
+      
+
         const description = `Ajout du produit fini: ${data.description}`;
         this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-        console.log("==========================");
+        console.log("=============PRODUCTIONS=============");
         
        console.log(production);
        
