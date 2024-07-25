@@ -275,6 +275,8 @@ export class tableReturn{
 
 
 export class coutProdSave{
+  @ApiProperty()
+  id: string
 
   @ApiProperty()
   libelle: string

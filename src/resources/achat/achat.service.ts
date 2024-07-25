@@ -891,7 +891,6 @@ export class AchatService {
 
       updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, userId: string): Promise<ligneLivraison> => {
 
-        
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 
           select: { references: true, achatId: true, quantite: true } 
@@ -914,28 +913,43 @@ export class AchatService {
       
         return ligneUpdate;
       }
-      
 
       // ================================GET ALL LIGNE ACHAT BY STORE ID ===========================
-
-
       matierePremiereByStore = async (idMagasin: string): Promise<LigneAchatByStore[]> => {
         const ligneAchat = await this.db.ligneAchat.findMany({
-            where: { magasinId: idMagasin },
+            where: { magasinId: idMagasin  },
             select: {
                 id: true,
                 quantite: true,
                 prixUnitaire: true,
+                qt_Utilise: true,
                 quantiteLivre: true,
                 matiere: {
                     select: {
                         id: true,
                         designation: true
                     }
+                },
+                achat:{
+                    select: {
+                        id: true,
+                        libelle: true,
+                        tva: true,
+                        couts: true,
+                        ligneAchats: {
+                            select: {
+                                id: true
+                            }
+                        }
+                    }
                 }
             }
         })
         if (ligneAchat === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
-        return ligneAchat
+
+         // Filtrer les lignes d'achat pour lesquelles la quantité est supérieure à la quantité utilisée
+         const filteredLigneAchat = ligneAchat.filter(ligne => ligne.quantite > ligne.qt_Utilise);
+         
+        return filteredLigneAchat
     }
 }

@@ -285,17 +285,12 @@ export class ProductionService {
                     },
                 },
             },
-            select: { id: true, numero: true, references: true, quantite: true, prixUnitaire: true, magasin: true,quantiteLivre: true, qt_Utilise: true, matiere: true, datePeremption: true, createdAt: true, updatedAt: true },
         })
         })
       
-
         const description = `Ajout du produit fini: ${data.description}`;
         this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-        console.log("=============PRODUCTIONS=============");
-        
-       console.log(production);
-       
+    
         return production;
       } catch (error: any) {
         console.log(error);
@@ -475,7 +470,69 @@ export class ProductionService {
               productions.coutProduction = productions.coutProduction.filter(cout =>  
                 !check.coutProduction.some(oldCout => oldCout.id === cout.id)
               );
-        
+
+            // ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE AUGMENTER LA QUANTITÉ UTILISÉE
+              data.productionLigneAchat.forEach(async (ligne) => {
+
+                const checkLigne = await this.db.ligneAchat.findUnique(
+                  { 
+                  where:  {id: ligne.id }, 
+                  select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
+                  quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
+      
+                const ligneUpdate = await this.db.ligneAchat.update({
+                  where: { id: checkLigne.id },
+                  data: {
+                      prixUnitaire: checkLigne.prixUnitaire,
+                      quantite: checkLigne.quantite,
+                      datePeremption: new Date(checkLigne.datePeremption),
+                      references: checkLigne.references,
+                      quantiteLivre: checkLigne.quantiteLivre,
+                      qt_Utilise: checkLigne.qt_Utilise + ligne.qt_Utilise ,
+                      matiere: {
+                          connect: {
+                              id: checkLigne.matiereId,
+                          },
+                      },
+                      magasin: {
+                          connect: {
+                              id: checkLigne.magasinId,
+                          },
+                      },
+                  },
+              })
+              })
+               // ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE EN DEDUISSANT LA QUANTITÉ UTILISÉE DE L'ANCIENNES PRODUCTION 
+              check.productionLigneAchat.forEach(async (oldLigne) => {
+                const checkLigne = await this.db.ligneAchat.findUnique(
+                  { 
+                  where:  {id: oldLigne.id }, 
+                  select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
+                  quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
+      
+                const ligneUpdate = await this.db.ligneAchat.update({
+                  where: { id: checkLigne.id },
+                  data: {
+                      prixUnitaire: checkLigne.prixUnitaire,
+                      quantite: checkLigne.quantite,
+                      datePeremption: new Date(checkLigne.datePeremption),
+                      references: checkLigne.references,
+                      quantiteLivre: checkLigne.quantiteLivre,
+                      qt_Utilise: checkLigne.qt_Utilise - oldLigne.qt_Utilise ,
+                      matiere: {
+                          connect: {
+                              id: checkLigne.matiereId,
+                          },
+                      },
+                      magasin: {
+                          connect: {
+                              id: checkLigne.magasinId,
+                          },
+                      },
+                  },
+              })
+              })
+
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
                 return productions
@@ -485,7 +542,6 @@ export class ProductionService {
             }
         })
     }
-
 
     archive = async (id: string, userId: string): Promise<ProdReturn> => {
       const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, archive: true } })

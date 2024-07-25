@@ -108,6 +108,14 @@ export class AchatAvecTva{
   @ApiProperty()
   couts?: Cout[];
 
+  ligneAchats?: LigneAchatA[]
+
+}
+
+export class LigneAchatA{
+  @ApiProperty()
+  id: string
+
 }
 
 export class LigneAchatByStore{
@@ -126,6 +134,10 @@ export class LigneAchatByStore{
 
   @ApiProperty()
   matiere: MatiereInput
+
+  @ApiProperty()
+  achat: AchatAvecTva
+
 }
 
 
@@ -163,8 +175,6 @@ export class LigneAchatProduction extends LigneAchatSelect {
   @ApiProperty()
   references: string; // Ajout de la propriété manquante
 }
-
-
 
 
 export class LigneAchatSave {

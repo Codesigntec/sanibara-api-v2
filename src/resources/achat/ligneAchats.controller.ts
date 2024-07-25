@@ -98,7 +98,8 @@ export class LigneAchatController {
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: [LigneAchatByStore] })
-    async ligneAchatByStore(@Query('magasinId') magasinId: string): Promise<LigneAchatByStore[]> {
+    async ligneAchatByStore(@Req() req: AuthorizedRequest): Promise<LigneAchatByStore[]> {
+        const magasinId = req.params.id
         return await this.service.matierePremiereByStore(magasinId)
     }
 }
