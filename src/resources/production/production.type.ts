@@ -465,6 +465,9 @@ const ProductionLigneAchatDtoSchema = z.object({
   id: z.string({
     invalid_type_error: errors.PRODUCTION_LIGNE_ACHAT_ID_MUST_BE_STRING,
   }),
+  qt_Utilise: z.number({
+    invalid_type_error: errors.QT_PRODUIT_MUST_BE_NUMBER,
+  }).optional(),
 });
 
 const CoutProduction = z.object({

@@ -91,9 +91,7 @@ export class ProductionService {
       return pagination
      }
 
-
    save = async(data: ProdSave, userId: string): Promise<ProdReturn> =>{
-
     return await this.db.$transaction(async (tx) => {
       try {
         const check = await tx.productions.findFirst({
@@ -334,7 +332,7 @@ export class ProductionService {
      }
 
     update = async (id: string, data: ProdUpdate, userId: string): Promise<ProdReturn> => {
-
+      console.log('Data received in update method:', JSON.stringify(data, null, 2));
         return await this.db.$transaction(async (tx) => {
             try {
                 const check = await tx.productions.findUnique({ where: { id: id }, select: { reference: true, description: true, stockProdFini: true, productionLigneAchat: true, coutProduction: true } })
@@ -349,20 +347,18 @@ export class ProductionService {
                             equals: data.reference,
                             mode: 'insensitive'
                         }
-                    }
+                    } 
                 })
                 if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
                 let productionOld = check;
                 
-
                 const dateDebut = new Date(data.dateDebut);
                 const dateFin = new Date(data.dateFin);
                 
                 if (dateDebut > dateFin) {
                   throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
                 }
-
              //NOUS ALLONS VERIFIER S'IL Y A PAS DUPLICATION DE PRODUIT FINIS
 
                 let ListIdProduitFini: string[] = [];
@@ -370,19 +366,19 @@ export class ProductionService {
                 let hasDuplicates = false;
                 
                 data.stockProdFini.forEach((stock) => {
-                  if (idSet.has(stock.produitFini.id)) {
+                  if (stock.produitFini.id && stock.produitFini.id !== null && stock.produitFini.id !== undefined && idSet.has(stock.produitFini.id)) {
                     hasDuplicates = true;
                   } else {
                     idSet.add(stock.produitFini.id);
                     ListIdProduitFini.push(stock.produitFini.id);
                   }
                 });
-                
+              
                 if (hasDuplicates) {
                   throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
                 } 
                 const productions = await tx.productions.update({
-                    where: { id },
+                    where: { id: id },
                     data: {
                       reference: data.reference,
                       dateDebut: dateDebut,
@@ -470,73 +466,61 @@ export class ProductionService {
               productions.coutProduction = productions.coutProduction.filter(cout =>  
                 !check.coutProduction.some(oldCout => oldCout.id === cout.id)
               );
+              
+         // Vérifiez les lignes d'achat existantes avant de mettre à jour
+                    const existingLignes = await Promise.all([
+                      ...data.productionLigneAchat.map(ligne => tx.ligneAchat.findUnique({
+                        where: { id: ligne.id }
+                      })),
+                      ...check.productionLigneAchat.map(oldLigne => tx.ligneAchat.findUnique({
+                        where: { id: oldLigne.ligneAchatId }
+                      }))
+                    ]);
 
-            // ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE AUGMENTER LA QUANTITÉ UTILISÉE
-              data.productionLigneAchat.forEach(async (ligne) => {
+                    // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
+                    const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
+                      existingLignes.some(e => e?.id === ligne.id)
+                    );
 
-                const checkLigne = await this.db.ligneAchat.findUnique(
-                  { 
-                  where:  {id: ligne.id }, 
-                  select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
-                  quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
-      
-                const ligneUpdate = await this.db.ligneAchat.update({
-                  where: { id: checkLigne.id },
-                  data: {
-                      prixUnitaire: checkLigne.prixUnitaire,
-                      quantite: checkLigne.quantite,
-                      datePeremption: new Date(checkLigne.datePeremption),
-                      references: checkLigne.references,
-                      quantiteLivre: checkLigne.quantiteLivre,
-                      qt_Utilise: checkLigne.qt_Utilise + ligne.qt_Utilise ,
-                      matiere: {
-                          connect: {
-                              id: checkLigne.matiereId,
-                          },
-                      },
-                      magasin: {
-                          connect: {
-                              id: checkLigne.magasinId,
-                          },
-                      },
-                  },
-              })
-              })
-               // ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE EN DEDUISSANT LA QUANTITÉ UTILISÉE DE L'ANCIENNES PRODUCTION 
-              check.productionLigneAchat.forEach(async (oldLigne) => {
-                const checkLigne = await this.db.ligneAchat.findUnique(
-                  { 
-                  where:  {id: oldLigne.id }, 
-                  select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
-                  quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
-      
-                const ligneUpdate = await this.db.ligneAchat.update({
-                  where: { id: checkLigne.id },
-                  data: {
-                      prixUnitaire: checkLigne.prixUnitaire,
-                      quantite: checkLigne.quantite,
-                      datePeremption: new Date(checkLigne.datePeremption),
-                      references: checkLigne.references,
-                      quantiteLivre: checkLigne.quantiteLivre,
-                      qt_Utilise: checkLigne.qt_Utilise - oldLigne.qt_Utilise ,
-                      matiere: {
-                          connect: {
-                              id: checkLigne.matiereId,
-                          },
-                      },
-                      magasin: {
-                          connect: {
-                              id: checkLigne.magasinId,
-                          },
-                      },
-                  },
-              })
-              })
+                    const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
+                      existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
+                    );
 
+                    console.log("ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE AUGMENTER LA QUANTITÉ UTILISÉE");
+                    console.log(validProductionLigneAchat);
+
+                    console.log(check.productionLigneAchat);
+
+                    await Promise.all([
+                      // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
+                      ...validProductionLigneAchat.map(async (ligne) => {
+                        console.log("Augmentation de la quantité utilisée pour la ligne d'achat :", ligne);
+                        return tx.ligneAchat.update({
+                          where: { id: ligne.id },
+                          data: {
+                            qt_Utilise: { increment: ligne.qt_Utilise ?? 0 }
+                          }
+                        });
+                      }),
+                      // Mise à jour des anciennes lignes d'achat en diminuant la quantité utilisée
+                      ...validCheckProductionLigneAchat.map(async (oldLigne) => {
+                        console.log("Diminution de la quantité utilisée pour la ligne d'achat :", oldLigne);
+                        return tx.ligneAchat.update({
+                          where: { id: oldLigne.ligneAchatId },
+                          data: {
+                            qt_Utilise: { decrement: oldLigne.qt_Utilise ?? 0 }
+                          }
+                        });
+                      })
+                    ]);
+
+        
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
                 return productions
             } catch (error: any) {
+              console.log("ERROR: ", error);
+              
                 if (error.status) throw new HttpException(error.message, error.status);
                 else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
             }
