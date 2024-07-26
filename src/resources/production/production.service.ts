@@ -467,7 +467,7 @@ export class ProductionService {
                 !check.coutProduction.some(oldCout => oldCout.id === cout.id)
               );
               
-         // Vérifiez les lignes d'achat existantes avant de mettre à jour
+               // Vérifiez les lignes d'achat existantes avant de mettre à jour
                     const existingLignes = await Promise.all([
                       ...data.productionLigneAchat.map(ligne => tx.ligneAchat.findUnique({
                         where: { id: ligne.id }

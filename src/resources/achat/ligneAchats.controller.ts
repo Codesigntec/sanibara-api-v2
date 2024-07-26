@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  LigneAchatByStore, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre } from "./achat.types";
+import {  LigneAchatByStore, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre, StockMatiereFetcher } from "./achat.types";
 import { LigneAchat } from "@prisma/client";
 
 
@@ -82,6 +82,7 @@ export class LigneAchatController {
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
+        @Query('magasinId') magasinId?: string | null,
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<LigneAchatFull>> {
         const paginationQuery : PaginationQuery = {
@@ -90,7 +91,11 @@ export class LigneAchatController {
             orderBy: order,
             orderDirection: direction
         }
-        return await this.service.getAllLigneAchats(paginationQuery)
+
+        const filter : StockMatiereFetcher = {
+            magasinId: magasinId
+        }
+        return await this.service.getAllLigneAchats(filter, paginationQuery)
     }
 
     @Get('/matierePremiereByStore/:id')

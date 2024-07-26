@@ -420,9 +420,6 @@ export class StockFetcher extends FetcherFilter {
 }
 
 
-
-
-
 // ============================== VALIDATION ====================================
 
 

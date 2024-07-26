@@ -2,7 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Cout, Etat, LigneAchat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
 import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatByStore, LigneAchatFull, LigneAchatSave,
-   LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave, } from './achat.types';
+   LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave,
+   StockMatiereFetcher, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
 
@@ -73,13 +74,10 @@ export class AchatService {
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
-
-            // Correction du filtrage par statut
-            if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
-              conditions.statutAchat = statutAchat;
-          }
-
-
+        // Correction du filtrage par statut
+        if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
+          conditions.statutAchat = statutAchat;
+        }
         let order = {}
         if (query.orderBy) {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
@@ -830,8 +828,13 @@ export class AchatService {
       }
 
 
-      getAllLigneAchats = async (query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
+      getAllLigneAchats = async (filter: StockMatiereFetcher, query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
 
+        let conditions = {...filter }
+
+        if (filter.magasinId !== undefined && filter.magasinId !== null) {
+          conditions = { ...conditions, magasinId: filter.magasinId }
+        }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
         let order = {}
@@ -842,6 +845,7 @@ export class AchatService {
         const ligneAchats = await this.db.ligneAchat.findMany({
           take: limit,
           skip: offset,
+          where: conditions,
           include: {
             matiere: true, 
             magasin: true,
@@ -851,6 +855,7 @@ export class AchatService {
       })
       
         const totalCount = await this.db.ligneAchat.count();
+        // const totalCount = ligneAchats.length;
 
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<LigneAchatFull> = {
