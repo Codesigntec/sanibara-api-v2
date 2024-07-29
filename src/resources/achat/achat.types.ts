@@ -116,6 +116,11 @@ export class AchatAvecTva{
 
 }
 
+export class Livraison{
+  @ApiProperty()
+  quantiteLivre : number
+}
+
 export class LigneAchatA{
   @ApiProperty()
   id: string
@@ -373,9 +378,9 @@ const frs = z.object({
 
 const MagasinQuantiteLivreShema = z.object({
   quantiteLivre: z.number({
-    required_error: errors.QUANTITY_REQUIRED,
-    invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
-  }),
+    required_error: 'La quantité est requise.',
+    invalid_type_error: 'La quantité doit être un nombre.',
+  }).min(0, 'La quantité doit être positive.'),
 });
 
 //===============Export=================

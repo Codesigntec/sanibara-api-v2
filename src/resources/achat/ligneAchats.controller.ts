@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import {  LigneAchatByStore, LigneAchatFetcher, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, MagasinQuantiteLivre, StockMatiereFetcher } from "./achat.types";
+import {  LigneAchatByStore, LigneAchatFull, LigneAchatSave, LigneAchatSchema, LigneAchatSelect, ligneLivraison, Livraison, MagasinQuantiteLivre, StockMatiereFetcher } from "./achat.types";
 import { LigneAchat } from "@prisma/client";
 
 
@@ -65,10 +65,10 @@ export class LigneAchatController {
     @UsePipes(new ZodPipe(MagasinQuantiteLivre))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: ligneLivraison })
-    async updateQuantiteLivre(@Body() quantiteLivre: LigneAchatFull, @Req() req: AuthorizedRequest): Promise<ligneLivraison> {
+    async updateQuantiteLivre(@Body() data: Livraison, @Req() req: AuthorizedRequest): Promise<ligneLivraison> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.updateQuantiteLivreAchat(id, quantiteLivre.quantiteLivre, userId)
+        return await this.service.updateQuantiteLivreAchat(id, data, userId)
     }
  
     @Get('/')

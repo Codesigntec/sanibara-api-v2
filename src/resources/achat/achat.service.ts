@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Cout, Etat, LigneAchat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
 import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatByStore, LigneAchatFull, LigneAchatSave,
-   LigneAchatSelect, ligneLivraison, PaiementFull, PaiementSave,
+   LigneAchatSelect, ligneLivraison, Livraison, PaiementFull, PaiementSave,
    StockMatiereFetcher, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
@@ -829,46 +829,59 @@ export class AchatService {
 
 
       getAllLigneAchats = async (filter: StockMatiereFetcher, query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
-
-        let conditions = {...filter }
-
+        let conditions = { ...filter };
+    
         if (filter.magasinId !== undefined && filter.magasinId !== null) {
-          conditions = { ...conditions, magasinId: filter.magasinId }
+            conditions = { ...conditions, magasinId: filter.magasinId };
         }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
-        let order = {}
+        let order = {};
         if (query.orderBy) {
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc';
         }
-        
+    
         const ligneAchats = await this.db.ligneAchat.findMany({
-          take: limit,
-          skip: offset,
-          where: conditions,
-          include: {
-            matiere: true, 
-            magasin: true,
-            // achat: true, // Inclure les détails de l'achat associé si nécessaire
-          },
-          orderBy: order
-      })
-      
-        const totalCount = await this.db.ligneAchat.count();
-        // const totalCount = ligneAchats.length;
-
+            where: conditions,
+            include: {
+                matiere: true,
+                magasin: true,
+            },
+        });
+    
+        // Cumuler les quantités des produits ayant la même désignation de matière première et le même prix unitaire
+        const cumulatedMap = new Map<string, LigneAchatFull>();
+    
+        ligneAchats.forEach((item) => {
+            const key = `${item.matiere.designation}-${item.prixUnitaire}`;
+            if (!cumulatedMap.has(key)) {
+                cumulatedMap.set(key, { ...item });
+            } else {
+                const existingItem = cumulatedMap.get(key);
+                if (existingItem) {
+                    existingItem.quantite += item.quantite;
+                }
+            }
+        });
+    
+        // Convertir la map en tableau
+        const cumulatedArray = Array.from(cumulatedMap.values());
+    
+        // Paginer les résultats cumulatifs
+        const paginatedData = cumulatedArray.slice(offset, offset + limit);
+        const totalCount = cumulatedArray.length;
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<LigneAchatFull> = {
-            data: ligneAchats,
+            data: paginatedData,
             totalPages,
             totalCount,
             currentPage: query.page ? query.page : 1,
-            size: limit
-        }
-      
+            size: limit,
+        };
+    
         return pagination;
-      };
-      
+    };
+    
       
         //=============================DESTROY====================================
 
@@ -894,19 +907,19 @@ export class AchatService {
           }
       }
 
-      updateQuantiteLivreAchat = async (id: string, quantiteLivre: number, userId: string): Promise<ligneLivraison> => {
+      updateQuantiteLivreAchat = async (id: string, data: Livraison, userId: string): Promise<ligneLivraison> => {
 
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 
           select: { references: true, achatId: true, quantite: true } 
         });
 
-        if (quantiteLivre > check.quantite) {
+        if (data.quantiteLivre > check.quantite) {
           throw new HttpException(errors.QUANTITE_ERROR, HttpStatus.BAD_REQUEST);
         }
         const ligneUpdate = await this.db.ligneAchat.update({
           where: { id },
-          data: { quantiteLivre },
+          data: {quantiteLivre: data.quantiteLivre },
           select: {
             quantiteLivre: true,
          
