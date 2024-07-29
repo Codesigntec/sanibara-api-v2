@@ -17,41 +17,33 @@ export class StocksService {
 
 
     listStock = async (filter: StockFetcher, query: PaginationQuery): Promise<Pagination<StockReturn>> => {
-        let conditions = {}
+        let conditions: any = {};
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
-  
-        // let filters = { }
+    
         if (filter.magasinId) {
-            conditions = {
-                ...conditions,
-                magasinId: {
-                    contains: filter.magasinId,
-                    mode: "insensitive"
-                }
-            }
+            conditions.magasinId = {
+                contains: filter.magasinId,
+                mode: "insensitive"
+            };
         }
-
+    
         if (filter.prodFiniId) {
-            conditions = {
-                ...conditions,
-                prodFiniId: {
-                    contains: filter.prodFiniId,
-                    mode: "insensitive"
-                }
-            }
+            conditions.prodFiniId = {
+                contains: filter.prodFiniId,
+                mode: "insensitive"
+            };
         }
-
-        conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
-  
-        let order = {}
+    
+        conditions = { ...conditions, removed: filter.removed, archive: filter.archive };
+    
+        let order: any = {};
         if (query.orderBy) {
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc';
         }
-  
+    
+        // Récupérer toutes les entrées de stock
         const stocks = await this.db.stockProduiFini.findMany({
-            take: limit,
-            skip: offset,
             where: conditions,
             include: {
                 magasin: true,
@@ -62,20 +54,41 @@ export class StocksService {
                 }
             },
             orderBy: order
-        })
-        const totalCount = await this.db.stockProduiFini.count({ where: conditions });
-  
+        });
+    
+        // Cumuler les quantités des produits ayant la même désignation et le même prix unitaire
+        const cumulatedMap = new Map<string, StockReturn>();
+    
+        stocks.forEach((item) => {
+            const key = `${item.produitFini.designation}-${item.pu_gros}`;
+            if (!cumulatedMap.has(key)) {
+                cumulatedMap.set(key, { ...item });
+            } else {
+                const existingItem = cumulatedMap.get(key);
+                if (existingItem) {
+                    existingItem.qt_produit += item.qt_produit;
+                }
+            }
+        });
+    
+        // Convertir la map en tableau
+        const cumulatedArray = Array.from(cumulatedMap.values());
+    
+        // Paginer les résultats cumulés
+        const paginatedData = cumulatedArray.slice(offset, offset + limit);
+        const totalCount = cumulatedArray.length;
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<StockReturn> = {
-            data: stocks,
+            data: paginatedData,
             totalPages,
             totalCount,
             currentPage: query.page ? query.page : 1,
             size: limit
-        }
-  
-        return pagination
-       }
+        };
+    
+        return pagination;
+    };
+    
 
 
 }

@@ -860,6 +860,7 @@ export class AchatService {
                 const existingItem = cumulatedMap.get(key);
                 if (existingItem) {
                     existingItem.quantite += item.quantite;
+                    existingItem.quantiteLivre += item.quantiteLivre
                 }
             }
         });
