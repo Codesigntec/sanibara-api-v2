@@ -124,7 +124,6 @@ export class Livraison{
 export class LigneAchatA{
   @ApiProperty()
   id: string
-
 }
 
 export class LigneAchatByStore{

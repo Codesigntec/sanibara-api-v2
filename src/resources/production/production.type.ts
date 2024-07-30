@@ -112,6 +112,15 @@ export class ProdSave {
   @ApiProperty()
   dateFin?: Date;
 
+  @ApiProperty()
+  coutTotalProduction: number;
+
+  @ApiProperty()
+  beneficeDetails: number;
+
+  @ApiProperty()
+  beneficeGros: number;
+
   @ApiProperty({ type: [StockProduiFiniDto] })
   stockProdFini: StockProduiFiniDto[];
 

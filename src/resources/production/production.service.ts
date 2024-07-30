@@ -135,6 +135,9 @@ export class ProductionService {
             dateDebut: dateDebut,
             description: data.description,
             dateFin: dateFin,
+            coutTotalProduction: data.coutTotalProduction,
+            beneficeDetails: data.beneficeDetails,
+            beneficeGros: data.beneficeGros,
             stockProdFini: {
               create: data.stockProdFini.map((stock) => ({
                 reference: stock.reference,

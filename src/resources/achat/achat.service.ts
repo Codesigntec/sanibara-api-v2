@@ -923,7 +923,6 @@ export class AchatService {
           data: {quantiteLivre: data.quantiteLivre },
           select: {
             quantiteLivre: true,
-         
           },
         });
       
@@ -965,6 +964,9 @@ export class AchatService {
             }
         })
         if (ligneAchat === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+        console.log(ligneAchat);
+        
 
          // Filtrer les lignes d'achat pour lesquelles la quantité est supérieure à la quantité utilisée
          const filteredLigneAchat = ligneAchat.filter(ligne => ligne.quantite > ligne.qt_Utilise);

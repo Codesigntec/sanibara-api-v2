@@ -59,7 +59,7 @@ export class LigneAchatController {
     }
 
 
-    @Put('/livraisons/:id')
+    @Put('/livraisons/ligneAchats/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(MagasinQuantiteLivre))

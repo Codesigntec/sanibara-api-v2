@@ -128,7 +128,6 @@ model ProduitFini {
   @@map("produits_finis")
 }
 
-
 model ProductionLigneAchat {
   id          String   @id @default(cuid())
   qt_Utilise  Int?
@@ -159,6 +158,9 @@ model Productions {
   id          String   @id @default(cuid())
   reference   String
   description String?
+  coutTotalProduction Float
+  beneficeDetails Float
+  beneficeGros Float
   numero      Int      @default(autoincrement())
   dateDebut   DateTime
   dateFin     DateTime? 
@@ -192,12 +194,35 @@ model StockProduiFini {
   magasinId      String   @map("magasin_id")
   magasin        MagasinProduitFini    @relation(fields: [magasinId], references: [id])
 
+  stockVente     StockVente[] 
+
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
 
   @@map("stock_produi_fini")
 }
 
+model Vente {
+   
+  id          String   @id @default(cuid())
+  reference   String
+  numero    Int      @default(autoincrement())
+  dateVente DateTime
+  montant    Float
+  tva        Float
+  
+  stockVente  StockVente[]
+
+  cleintId     String   @map("cleint_id")
+  client       Client    @relation(fields: [cleintId], references: [id])
+
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ventes")
+}
 
 model Client {
   id        String   @id @default(cuid())
@@ -207,12 +232,29 @@ model Client {
   email     String?
   adresse   String?
   societe   String?
+
+  vente Vente[]
+
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("clients")
+}
+
+
+model StockVente {
+  id                String           @id @default(cuid())
+  quantiteVendue    Int
+  stockProduiFiniId String           @map("stock_produi_fini_id")
+  venteId           String           @map("vente_id")
+
+  stockProduiFini   StockProduiFini  @relation(fields: [stockProduiFiniId], references: [id])
+  vente             Vente            @relation(fields: [venteId], references: [id])
+
+  @@map("stock_vente")
+  @@unique([stockProduiFiniId, venteId])
 }
 
 model Fournisseur {
