@@ -175,7 +175,7 @@ export class MatiereService {
         // let filters = { }
         // if (data.categorieId) { conditions = { ...conditions, categorieId: data.categorieId } }
         if (data.uniteId) { conditions = { ...conditions, uniteId: data.uniteId } }
-        // if(data.paymentMethode){ conditions = { ...conditions, paymentMethode: data.paymentMethode } }
+        // if(data.paymentMethode){ conditions = { ...conditions, paymentnew Date(data.debut)Methode: data.paymentMethode } }
 
         if (data.debut || data.fin) {
             let dateFilter = {};

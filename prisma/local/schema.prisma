@@ -212,6 +212,7 @@ model Vente {
   tva         Float
   paye        Float
   reliquat    Float
+  etat        Boolean  @default(true)
   
   stockVente  StockVente[]
 

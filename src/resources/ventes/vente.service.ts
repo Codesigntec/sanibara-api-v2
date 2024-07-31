@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { Etat, PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
 import { Vente, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
@@ -16,7 +16,7 @@ export class VentesService {
 
 
     list = async (filter: VenteFetcher, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
-        const conditions = { ...filter }
+        let conditions = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -25,6 +25,7 @@ export class VentesService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
+        if (filter.etat) { conditions = { ...conditions, etat: filter.etat } }
 
         const vente = await this.db.vente.findMany({
             take: limit,
@@ -77,23 +78,25 @@ export class VentesService {
                 throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                }
 
+              if (data.etat) {
                     // Check quantities before creating stockVente records
-                for (const stockVente of data.stockVente) {
-                    const stock = await tx.stockProduiFini.findUnique({
-                        where: { id: stockVente.stockProduiFiniId }
-                    });
-
-                    if (!stock) {
-                        throw new HttpException(errors.STOCK_NOT_FOUND, HttpStatus.BAD_REQUEST);
+                    for (const stockVente of data.stockVente) {
+                        const stock = await tx.stockProduiFini.findUnique({
+                            where: { id: stockVente.stockProduiFiniId }
+                        });
+    
+                        if (!stock) {
+                            throw new HttpException(errors.STOCK_NOT_FOUND, HttpStatus.BAD_REQUEST);
+                        }
+    
+                        if (stockVente.quantiteVendue > stock.qt_produit) {
+                            throw new HttpException(errors.QUANTITE_INSUFFISANTE, HttpStatus.BAD_REQUEST);
+                        }
+                        if (stockVente.quantiteVendue <= 0) {
+                            throw new HttpException(errors.QUANTITE_NON_VALID, HttpStatus.BAD_REQUEST);
+                        }
                     }
-
-                    if (stockVente.quantiteVendue > stock.qt_produit) {
-                        throw new HttpException(errors.QUANTITE_INSUFFISANTE, HttpStatus.BAD_REQUEST);
-                    }
-                    if (stockVente.quantiteVendue < 0) {
-                        throw new HttpException(errors.QUANTITE_NON_VALID, HttpStatus.BAD_REQUEST);
-                    }
-                }
+              }
             
                 const matiere = await tx.vente.create({
                     data: {
@@ -101,6 +104,7 @@ export class VentesService {
                         montant:data.montant,
                         tva: data.tva,
                         paye: data.paye,
+                        etat: data.etat,
                         reliquat: data.montant - data.paye,
                         dateVente: new Date(data.dateVente),
                         client:{
@@ -128,6 +132,31 @@ export class VentesService {
                       
                     }
                 })
+
+
+                 // Update stockProduiFini quantities if etat is true
+            if (data.etat) {
+                await Promise.all(data.stockVente.map(async (stockVente) => {
+                    const check = await tx.stockProduiFini.findUnique({
+                        where: { id: stockVente.stockProduiFiniId },
+                        select: { id: true }
+                    });
+
+                    if (!check) {
+                        throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
+                    }
+
+                    await tx.stockProduiFini.update({
+                        where: { id: stockVente.stockProduiFiniId },
+                        data: {
+                            qt_produit: { decrement: stockVente.quantiteVendue }
+                        },
+                        select: { id: true }
+                    });
+                }));
+            }
+
+
 
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))

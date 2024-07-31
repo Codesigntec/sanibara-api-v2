@@ -1,8 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
 import { z } from "zod"
+import { errors } from "./vente.constant"
 
 export class VenteFetcher extends FetcherFilter {
+    etat: boolean | null
 }
 
 
@@ -58,6 +60,9 @@ export class Vente {
   
     @ApiProperty()
     montant: number
+
+    @ApiProperty()
+    etat: boolean
   
     @ApiProperty()
     tva: number
@@ -109,9 +114,15 @@ export class StockProduiFini{
 
 const saverSchemaVente = z.object({
     reference: z.string(),
-    montant: z.number(),
+    montant: z.number(
+        {
+        required_error: errors.MONTANT_REQUIRED,
+        invalid_type_error: errors.MONTANT_DOIT_ETRE_NOMBRE,
+        }
+    ),
     tva: z.number(),
     paye: z.number(),
+    etat: z.boolean(),
     dateVente: z.date(),
     cleintId: z.string(),
     stockVente: z.array(z.object({
