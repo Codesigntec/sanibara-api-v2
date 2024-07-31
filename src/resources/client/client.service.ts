@@ -206,4 +206,25 @@ export class ClientService {
             throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
         }
     }
+
+    findOne = async (id: string): Promise<Client> => {
+        const client = await this.db.client.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                numero: true,
+                nom: true,
+                telephone: true,
+                email: true,
+                adresse: true,
+                societe: true,
+                createdAt: true,
+            }
+        })
+        if (client === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+        return client
+    }
+
+
+    
 }

@@ -100,7 +100,7 @@ export class VentesService {
                     }
               }
             
-                const matiere = await tx.vente.create({
+                const vente = await tx.vente.create({
                     data: {
                         reference: data.reference,
                         montant:data.montant,
@@ -112,30 +112,26 @@ export class VentesService {
                         client:{
                             connect:{id: data.cleintId}
                         },
-                        stockVente:{
-                            create: data.stockVente.map((stockVente)=>({
-                                quantiteVendue: stockVente.quantiteVendue,
-                                stockProduiFini:{
-                                    connect:{id: stockVente.stockProduiFiniId}
-                                },
-                                vente:{
-                                    connect:{id:stockVente.venteId}
-                                }
-                            }))
-                        }
                     },
                     include: {
                       client: true,
-                      stockVente:{
-                        include:{
-                            stockProduiFini:true
-                        }
-                      }
-                      
                     }
                 })
 
-
+            await Promise.all(data.stockVente.map(async (stockVente) => {
+                 // Create stockVente records with the vente ID
+                 await tx.stockVente.create({
+                    data: {
+                        quantiteVendue: stockVente.quantiteVendue,
+                        stockProduiFini: {
+                            connect: { id: stockVente.stockProduiFiniId }
+                        },
+                        vente: {
+                            connect: { id: vente.id }
+                        }
+                    }
+                });
+            }));
                  // Update stockProduiFini quantities if etat is true
             if (data.etat) {
                 await Promise.all(data.stockVente.map(async (stockVente) => {
@@ -163,7 +159,7 @@ export class VentesService {
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
-                return matiere
+                return vente
             } catch (error: any) {
                 if (error.status) throw new HttpException(error.message, error.status);
                 else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -364,8 +360,7 @@ export class VentesService {
         // })
 
         const quantiteVendue = stockProduiFini.stockVente?.reduce((total, stockVente) => total + stockVente.quantiteVendue, 0) || 0;
-
-
+    
         return  stockProduiFini.qt_produit - quantiteVendue
     }
 }

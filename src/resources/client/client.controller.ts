@@ -67,13 +67,13 @@ export class ClientController {
         return await this.service.select()
     }
 
-    @Get('/:id')
+    @Get('/findOne/client/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
-    @ApiOkResponse({ type: [ClientSelect] })
-    async findOne(@Param('id') id: string): Promise<ClientSelect[]> {
-        return await this.service.select()
+    @ApiOkResponse({ type: [Client] })
+    async findOne(@Param('id') id: string): Promise<Client> {
+        return await this.service.findOne(id)
     }
 
     @Post('/')

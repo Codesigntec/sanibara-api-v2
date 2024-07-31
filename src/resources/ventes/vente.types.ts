@@ -80,7 +80,7 @@ export class Vente {
     cleintId: string
 
     @ApiProperty()
-    stockVente: StockVenteFull[]
+    stockVente?: StockVenteFull[]
 
   }
 
