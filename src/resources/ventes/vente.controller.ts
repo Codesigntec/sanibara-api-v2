@@ -1,8 +1,11 @@
-import { Controller } from "@nestjs/common";
-import { ApiTags, ApiExtraModels, ApiResponse } from "@nestjs/swagger";
-import { Pagination } from "src/common/types";
-import { Vente } from "./vente.types";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse } from "@nestjs/swagger";
+import { AuthorizedRequest, Pagination } from "src/common/types";
+import saverSchemaVente, { Vente } from "./vente.types";
 import { VentesService } from "./vente.service";
+import { ZodPipe } from "src/validation/zod.pipe";
+import { AuthGuard } from "../auth/auth.guard";
+import { Produit } from "../produit-fini/produit-fini.types";
 
 @Controller('vente')
 @ApiTags('Produits finis')
@@ -16,5 +19,17 @@ export class VentesController {
 
     constructor(private service: VentesService) { }
 
+
+
+    @Post('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UsePipes(new ZodPipe(saverSchemaVente))
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Vente })
+    async save(@Body() data: Vente, @Req() req: AuthorizedRequest): Promise<Vente> {
+        const userId = req.userId
+        return await this.service.save(data, userId)
+    }
 
 }

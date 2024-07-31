@@ -1,6 +1,52 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { ClientSelect } from "../client/client.types"
+import { FetcherFilter } from "src/common/types"
+import { z } from "zod"
 
+export class VenteFetcher extends FetcherFilter {
+}
+
+
+export class VenteTable{
+
+    @ApiProperty()
+    id: string
+
+    @ApiProperty()
+    reference: string
+  
+    @ApiProperty()
+    montant: number
+  
+    @ApiProperty()
+    tva: number
+
+    @ApiProperty()
+    paye: number
+    
+    @ApiProperty()
+    dateVente: Date
+
+    @ApiProperty()
+    createdAt: Date
+
+    client: Client
+
+}
+
+export class Client{
+
+    @ApiProperty()
+    id: string
+
+    @ApiProperty()
+    nom: string
+
+    @ApiProperty()
+    telephone: string
+
+    @ApiProperty()
+    email: string
+}
 
 export class Vente {
 
@@ -60,3 +106,20 @@ export class StockProduiFini{
     stockVente: StockVente[]
 
 }
+
+const saverSchemaVente = z.object({
+    reference: z.string(),
+    montant: z.number(),
+    tva: z.number(),
+    paye: z.number(),
+    dateVente: z.date(),
+    cleintId: z.string(),
+    stockVente: z.array(z.object({
+        id: z.string(),
+        quantiteVendue: z.number(),
+        stockProduiFiniId: z.string(),
+        venteId: z.string()
+    }))
+})
+
+export default saverSchemaVente

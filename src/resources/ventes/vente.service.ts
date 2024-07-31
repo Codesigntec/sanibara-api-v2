@@ -1,8 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { Vente } from "./vente.types";
+import { Vente, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
+import { Pagination, PaginationQuery } from "src/common/types";
 
 
 @Injectable()
@@ -12,6 +13,59 @@ export class VentesService {
         private db: PrismaClient,
         private trace: TraceService
     ) { }
+
+
+    list = async (filter: VenteFetcher, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
+        const conditions = { ...filter }
+        const limit = query.size ? query.size : 10;
+        const offset = query.page ? (query.page - 1) * limit : 0;
+
+        let order = {}
+        if(query.orderBy){
+            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+        }
+
+
+        const vente = await this.db.vente.findMany({
+            take: limit,
+            skip: offset,
+            where: conditions,
+            select: { 
+                id: true, 
+                reference: true,
+                dateVente: true,
+                reliquat: true,
+                montant: true,
+                paye: true,
+                tva: true,
+                createdAt: true,
+                client: {
+                    select: {
+                        id: true,
+                        nom: true,
+                        telephone: true,
+                        email: true
+                    }
+                }
+
+            },
+            orderBy: order
+        })
+
+        const totalCount = await this.db.unite.count({ where: conditions });
+
+        const totalPages = Math.ceil(totalCount / limit);
+        const pagination: Pagination<VenteTable> = {
+            data: vente,
+            totalPages,
+            totalCount,
+            currentPage: query.page ? query.page : 1,
+            size: limit
+        }
+
+        return pagination
+    }
+
 
     save = async (data: Vente, userId: string): Promise<Vente> => {
         return await this.db.$transaction(async (tx) => {
