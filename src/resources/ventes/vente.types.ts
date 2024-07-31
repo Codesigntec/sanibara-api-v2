@@ -80,6 +80,15 @@ export class Vente {
     stockVente: StockVenteFull[]
 
   }
+
+  export class VenteArchiveDeleteAndDestory{
+
+    @ApiProperty()
+    id: string
+
+    @ApiProperty()
+    reference: string
+  }
   export class StockVente{
 
     @ApiProperty()
