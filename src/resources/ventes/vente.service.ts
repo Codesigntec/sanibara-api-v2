@@ -308,39 +308,39 @@ export class VentesService {
         return vente
     }
 
-    remove = async (id: string, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true, removed: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+    remove = async (id: string, userId: string): Promise<VenteArchiveDeleteAndDestory> => {
+        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true, removed: true } })
+        if (!check) throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
 
-        const unite = await this.db.unite.update({
+        const vente = await this.db.vente.update({
             where: { id },
             data: {
                 removed: !check.removed
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, reference: true, createdAt: true }
         })
 
-        const description = `Suppression logique de l'unité: ${check.libelle}`
+        const description = `Suppression logique de la vente: ${check.reference}`
         this.trace.logger({action: 'Suppression logique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
 
-        return unite
+        return vente
     }
 
-    destroy = async (id: string, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+    destroy = async (id: string, userId: string): Promise<VenteArchiveDeleteAndDestory> => {
+        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true } })
+        if (!check) throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
 
         try {
-            const unite = await this.db.unite.delete({
+            const vente = await this.db.vente.delete({
                 where: { id },
-                select: { id: true, libelle: true, createdAt: true }
+                select: { id: true, reference: true, createdAt: true }
             })
 
-            const description = `Suppression physique de l'unité: ${check.libelle}`
+            const description = `Suppression physique de l'unité: ${check.reference}`
             this.trace.logger({action: 'Suppression physique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
-            return unite
+            return vente
         } catch (_: any) {
             throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
         }

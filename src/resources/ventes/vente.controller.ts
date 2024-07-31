@@ -1,7 +1,7 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
-import saverSchemaVente, { Vente, VenteFetcher, VenteTable } from "./vente.types";
+import saverSchemaVente, { Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { VentesService } from "./vente.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
@@ -87,5 +87,39 @@ export class VentesController {
         const userId = req.userId
         const id = req.params.id
         return await this.service.update(id, data, userId)
+    }
+
+    
+    @Delete('/:id/archive')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Vente })
+    async archive(@Req() req: AuthorizedRequest): Promise<VenteArchiveDeleteAndDestory> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.archive(id, userId)
+    }
+
+    @Delete('/:id/destroy')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Vente })
+    async destroy(@Req() req: AuthorizedRequest): Promise<VenteArchiveDeleteAndDestory> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.destroy(id, userId)
+    }
+
+    @Delete('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Vente })
+    async remove(@Req() req: AuthorizedRequest): Promise<VenteArchiveDeleteAndDestory> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.remove(id, userId)
     }
 }
