@@ -161,8 +161,15 @@ export class VentesService {
 
                 return vente
             } catch (error: any) {
-                if (error.status) throw new HttpException(error.message, error.status);
-                else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+                if (error.status) {
+                    throw new HttpException(error.message, error.status);
+                console.log(error);
+                }
+                else{
+                    console.log(error);
+                    
+                    throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+                } 
             }
         })
     }
