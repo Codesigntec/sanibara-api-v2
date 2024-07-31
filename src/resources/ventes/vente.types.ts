@@ -4,7 +4,7 @@ import { z } from "zod"
 import { errors } from "./vente.constant"
 
 export class VenteFetcher extends FetcherFilter {
-    etat: boolean | null
+    etat?: boolean | null
 }
 
 
@@ -12,6 +12,9 @@ export class VenteTable{
 
     @ApiProperty()
     id: string
+
+    @ApiProperty()
+    numero: number
 
     @ApiProperty()
     reference: string
@@ -65,7 +68,7 @@ export class Vente {
     etat: boolean
   
     @ApiProperty()
-    tva: number
+    tva?: number
 
     @ApiProperty()
     paye: number

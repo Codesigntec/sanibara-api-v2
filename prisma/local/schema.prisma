@@ -209,7 +209,7 @@ model Vente {
   numero      Int      @default(autoincrement())
   dateVente   DateTime
   montant     Float
-  tva         Float
+  tva         Float?
   paye        Float
   reliquat    Float
   etat        Boolean  @default(true)

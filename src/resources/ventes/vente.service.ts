@@ -15,7 +15,7 @@ export class VentesService {
     ) { }
 
 
-    list = async (filter: VenteFetcher, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
+    list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
         let conditions = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
@@ -25,7 +25,8 @@ export class VentesService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
-        if (filter.etat) { conditions = { ...conditions, etat: filter.etat } }
+        if (etat !== null && etat !== undefined && etat !== '' && etat !== 'true') { conditions = { ...conditions, etat: true } }
+        if (etat !== null && etat !== undefined && etat !== '' && etat !== 'false') { conditions = { ...conditions, etat: false } }
 
         const vente = await this.db.vente.findMany({
             take: limit,
@@ -33,6 +34,7 @@ export class VentesService {
             where: conditions,
             select: { 
                 id: true, 
+                numero: true,
                 reference: true,
                 dateVente: true,
                 reliquat: true,
@@ -53,7 +55,7 @@ export class VentesService {
             orderBy: order
         })
 
-        const totalCount = await this.db.unite.count({ where: conditions });
+        const totalCount = await this.db.vente.count({ where: conditions });
 
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<VenteTable> = {
@@ -346,4 +348,24 @@ export class VentesService {
         }
     }
 
+
+
+    quantiteRestant = async (id: string): Promise<number> => {
+        const stockProduiFini = await this.db.stockProduiFini.findUnique({
+            where: { id },
+            include: { stockVente: true }
+        })
+        if (stockProduiFini === null) throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
+
+        // let quantite = 0
+
+        // stockProduiFini.stockVente.forEach((stockVente) => {
+        //     quantite += stockVente.quantiteVendue
+        // })
+
+        const quantiteVendue = stockProduiFini.stockVente?.reduce((total, stockVente) => total + stockVente.quantiteVendue, 0) || 0;
+
+
+        return  stockProduiFini.qt_produit - quantiteVendue
+    }
 }

@@ -12,4 +12,4 @@ import { VentesController } from './vente.controller';
   controllers: [VentesController],
   providers: [VentesService, TraceService, PrismaService]
 })
-export class ProduitModule { }
+export class VenteModule { }
