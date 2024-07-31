@@ -8,6 +8,7 @@ const errors = {
     NOT_PRODUI_FINI_EXIST: "Le produit n'existe pas ou son ID n'est pas valide.",
     MONTANT_REQUIRED: "Le montant est obligatoire.",
     MONTANT_DOIT_ETRE_NOMBRE: "Le montant doit être un nombre.",
+    NOT_VENTE_EXIST: "La vente n'existe pas ou son ID n'est pas valide.",
 }
 const infos = {
 
