@@ -102,7 +102,7 @@ export class ProductionService {
             },
           },
         });
-        if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+        // if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
         const dateDebut = new Date(data.dateDebut);
         const dateFin = new Date(data.dateFin);
@@ -181,6 +181,9 @@ export class ProductionService {
             reference: true,
             description: true,
             dateDebut: true,
+            coutTotalProduction: true,
+            beneficeDetails: true,
+            beneficeGros: true,
             dateFin: true,
             createdAt: true,
             updatedAt: true,
@@ -299,6 +302,8 @@ export class ProductionService {
         else 
         throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.BAD_REQUEST);
       }
+    },{
+      timeout: 10000 // 30 secondes
     });
     }
 
@@ -352,7 +357,7 @@ export class ProductionService {
                         }
                     } 
                 })
-                if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+                // if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
                 let productionOld = check;
                 
@@ -386,6 +391,9 @@ export class ProductionService {
                       reference: data.reference,
                       dateDebut: dateDebut,
                       description: data.description,
+                      coutTotalProduction: data.coutTotalProduction,
+                      beneficeDetails: data.beneficeDetails,
+                      beneficeGros: data.beneficeGros,
                       dateFin: dateFin,   
                       stockProdFini: {
                         create: data.stockProdFini.map((stock) => ({

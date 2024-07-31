@@ -206,10 +206,12 @@ model Vente {
    
   id          String   @id @default(cuid())
   reference   String
-  numero    Int      @default(autoincrement())
-  dateVente DateTime
-  montant    Float
-  tva        Float
+  numero      Int      @default(autoincrement())
+  dateVente   DateTime
+  montant     Float
+  tva         Float
+  paye        Float
+  reliquat    Float
   
   stockVente  StockVente[]
 

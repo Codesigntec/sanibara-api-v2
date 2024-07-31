@@ -113,7 +113,7 @@ export class ProductionController {
     @Post('/')
     @Version('2')
     @HttpCode(HttpStatus.OK)
-    // @UsePipes(new ZodPipe(ProdSaveSchema))
+    @UsePipes(new ZodPipe(ProdSaveSchema))
     @UseGuards(AuthGuard)
     @ApiOkResponse({ type: Productions })
     async save(@Body() data: ProdSave, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
@@ -140,6 +140,9 @@ export class ProductionController {
     async update(@Body() data: ProdUpdate, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
         const userId = req.userId
         const id = req.params.id
+        console.log("===================================================================");
+        console.log(data);
+        
         return await this.service.update(id, data, userId)
     }
 

@@ -143,6 +143,15 @@ export class ProdUpdate {
   dateDebut: Date;
 
   @ApiProperty()
+  coutTotalProduction: number;
+
+  @ApiProperty()
+  beneficeDetails: number;
+
+  @ApiProperty()
+  beneficeGros: number;
+
+  @ApiProperty()
   dateFin?: Date;
 
   @ApiProperty({ type: [StockProduiFiniDtoUpdate] })
@@ -191,6 +200,15 @@ export class ProductionsReturn{
   
   @ApiProperty()
   numero: number
+
+  @ApiProperty()
+  coutTotalProduction: number;
+
+  @ApiProperty()
+  beneficeDetails: number;
+
+  @ApiProperty()
+  beneficeGros: number;
 
   @ApiProperty()
   description: string
@@ -483,7 +501,7 @@ const CoutProduction = z.object({
   libelle: z.string({
     invalid_type_error: errors.LIBELLE_COUT_MUST_BE_STRING,
   }),
-  motif: z.string().optional(),
+  motif: z.string().nullable().optional(),
 });
 
 const ProdSaveSchema = z.object({
@@ -495,6 +513,15 @@ const ProdSaveSchema = z.object({
   }),
   dateDebut: z.string({
     invalid_type_error: errors.DATE_DEBUT_MUST_BE_DATE,
+  }),
+  coutTotalProduction: z.number({
+    invalid_type_error: errors.MONTANT_COUT_TOTAL_MUST_BE_NUMBER,
+  }),
+  beneficeDetails: z.number({
+    invalid_type_error: errors.MONTANT_BENEFICE_DETAIL_MUST_BE_NUMBER,
+  }),
+  beneficeGros: z.number({
+    invalid_type_error: errors.MONTANT_BENEFICE_GROS_MUST_BE_NUMBER,
   }),
   dateFin: z.string({
     invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
