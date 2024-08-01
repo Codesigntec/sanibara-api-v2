@@ -10,14 +10,14 @@ import { PaiementVente, PaiementSaverSchema } from "./vente.types"
 
 
 @Controller('paiementsVente')
-@ApiTags('vente ')
+@ApiTags('Vente ')
 @ApiExtraModels(Pagination, PaiementVente)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
 @ApiResponse({ status: 402, description: 'Subscription expired.'})
 @ApiResponse({ status: 403, description: 'Forbidden.'})
 @ApiResponse({ status: 500, description: 'Internal server error.'})
-export class PaiementController {
+export class PaiementVenteController {
     
     constructor(private service: VentesService) { }
 

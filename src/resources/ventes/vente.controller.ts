@@ -63,6 +63,14 @@ export class VentesController {
         return await this.service.list(filter, req.params.etat, paginationQuery)
     }
 
+    @Get('/findByid/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Vente })
+    async findById(@Req() req: AuthorizedRequest): Promise<Vente> {
+        return await this.service.findById(req.params.id)
+    }
     
 
     @Post('/')

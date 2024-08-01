@@ -15,6 +15,18 @@ export class VentesService {
     ) { }
 
 
+    findById = async (id: string): Promise<Vente> => {
+        return await this.db.vente.findUnique({
+            where: { id },
+            include: {
+                stockVente: true,
+                paiements: true
+            }
+        });
+    }
+
+
+
     list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
         let conditions = { ...filter }
         const limit = query.size ? query.size : 10;
