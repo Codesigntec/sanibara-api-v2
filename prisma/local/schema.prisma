@@ -215,9 +215,10 @@ model Vente {
   etat        Boolean  @default(true)
   
   stockVente  StockVente[]
+  paiements   PaiementVente[] 
 
-  cleintId     String   @map("cleint_id")
-  client       Client    @relation(fields: [cleintId], references: [id])
+  clientId     String   @map("client_id")
+  client       Client    @relation(fields: [clientId], references: [id])
 
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
@@ -225,6 +226,17 @@ model Vente {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("ventes")
+}
+
+model PaiementVente {
+  id         String   @id @default(cuid())
+  montant    Float
+  venteId    String   @map("achat_id")
+  vente      Vente    @relation(fields: [venteId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("paiements_vente")
 }
 
 model Client {
@@ -254,7 +266,7 @@ model StockVente {
   venteId           String           @map("vente_id")
 
   stockProduiFini   StockProduiFini  @relation(fields: [stockProduiFiniId], references: [id])
-  vente             Vente            @relation(fields: [venteId], references: [id])
+  vente             Vente            @relation(fields: [venteId], references: [id], onDelete: Cascade)
 
   @@map("stock_vente")
   @@unique([stockProduiFiniId, venteId])

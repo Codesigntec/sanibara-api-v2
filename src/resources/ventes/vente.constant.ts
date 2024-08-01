@@ -10,6 +10,8 @@ const errors = {
     MONTANT_DOIT_ETRE_NOMBRE: "Le montant doit être un nombre.",
     NOT_VENTE_EXIST: "La vente n'existe pas ou son ID n'est pas valide.",
     NOT_REMOVABLE: 'Vous ne pouvez pas supprimer cette vente car elle peut être liée à un article\nVous pouvez proceder à une suppresion logique ou l\'archivage.',
+    TVA_REQUIRED: "La tva est obligatoire.",
+    MONTANT_MUST_BE_NUMBER: "Le montant du paiement doit être un entier.",
 }
 const infos = {
 

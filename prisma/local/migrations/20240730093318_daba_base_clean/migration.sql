@@ -26,7 +26,7 @@ CREATE TABLE "ventes" (
     "dateVente" TIMESTAMP(3) NOT NULL,
     "montant" DOUBLE PRECISION NOT NULL,
     "tva" DOUBLE PRECISION NOT NULL,
-    "cleint_id" TEXT NOT NULL,
+    "client_id" TEXT NOT NULL,
     "archive" BOOLEAN NOT NULL DEFAULT false,
     "removed" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -39,4 +39,4 @@ CREATE TABLE "ventes" (
 ALTER TABLE "stock_produi_fini" ADD CONSTRAINT "stock_produi_fini_vente_id_fkey" FOREIGN KEY ("vente_id") REFERENCES "ventes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ventes" ADD CONSTRAINT "ventes_cleint_id_fkey" FOREIGN KEY ("cleint_id") REFERENCES "clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ventes" ADD CONSTRAINT "ventes_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

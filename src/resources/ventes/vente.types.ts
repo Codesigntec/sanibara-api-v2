@@ -25,18 +25,33 @@ export class VenteTable{
     @ApiProperty()
     tva: number
 
-    @ApiProperty()
-    paye: number
+    // @ApiProperty()
+    // paye: number
     
     @ApiProperty()
     dateVente: Date
 
     @ApiProperty()
     createdAt: Date
-
+   
+    @ApiProperty()
     client: Client
 
+    @ApiProperty()
+    paiements: PaiementVente[]
+
 }
+
+export class PaiementVente{
+    @ApiProperty()
+    id: string
+    @ApiProperty()
+    montant: number
+    @ApiProperty()
+    createdAt: Date
+    @ApiProperty()
+    updatedAt: Date
+  }
 
 export class Client{
 
@@ -70,17 +85,21 @@ export class Vente {
     @ApiProperty()
     tva?: number
 
-    @ApiProperty()
-    paye: number
+    // @ApiProperty()
+    // paye: number
     
     @ApiProperty()
     dateVente: Date
 
     @ApiProperty()
-    cleintId: string
+    clientId?: string
 
     @ApiProperty()
     stockVente?: StockVenteFull[]
+
+    @ApiProperty()
+    paiements: PaiementVente[]
+
 
   }
 
@@ -124,6 +143,13 @@ export class StockProduiFini{
 
 }
 
+const PaiementInputSchema = z.object({
+    montant: z.number({
+      required_error: errors.MONTANT_REQUIRED,
+      invalid_type_error: errors.MONTANT_MUST_BE_NUMBER,
+    })
+  });
+
 const saverSchemaVente = z.object({
     reference: z.string(),
     montant: z.number(
@@ -132,17 +158,17 @@ const saverSchemaVente = z.object({
         invalid_type_error: errors.MONTANT_DOIT_ETRE_NOMBRE,
         }
     ),
-    tva: z.number(),
-    paye: z.number(),
+    tva: z.number().nullable(),
+    paiements: z.array(PaiementInputSchema),
     etat: z.boolean(),
-    dateVente: z.date(),
-    cleintId: z.string(),
+    dateVente: z.string(),
+    clientId: z.string(),
     stockVente: z.array(z.object({
-        id: z.string(),
+        id: z.string().optional(),
         quantiteVendue: z.number(),
         stockProduiFiniId: z.string(),
-        venteId: z.string()
+        venteId: z.string().optional()
     }))
 })
-
+export const PaiementSaverSchema = PaiementInputSchema;
 export default saverSchemaVente

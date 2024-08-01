@@ -4,6 +4,7 @@ import { TraceService } from "../trace/trace.service";
 import { Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
+import { timeout } from "rxjs";
 
 
 @Injectable()
@@ -25,9 +26,10 @@ export class VentesService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
-        if (etat !== null && etat !== undefined && etat !== '' && etat !== 'true') { conditions = { ...conditions, etat: true } }
-        if (etat !== null && etat !== undefined && etat !== '' && etat !== 'false') { conditions = { ...conditions, etat: false } }
+        if (etat !== null && etat !== undefined && etat !== '' && etat === 'true') { conditions = { ...conditions, etat: true } }
+        if (etat !== null && etat !== undefined && etat !== '' && etat === 'false') { conditions = { ...conditions, etat: false } }
 
+        
         const vente = await this.db.vente.findMany({
             take: limit,
             skip: offset,
@@ -39,7 +41,6 @@ export class VentesService {
                 dateVente: true,
                 reliquat: true,
                 montant: true,
-                paye: true,
                 tva: true,
                 createdAt: true,
                 client: {
@@ -49,7 +50,14 @@ export class VentesService {
                         telephone: true,
                         email: true
                     }
-                }
+                },
+                paiements: {
+                    select: {
+                        id: true,
+                        montant: true,
+                        createdAt: true,
+                    }
+                },
 
             },
             orderBy: order
@@ -71,9 +79,14 @@ export class VentesService {
 
 
     save = async (data: Vente, userId: string): Promise<Vente> => {
+    
         return await this.db.$transaction(async (tx) => {
             try {
-               if (data.paye > data.montant) {
+
+                // Calcul du montant total des paiements
+                const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
+     
+              if (totalPaiements > data.montant) {
                 throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
                }
                if (data.dateVente > new Date()) {
@@ -86,7 +99,6 @@ export class VentesService {
                         const stock = await tx.stockProduiFini.findUnique({
                             where: { id: stockVente.stockProduiFiniId }
                         });
-    
                         if (!stock) {
                             throw new HttpException(errors.STOCK_NOT_FOUND, HttpStatus.BAD_REQUEST);
                         }
@@ -104,13 +116,17 @@ export class VentesService {
                     data: {
                         reference: data.reference,
                         montant:data.montant,
-                        tva: data.tva,
-                        paye: data.paye,
+                        tva: data.tva ? data.tva : 0,
+                        paiements: {
+                            create: data.paiements.map((paiement) => ({
+                              montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
+                            })),
+                          },
                         etat: data.etat,
-                        reliquat: data.montant - data.paye,
+                        reliquat: data.montant - totalPaiements,
                         dateVente: new Date(data.dateVente),
                         client:{
-                            connect:{id: data.cleintId}
+                            connect:{id: data.clientId}
                         },
                     },
                     include: {
@@ -132,30 +148,29 @@ export class VentesService {
                     }
                 });
             }));
+
+
                  // Update stockProduiFini quantities if etat is true
-            if (data.etat) {
-                await Promise.all(data.stockVente.map(async (stockVente) => {
-                    const check = await tx.stockProduiFini.findUnique({
-                        where: { id: stockVente.stockProduiFiniId },
-                        select: { id: true }
-                    });
+            // if (data.etat) {
+            //     await Promise.all(data.stockVente.map(async (stockVente) => {
+            //         const check = await tx.stockProduiFini.findUnique({
+            //             where: { id: stockVente.stockProduiFiniId },
+            //             select: { id: true }
+            //         });
 
-                    if (!check) {
-                        throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
-                    }
+            //         if (!check) {
+            //             throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
+            //         }
 
-                    await tx.stockProduiFini.update({
-                        where: { id: stockVente.stockProduiFiniId },
-                        data: {
-                            qt_produit: { decrement: stockVente.quantiteVendue }
-                        },
-                        select: { id: true }
-                    });
-                }));
-            }
-
-
-
+            //         await tx.stockProduiFini.update({
+            //             where: { id: stockVente.stockProduiFiniId },
+            //             data: {
+            //                 qt_produit: { decrement: stockVente.quantiteVendue }
+            //             },
+            //             select: { id: true }
+            //         });
+            //     }));
+            // }
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
@@ -171,7 +186,7 @@ export class VentesService {
                     throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
                 } 
             }
-        })
+        });
     }
 
 
@@ -188,8 +203,10 @@ export class VentesService {
                     throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
                 }
 
-
-                if (data.paye > data.montant) {
+                // Calcul du montant total des paiements
+               const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
+     
+                if (totalPaiements > data.montant) {
                     throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
                 }
                 if (data.dateVente > new Date()) {
@@ -222,12 +239,18 @@ export class VentesService {
                         reference: data.reference,
                         montant: data.montant,
                         tva: data.tva,
-                        paye: data.paye,
+                        paiements: {
+                            create: data.paiements
+                              .filter((paiement) => Number(paiement.montant) !== 0)
+                              .map((paiement) => ({
+                                montant: Number(paiement.montant),
+                              })),
+                          },
                         etat: data.etat,
-                        reliquat: data.montant - data.paye,
+                        reliquat: data.montant - totalPaiements,
                         dateVente: new Date(data.dateVente),
                         client: {
-                            connect: { id: data.cleintId }
+                            connect: { id: data.clientId     }
                         },
                         stockVente: {
                             create: data.stockVente.map((stockVente) => ({
@@ -262,26 +285,26 @@ export class VentesService {
                   
     
                 // Update stockProduiFini quantities if etat is true
-                if (data.etat) {
-                    await Promise.all(data.stockVente.map(async (stockVente) => {
-                        const check = await tx.stockProduiFini.findUnique({
-                            where: { id: stockVente.stockProduiFiniId },
-                            select: { id: true }
-                        });
+                // if (data.etat) {
+                //     await Promise.all(data.stockVente.map(async (stockVente) => {
+                //         const check = await tx.stockProduiFini.findUnique({
+                //             where: { id: stockVente.stockProduiFiniId },
+                //             select: { id: true }
+                //         });
     
-                        if (!check) {
-                            throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
-                        }
+                //         if (!check) {
+                //             throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
+                //         }
     
-                        await tx.stockProduiFini.update({
-                            where: { id: stockVente.stockProduiFiniId },
-                            data: {
-                                qt_produit: { decrement: stockVente.quantiteVendue }
-                            },
-                            select: { id: true }
-                        });
-                    }));
-                }
+                //         await tx.stockProduiFini.update({
+                //             where: { id: stockVente.stockProduiFiniId },
+                //             data: {
+                //                 qt_produit: { decrement: stockVente.quantiteVendue }
+                //             },
+                //             select: { id: true }
+                //         });
+                //     }));
+                // }
     
                 const description = `Mise à jour de la vente: ${data.reference}`
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res))
@@ -367,7 +390,6 @@ export class VentesService {
         // })
 
         const quantiteVendue = stockProduiFini.stockVente?.reduce((total, stockVente) => total + stockVente.quantiteVendue, 0) || 0;
-    
         return  stockProduiFini.qt_produit - quantiteVendue
     }
 }
