@@ -7,6 +7,25 @@ export class VenteFetcher extends FetcherFilter {
     etat?: boolean | null
 }
 
+export class Client{
+
+    @ApiProperty()
+    id: string
+
+    @ApiProperty()
+    nom: string
+
+    @ApiProperty()
+    telephone: string
+
+    @ApiProperty()
+    email: string
+}
+
+export class PaiementSave{
+    @ApiProperty()
+    montant: number
+  }
 
 export class VenteTable{
 
@@ -53,20 +72,7 @@ export class PaiementVente{
     updatedAt: Date
   }
 
-export class Client{
 
-    @ApiProperty()
-    id: string
-
-    @ApiProperty()
-    nom: string
-
-    @ApiProperty()
-    telephone: string
-
-    @ApiProperty()
-    email: string
-}
 
 export class Vente {
 

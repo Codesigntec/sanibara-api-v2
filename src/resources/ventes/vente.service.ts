@@ -1,10 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Etat, PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
+import { PaiementSave, PaiementVente, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
-import { timeout } from "rxjs";
 
 
 @Injectable()
@@ -56,6 +55,7 @@ export class VentesService {
                         id: true,
                         montant: true,
                         createdAt: true,
+                        updatedAt: true
                     }
                 },
 
@@ -115,7 +115,7 @@ export class VentesService {
                 const vente = await tx.vente.create({
                     data: {
                         reference: data.reference,
-                        montant:data.montant,
+                        montant: data.montant,
                         tva: data.tva ? data.tva : 0,
                         paiements: {
                             create: data.paiements.map((paiement) => ({
@@ -131,6 +131,7 @@ export class VentesService {
                     },
                     include: {
                       client: true,
+                      paiements: true
                     }
                 })
 
@@ -196,12 +197,14 @@ export class VentesService {
 
                 const check = await tx.vente.findUnique({
                     where: { id: id },
-                    select: { id: true }
+                    select: { id: true, paiements: true }
                 });
 
                 if (!check) {
                     throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
                 }
+
+                let ach = check;
 
                 // Calcul du montant total des paiements
                const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
@@ -266,6 +269,7 @@ export class VentesService {
                     },
                     include: {
                         client: true,
+                        paiements: true,
                         stockVente: {
                             include: {
                                 stockProduiFini: true
@@ -282,8 +286,6 @@ export class VentesService {
                       }
                     }
                   });
-                  
-    
                 // Update stockProduiFini quantities if etat is true
                 // if (data.etat) {
                 //     await Promise.all(data.stockVente.map(async (stockVente) => {
@@ -305,6 +307,15 @@ export class VentesService {
                 //         });
                 //     }));
                 // }
+
+                //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+
+                await Promise.all([ 
+                      // Supprimez les paiements dont le montant est égal à zéro
+                    ach.paiements
+                    .filter((p:PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined) 
+                    .forEach((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
+                ]);
     
                 const description = `Mise à jour de la vente: ${data.reference}`
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res))
@@ -374,7 +385,7 @@ export class VentesService {
         }
     }
 
-
+    // ============== QUANTITE RESTANT ==============
 
     quantiteRestant = async (id: string): Promise<number> => {
         const stockProduiFini = await this.db.stockProduiFini.findUnique({
@@ -382,14 +393,70 @@ export class VentesService {
             include: { stockVente: true }
         })
         if (stockProduiFini === null) throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
-
         // let quantite = 0
-
         // stockProduiFini.stockVente.forEach((stockVente) => {
         //     quantite += stockVente.quantiteVendue
         // })
-
         const quantiteVendue = stockProduiFini.stockVente?.reduce((total, stockVente) => total + stockVente.quantiteVendue, 0) || 0;
         return  stockProduiFini.qt_produit - quantiteVendue
     }
+
+
+
+    // ======================= PAIEMENTS =========================
+        // Méthode pour ajouter un paiement à un achat existant
+        savePaiementToAchat = async (venteId: string, paiement: PaiementSave, userId: string): Promise<PaiementVente> => {
+            // Récupérer l'achat existant par son ID avec les paiements associés
+            const vente = await this.db.vente.findUnique({
+              where: { id: venteId },
+              include: { 
+                paiements: true,
+                stockVente: true
+              },
+            });
+    
+            if (!vente) {
+              throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.NOT_FOUND);
+            }
+    
+            // Calculer le montant total déjà payé
+            const montantTotalPaye = vente.paiements.reduce((acc, p) => acc + p.montant, 0);
+
+            const reliquat: number = vente.montant - montantTotalPaye
+    
+            // Vérifier si le paiement proposé ne dépasse pas le reliquat
+            if (paiement.montant > reliquat) {
+              throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
+            }
+    
+            let newPaiement: PaiementVente;
+    
+            await this.db.$transaction(async (tx) => {
+              // Ajouter le paiement à l'achat
+              newPaiement = await tx.paiementVente.create({
+                data: {
+                  montant: paiement.montant,
+                  vente: { connect: { id: venteId } },
+                },
+              });
+    
+              // Mettre à jour l'achat pour refléter le paiement ajouté
+              await tx.vente.update({
+                where: { id: venteId },
+                data: {
+                  paiements: {
+                    connect: { id: newPaiement.id },
+                  },
+                },
+                include: {
+                  paiements: true, // Inclure les paiements mis à jour dans la réponse
+                },
+              });
+            });
+    
+            const description = `Paiement de ${paiement.montant} pour l'achat ${venteId}`
+            this.trace.logger({action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res));
+    
+            return newPaiement;
+          };
 }

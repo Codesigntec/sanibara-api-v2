@@ -210,7 +210,6 @@ model Vente {
   dateVente   DateTime
   montant     Float
   tva         Float
-  paye        Float
   reliquat    Float
   etat        Boolean  @default(true)
   
