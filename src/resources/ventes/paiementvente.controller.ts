@@ -22,7 +22,7 @@ export class PaiementController {
     constructor(private service: VentesService) { }
 
 
-    @Post('/:achatId')
+    @Post('/:venteId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(PaiementSaverSchema))
@@ -30,11 +30,11 @@ export class PaiementController {
     @ApiOkResponse({ type: PaiementVente })
     async save(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementVente> {
         const userId = req.userId
-        const id = req.params.achatId
-        return await this.service.savePaiementToAchat(id, data, userId)
+        const id = req.params.venteId
+        return await this.service.savePaiementToVente(id, data, userId)
     }
 
-    @Put('/:id/:achatId')
+    @Put('/:id/:venteId')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodPipe(PaiementSaverSchema))
@@ -43,8 +43,8 @@ export class PaiementController {
     async update(@Body() data: PaiementSave, @Req() req: AuthorizedRequest): Promise<PaiementVente> {
         const userId = req.userId
         const id = req.params.id
-        const achatId = req.params.achatId
-        return await this.service.updatePaiement(id, data, achatId, userId)
+        const venteId = req.params.venteId
+        return await this.service.updatePaiement(id, data, venteId, userId)
     }
 
 

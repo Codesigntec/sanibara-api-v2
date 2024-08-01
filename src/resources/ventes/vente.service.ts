@@ -405,7 +405,7 @@ export class VentesService {
 
     // ======================= PAIEMENTS =========================
         // Méthode pour ajouter un paiement à un achat existant
-        savePaiementToAchat = async (venteId: string, paiement: PaiementSave, userId: string): Promise<PaiementVente> => {
+        savePaiementToVente = async (venteId: string, paiement: PaiementSave, userId: string): Promise<PaiementVente> => {
             // Récupérer l'achat existant par son ID avec les paiements associés
             const vente = await this.db.vente.findUnique({
               where: { id: venteId },
@@ -459,4 +459,72 @@ export class VentesService {
     
             return newPaiement;
           };
+
+        updatePaiement = async (id: string, data: PaiementSave, venteId: string ,userId: string): Promise<PaiementVente> => {
+        const check = await this.db.paiement.findUnique({ where:  {id: id }, select: { montant: true } })
+        if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
+    
+            // Récupérer l'achat existant par son ID avec les paiements associés
+            const vente = await this.db.vente.findUnique({
+            where: { id: venteId },
+            include: { 
+                stockVente: true, 
+                paiements: true,
+            },
+            });
+    
+            if (!vente) {
+            throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.NOT_FOUND);
+            }
+    
+            // Calculer le montant total déjà payé
+            const montantTotalPaye = vente.paiements.reduce((acc, p) => acc + p.montant, 0);
+    
+    
+            // Calculer le reliquat restant à payer
+            const reliquat = vente.montant -  montantTotalPaye;
+    
+            // Vérifier si le paiement proposé ne dépasse pas le reliquat
+            if (data.montant > reliquat) {
+            throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
+            }
+    
+        const paiementSaver = await this.db.paiementVente.update({
+            where: { id },
+            data: {
+                montant: data.montant
+            },
+            select: { id: true, montant: true, createdAt: true, updatedAt: true },
+        })
+    
+        const description = `Modification du paiement: ${check.montant} -> ${data.montant} pour l'achat ${venteId}`
+        this.trace.logger({action: 'Modification', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+    
+    
+        return paiementSaver
+        }
+      
+        destroyPaiement = async (id: string, userId: string): Promise<PaiementVente> => {
+            const check = await this.db.paiementVente.findUnique({ where: { id: id }, select: { montant: true } })
+            if (!check) throw new HttpException(errors.NOT_EXIST_PAIEMENT, HttpStatus.BAD_REQUEST);
+    
+            try {
+                const paiementsDestroy = await this.db.paiementVente.delete({
+                    where: { id },
+                    select: {
+                      id: true,
+                      montant: true,
+                      updatedAt: true,
+                      createdAt: true,
+                    }
+                })
+    
+                const description = `Suppression physique du paiement: ${check.montant}`
+                this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+    
+                return paiementsDestroy
+            } catch (_: any) {
+                throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
+            }
+        }
 }
