@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Etat, PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { PaiementSave, PaiementVente, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
+import { PaiementSave, PaiementVente, StockProduiFiniDto, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
 
@@ -19,7 +19,15 @@ export class VentesService {
         return await this.db.vente.findUnique({
             where: { id },
             include: {
-                stockVente: true,
+                client: true,
+                stockVente: {
+                    select:{
+                        quantiteVendue:true,
+                        stockProduiFiniId: true,
+                        prix_unitaire:true,
+                        venteId: true
+                    }
+                },
                 paiements: true
             }
         });
@@ -59,7 +67,9 @@ export class VentesService {
                         id: true,
                         nom: true,
                         telephone: true,
-                        email: true
+                        email: true,
+                        adresse: true,
+                        societe: true
                     }
                 },
                 paiements: {
@@ -70,6 +80,8 @@ export class VentesService {
                         updatedAt: true
                     }
                 },
+                stockVente:true
+                
 
             },
             orderBy: order
@@ -95,7 +107,6 @@ export class VentesService {
         return await this.db.$transaction(async (tx) => {
             try {
 
-                // Calcul du montant total des paiements
                 const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
      
               if (totalPaiements > data.montant) {
@@ -104,7 +115,6 @@ export class VentesService {
                if (data.dateVente > new Date()) {
                 throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                }
-
               if (data.etat) {
                     // Check quantities before creating stockVente records
                     for (const stockVente of data.stockVente) {
@@ -114,7 +124,6 @@ export class VentesService {
                         if (!stock) {
                             throw new HttpException(errors.STOCK_NOT_FOUND, HttpStatus.BAD_REQUEST);
                         }
-    
                         if (stockVente.quantiteVendue > stock.qt_produit) {
                             throw new HttpException(errors.QUANTITE_INSUFFISANTE, HttpStatus.BAD_REQUEST);
                         }
@@ -143,7 +152,7 @@ export class VentesService {
                     },
                     include: {
                       client: true,
-                      paiements: true
+                      paiements: true,
                     }
                 })
 
@@ -152,6 +161,7 @@ export class VentesService {
                  await tx.stockVente.create({
                     data: {
                         quantiteVendue: stockVente.quantiteVendue,
+                        prix_unitaire: stockVente.prix_unitaire,
                         stockProduiFini: {
                             connect: { id: stockVente.stockProduiFiniId }
                         },
@@ -187,7 +197,16 @@ export class VentesService {
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
-                return vente
+                // return vente
+                return await tx.vente.findUnique({
+                    where: { id: vente.id },
+                    include: {
+                        client: true,
+                        paiements: true,
+                        stockVente: true
+                    }
+                });
+
             } catch (error: any) {
                 if (error.status) {
                     throw new HttpException(error.message, error.status);
@@ -206,7 +225,6 @@ export class VentesService {
     update = async (id: string, data: Vente, userId: string): Promise<Vente> => {
         return await this.db.$transaction(async (tx) => {
             try {
-
                 const check = await tx.vente.findUnique({
                     where: { id: id },
                     select: { id: true, paiements: true }
@@ -215,12 +233,9 @@ export class VentesService {
                 if (!check) {
                     throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
                 }
-
                 let ach = check;
-
                 // Calcul du montant total des paiements
                const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
-     
                 if (totalPaiements > data.montant) {
                     throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
                 }
@@ -258,11 +273,11 @@ export class VentesService {
                             create: data.paiements
                               .filter((paiement) => Number(paiement.montant) !== 0)
                               .map((paiement) => ({
-                                montant: Number(paiement.montant),
+                                montant: totalPaiements - Number(paiement.montant),
                               })),
                           },
                         etat: data.etat,
-                        reliquat: data.montant - totalPaiements,
+                        reliquat: data.montant - Number(data.paiements[0].montant),
                         dateVente: new Date(data.dateVente),
                         client: {
                             connect: { id: data.clientId     }
@@ -270,6 +285,7 @@ export class VentesService {
                         stockVente: {
                             create: data.stockVente.map((stockVente) => ({
                                 quantiteVendue: stockVente.quantiteVendue,
+                                prix_unitaire: stockVente.prix_unitaire,
                                 stockProduiFini: {
                                     connect: { id: stockVente.stockProduiFiniId }
                                 },
@@ -282,11 +298,7 @@ export class VentesService {
                     include: {
                         client: true,
                         paiements: true,
-                        stockVente: {
-                            include: {
-                                stockProduiFini: true
-                            }
-                        }
+                        stockVente: true,
                     }
                 });
 
@@ -333,6 +345,7 @@ export class VentesService {
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res))
     
                 return updatedVente
+     
             } catch (error: any) {
                 if (error.status) throw new HttpException(error.message, error.status);
                 else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -473,7 +486,7 @@ export class VentesService {
           };
 
         updatePaiement = async (id: string, data: PaiementSave, venteId: string ,userId: string): Promise<PaiementVente> => {
-        const check = await this.db.paiement.findUnique({ where:  {id: id }, select: { montant: true } })
+        const check = await this.db.paiementVente.findUnique({ where:  {id: id }, select: { montant: true } })
         if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
     
             // Récupérer l'achat existant par son ID avec les paiements associés
@@ -530,13 +543,27 @@ export class VentesService {
                       createdAt: true,
                     }
                 })
-    
                 const description = `Suppression physique du paiement: ${check.montant}`
                 this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+                
     
                 return paiementsDestroy
             } catch (_: any) {
                 throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
             }
+        }
+
+
+        //===================STOCK PRODUIT FINI====================
+
+
+        findByIdStockProduiFini = async (id: string): Promise<StockProduiFiniDto> => {
+            return await this.db.stockProduiFini.findUnique({
+                where: { id },
+                include: {
+                    produitFini: true,
+                    
+                }
+            });
         }
 }

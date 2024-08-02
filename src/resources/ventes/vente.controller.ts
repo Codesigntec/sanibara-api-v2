@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards, UsePipes, Version } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiResponse, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types";
-import saverSchemaVente, { Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
+import saverSchemaVente, { StockProduiFiniDto, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { VentesService } from "./vente.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
@@ -72,6 +72,15 @@ export class VentesController {
         return await this.service.findById(req.params.id)
     }
     
+
+    @Get('/findByid/Stock/ProduitFini/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: StockProduiFiniDto })
+    async findByIdStockProduitFini(@Req() req: AuthorizedRequest): Promise<StockProduiFiniDto> {
+        return await this.service.findByIdStockProduiFini(req.params.id)
+    }
 
     @Post('/')
     @Version('2')

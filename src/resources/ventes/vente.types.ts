@@ -57,6 +57,9 @@ export class VenteTable{
     client: Client
 
     @ApiProperty()
+    stockVente?: StockVenteProduiFiniId[]
+
+    @ApiProperty()
     paiements: PaiementVente[]
 
 }
@@ -71,6 +74,29 @@ export class PaiementVente{
     @ApiProperty()
     updatedAt: Date
   }
+
+export class ProduitDto {
+    @ApiProperty()
+    id: string;
+  
+    @ApiProperty()
+    designation?: string;
+
+    @ApiProperty()
+    description: string
+  
+  }
+  
+  export class StockProduiFiniDto {
+
+    @ApiProperty()
+    id: string
+
+    @ApiProperty()
+    produitFini: ProduitDto;
+  
+  }
+  
 
 
 
@@ -122,7 +148,18 @@ export class Vente {
     @ApiProperty()
     id: string
 }
+export class StockVenteProduiFiniId{
 
+  @ApiProperty()
+    id: string
+    
+  @ApiProperty()
+    stockProduiFiniId: string
+
+    @ApiProperty()
+    prix_unitaire: number
+
+}
 export class StockVenteFull{
 
     @ApiProperty()
@@ -130,6 +167,9 @@ export class StockVenteFull{
     
     @ApiProperty()
     stockProduiFiniId: string
+
+    @ApiProperty()
+    prix_unitaire: number
 
     @ApiProperty()
     venteId: string
@@ -172,6 +212,7 @@ const saverSchemaVente = z.object({
     stockVente: z.array(z.object({
         id: z.string().optional(),
         quantiteVendue: z.number(),
+        prix_unitaire: z.number(),
         stockProduiFiniId: z.string(),
         venteId: z.string().optional()
     }))

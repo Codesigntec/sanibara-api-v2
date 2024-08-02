@@ -261,6 +261,7 @@ model Client {
 model StockVente {
   id                String           @id @default(cuid())
   quantiteVendue    Int
+  prix_unitaire     Float            @default(0)
   stockProduiFiniId String           @map("stock_produi_fini_id")
   venteId           String           @map("vente_id")
 

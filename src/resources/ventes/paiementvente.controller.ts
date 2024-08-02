@@ -47,7 +47,6 @@ export class PaiementVenteController {
         return await this.service.updatePaiement(id, data, venteId, userId)
     }
 
-
     @Delete('/:id/destroy')
     @Version('2')
     @HttpCode(HttpStatus.OK)
@@ -58,7 +57,6 @@ export class PaiementVenteController {
         const id = req.params.id
         return await this.service.destroyPaiement(id, userId)
     }
-
  
     
 }

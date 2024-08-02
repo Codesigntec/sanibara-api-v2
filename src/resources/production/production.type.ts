@@ -39,6 +39,7 @@ export class ProduitDto {
 }
 
 
+
 export class StockProduiFiniDto {
 
   @ApiProperty()
