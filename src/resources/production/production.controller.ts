@@ -157,7 +157,7 @@ export class ProductionController {
         return await this.service.archive(id, userId)
     }
 
-    @Delete('/:id')
+    @Delete('/:id/hasStockVenteLink/:etat')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
@@ -165,7 +165,8 @@ export class ProductionController {
     async remove(@Req() req: AuthorizedRequest): Promise<ProdReturn> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.remove(id, userId)
+        const etat = req.params.etat
+        return await this.service.remove(id, userId, etat)
     }
 
     @Delete('/:id/destroy')

@@ -550,21 +550,49 @@ export class ProductionService {
       return magasin
     }
 
-    remove = async (id: string, userId: string): Promise<ProdReturn> => {
-      const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, removed: true } })
+    remove = async (id: string, userId: string, etat: string): Promise<ProdReturn> => {
+      const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, removed: true, stockProdFini: { select: { id: true } } } })
       if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+      const stockIds = check.stockProdFini.map(stock => stock.id);
+      const newRemovedState = !check.removed;
 
       const magasin = await this.db.productions.update({
           where: { id },
           data: {
-              removed: !check.removed
+              removed: newRemovedState
           },
           select: { id: true }
       })
 
       const description = `Suppression logique d'une production: ${check.description}`
       this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+ 
+      if (etat === 'true') {
+             // Supprimer les ventes liées aux StockVente qui sont liés à stockProdFini de la production
+            // await this.db.vente.deleteMany({
+            //   where: {
+            //     stockVente: {
+            //       stockProdFiniId: { in: stockIds }
+            //     }
+            //   }
+            // });
 
+            // Récupérer tous les stockVente liés aux stockProdFini
+              // Mettre à jour les ventes liées aux stockVente
+              await this.db.vente.updateMany({
+                where: {
+                  stockVente: {
+                    some: {
+                      stockProduiFiniId: { in: stockIds }
+                    }
+                  }
+                },
+                data: {
+                  removed: newRemovedState
+                }
+              });
+          }
 
       return magasin
     }
