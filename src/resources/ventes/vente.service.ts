@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Etat, PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { PaiementSave, PaiementVente, StockProduiFiniDto, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
+import { PaiementSave, PaiementVente, StockProduiFiniDto, StockVente, Vente, VenteArchiveDeleteAndDestory, VenteFetcher, VenteTable } from "./vente.types";
 import { errors } from "./vente.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
 
@@ -172,28 +172,6 @@ export class VentesService {
                 });
             }));
 
-
-                 // Update stockProduiFini quantities if etat is true
-            // if (data.etat) {
-            //     await Promise.all(data.stockVente.map(async (stockVente) => {
-            //         const check = await tx.stockProduiFini.findUnique({
-            //             where: { id: stockVente.stockProduiFiniId },
-            //             select: { id: true }
-            //         });
-
-            //         if (!check) {
-            //             throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
-            //         }
-
-            //         await tx.stockProduiFini.update({
-            //             where: { id: stockVente.stockProduiFiniId },
-            //             data: {
-            //                 qt_produit: { decrement: stockVente.quantiteVendue }
-            //             },
-            //             select: { id: true }
-            //         });
-            //     }));
-            // }
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
@@ -223,11 +201,14 @@ export class VentesService {
 
 
     update = async (id: string, data: Vente, userId: string): Promise<Vente> => {
+  
         return await this.db.$transaction(async (tx) => {
+
+            let lastStockVente: any;
             try {
                 const check = await tx.vente.findUnique({
                     where: { id: id },
-                    select: { id: true, paiements: true }
+                    select: { id: true, paiements: true, stockVente: true }
                 });
 
                 if (!check) {
@@ -242,6 +223,16 @@ export class VentesService {
                 if (data.dateVente > new Date()) {
                     throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                 }
+
+                  lastStockVente = check.stockVente;
+
+
+                await tx.stockVente.deleteMany({
+                    where: {
+                      venteId: id,
+                    }
+                  });
+
     
                 if (data.etat) {
                     // Check quantities before updating stockVente records
@@ -262,7 +253,7 @@ export class VentesService {
                         }
                     }
                 }
-    
+
                 const updatedVente = await tx.vente.update({
                     where: { id },
                     data: {
@@ -282,18 +273,6 @@ export class VentesService {
                         client: {
                             connect: { id: data.clientId     }
                         },
-                        stockVente: {
-                            create: data.stockVente.map((stockVente) => ({
-                                quantiteVendue: stockVente.quantiteVendue,
-                                prix_unitaire: stockVente.prix_unitaire,
-                                stockProduiFini: {
-                                    connect: { id: stockVente.stockProduiFiniId }
-                                },
-                                vente: {
-                                    connect: { id }
-                                }
-                            }))
-                        }
                     },
                     include: {
                         client: true,
@@ -302,14 +281,22 @@ export class VentesService {
                     }
                 });
 
-                await tx.stockVente.deleteMany({
-                    where: {
-                      venteId: id,
-                      id: {
-                        notIn: data.stockVente.map((stockVente) => stockVente.venteId)
-                      }
-                    }
-                  });
+                    await Promise.all(data.stockVente.map(async (stockVente) => {
+                        // Create stockVente records with the vente ID
+                        await tx.stockVente.create({
+                        data: {
+                            quantiteVendue: stockVente.quantiteVendue,
+                            prix_unitaire: stockVente.prix_unitaire,
+                            stockProduiFini: {
+                                connect: { id: stockVente.stockProduiFiniId }
+                            },
+                            vente: {
+                                connect: { id: id }
+                            }
+                        }
+                    });
+                }));
+
                 // Update stockProduiFini quantities if etat is true
                 // if (data.etat) {
                 //     await Promise.all(data.stockVente.map(async (stockVente) => {
@@ -334,22 +321,55 @@ export class VentesService {
 
                 //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
 
+ 
                 await Promise.all([ 
                       // Supprimez les paiements dont le montant est égal à zéro
                     ach.paiements
                     .filter((p:PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined) 
                     .forEach((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
-                ]);
-    
+                ]);    
+
                 const description = `Mise à jour de la vente: ${data.reference}`
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res))
     
-                return updatedVente
+                
+                return  await tx.vente.findUnique({
+                    where: { id: updatedVente.id },
+                    include: {
+                        client: true,
+                        paiements: true,
+                        stockVente: true
+                    }
+                });
      
             } catch (error: any) {
-                if (error.status) throw new HttpException(error.message, error.status);
-                else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+
+
+                await Promise.all(lastStockVente.map(async (stockVente: any) => {
+                    // Create stockVente records with the vente ID
+                    await tx.stockVente.create({
+                    data: {
+                        quantiteVendue: stockVente.quantiteVendue,
+                        prix_unitaire: stockVente.prix_unitaire,
+                        stockProduiFini: {
+                            connect: { id: stockVente.stockProduiFiniId }
+                        },
+                        vente: {
+                            connect: { id: id }
+                        }
+                    }
+                });
+            }));
+
+
+            console.log(error);
+            
+            if (error.status){
+                    throw new HttpException(error.message, error.status);
             }
+
+            else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
         });
     }
     

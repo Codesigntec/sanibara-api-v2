@@ -135,6 +135,7 @@ export class Vente {
 
   }
 
+
   export class VenteArchiveDeleteAndDestory{
 
     @ApiProperty()

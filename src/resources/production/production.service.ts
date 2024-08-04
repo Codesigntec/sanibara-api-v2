@@ -75,6 +75,7 @@ export class ProductionService {
           orderBy: order
       })
 
+      
 
 
       const totalCount = await this.db.productions.count({ where: conditions });
@@ -496,12 +497,6 @@ export class ProductionService {
                     const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
                       existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
                     );
-
-                    console.log("ICI NOUS METONS À JOURS LES LIGNES D'ACHAT DE LA PRODUCTION GENRE AUGMENTER LA QUANTITÉ UTILISÉE");
-                    console.log(validProductionLigneAchat);
-
-                    console.log(check.productionLigneAchat);
-
                     await Promise.all([
                       // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
                       ...validProductionLigneAchat.map(async (ligne) => {
@@ -525,7 +520,6 @@ export class ProductionService {
                       })
                     ]);
 
-        
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
                 return productions
@@ -663,6 +657,14 @@ export class ProductionService {
           orderBy: order
       })
 
+
+        // Récupérer les IDs des produits finis liés à StockVente
+        const stockVenteProductIds = await this.db.stockVente.findMany({
+          select: {
+            stockProduiFiniId: true
+          }
+        }).then(results => results.map(stock => stock.stockProduiFiniId));
+
       let tableContent: tableReturn[] = [];
       let i = 0;
       production.forEach(element => {
@@ -692,6 +694,11 @@ export class ProductionService {
         element.coutProduction.forEach((element) => {
             montantChargeOuCoutProduction += element.montant;
         });
+
+
+        // Vérifier si au moins un produit fini de cette production est lié à StockVente
+          const hasStockVenteLink = element.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
+
       
         tableContent.push({
           id: element.id,
@@ -701,14 +708,15 @@ export class ProductionService {
           description: element.description,
           dateDebut: element.dateDebut,
           dateFin: element.dateFin,
-          coutTotal : montantPrixAchatMatierePremiere + montantChargeOuCoutProduction + coutAchatMatirePremiere
+          coutTotal : montantPrixAchatMatierePremiere + montantChargeOuCoutProduction + coutAchatMatirePremiere,
+          hasStockVenteLink: hasStockVenteLink,
         })
 
       });
       
 
-      const totalCount = await this.db.productions.count({ where: conditions });
 
+      const totalCount = await this.db.productions.count({ where: conditions });
       const totalPages = Math.ceil(totalCount / limit);
       const pagination: Pagination<tableReturn> = {
           data: tableContent,

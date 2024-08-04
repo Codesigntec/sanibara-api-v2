@@ -234,6 +234,8 @@ export class ProductionsReturn{
 
   @ApiProperty()
   createdAt: Date
+
+
 }
 
 
@@ -299,6 +301,9 @@ export class tableReturn{
 
   @ApiProperty()
   coutTotal : number
+
+  @ApiProperty()
+  hasStockVenteLink : boolean
 }
 
 
