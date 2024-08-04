@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { UniteFetcher, UniteSaver, Unite, UniteSelect } from './structure.types';
 import { errors } from './structure.constant';
 import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
+import { Structure, StructureFull } from './structure.types';
 
 @Injectable()
 export class StructureService {
@@ -13,156 +13,81 @@ export class StructureService {
         private trace: TraceService
     ) { }
 
-    list = async (filter: UniteFetcher, query: PaginationQuery): Promise<Pagination<Unite>> => {
-        const conditions = { ...filter }
-        const limit = query.size ? query.size : 10;
-        const offset = query.page ? (query.page - 1) * limit : 0;
-
-        let order = {}
-        if(query.orderBy){
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
-        }
 
 
-        const unites = await this.db.unite.findMany({
-            take: limit,
-            skip: offset,
-            where: conditions,
-            select: { id: true, libelle: true, createdAt: true, },
-            orderBy: order
+    saveOrUpdate = async (data: Structure, userId: string): Promise<Structure> => {
+
+        const struct = await this.db.structure.findMany({
+            select: { id: true,  },
         })
 
-        const totalCount = await this.db.unite.count({ where: conditions });
+        let structure: Structure;
 
-        const totalPages = Math.ceil(totalCount / limit);
-        const pagination: Pagination<Unite> = {
-            data: unites,
-            totalPages,
-            totalCount,
-            currentPage: query.page ? query.page : 1,
-            size: limit
-        }
-
-        return pagination
-    }
-
-    select = async (): Promise<UniteSelect[]> => {
-        const unites = await this.db.unite.findMany({ 
-            where: { removed: false, archive: false },
-            select: { id: true, libelle: true }
-        })
-        return unites
-    }
-
-    save = async (data: UniteSaver, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findFirst({ 
-            where: { 
-                libelle: { 
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                } 
-            }
-        })
-        if (check !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-
-        const unite = await this.db.unite.create({
+        if (struct.length > 0) {
+              
+         structure = await this.db.structure.create({
             data: {
-                libelle: data.libelle
+                nom: data.nom,
+                email: data.email,
+                telephone: data.telephone,
+                adresse: data.adresse,
+                logo: data.logo,
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, nom: true, email: true, telephone: true, logo: true, adresse: true, createdAt: true, updatedAt: true }
         })
 
-        const description = `Ajout de l'unité: ${data.libelle}`
+        }else{
+              
+            structure = await this.db.structure.update({
+                where: { id: data.id },
+                data: {
+                    nom: data.nom,
+                    email: data.email,
+                    telephone: data.telephone,
+                    adresse: data.adresse,
+                    logo: data.logo,
+                },
+                select: { id: true, nom: true, email: true, telephone: true, logo: true, adresse: true, createdAt: true, updatedAt: true }
+            })
+        }
+
+        const description = `Renseignement des données de la structure: ${data.nom}`
         this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
-        return unite
+        return structure
     }
 
-    update = async (id: string, data: UniteSaver, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+    // update = async (id: string, data: UniteSaver, userId: string): Promise<Unite> => {
+    //     const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
+    //     if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
-        const checkFirst = await this.db.unite.findFirst({ 
-            where: { 
-                id: {
-                    not: id
-                },
-                libelle: { 
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                } 
-            }
-        })
-        if (checkFirst !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+    //     const checkFirst = await this.db.unite.findFirst({ 
+    //         where: { 
+    //             id: {
+    //                 not: id
+    //             },
+    //             libelle: { 
+    //                 equals: data.libelle,
+    //                 mode: 'insensitive'
+    //             } 
+    //         }
+    //     })
+    //     if (checkFirst !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
-        const unite = await this.db.unite.update({
-            where: { id },
-            data: {
-                libelle: data.libelle
-            },
-            select: { id: true, libelle: true, createdAt: true }
-        })
+    //     const unite = await this.db.unite.update({
+    //         where: { id },
+    //         data: {
+    //             libelle: data.libelle
+    //         },
+    //         select: { id: true, libelle: true, createdAt: true }
+    //     })
 
-        const description = `Modification de l'unité: ${check.libelle} -> ${data.libelle}`
-        this.trace.logger({action: 'Modification', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
-
-
-        return unite
-    }
-
-    archive = async (id: string, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true, archive: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
-
-        const unite = await this.db.unite.update({
-            where: { id },
-            data: {
-                archive: !check.archive
-            },
-            select: { id: true, libelle: true, createdAt: true }
-        })
-
-        const description = `Archivage de l'unité: ${check.libelle}`
-        this.trace.logger({action: 'Archivage', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
-
-        return unite
-    }
-
-    remove = async (id: string, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true, removed: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
-
-        const unite = await this.db.unite.update({
-            where: { id },
-            data: {
-                removed: !check.removed
-            },
-            select: { id: true, libelle: true, createdAt: true }
-        })
-
-        const description = `Suppression logique de l'unité: ${check.libelle}`
-        this.trace.logger({action: 'Suppression logique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
+    //     const description = `Modification de l'unité: ${check.libelle} -> ${data.libelle}`
+    //     this.trace.logger({action: 'Modification', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
 
-        return unite
-    }
+    //     return unite
+    // }
 
-    destroy = async (id: string, userId: string): Promise<Unite> => {
-        const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
-
-        try {
-            const unite = await this.db.unite.delete({
-                where: { id },
-                select: { id: true, libelle: true, createdAt: true }
-            })
-
-            const description = `Suppression physique de l'unité: ${check.libelle}`
-            this.trace.logger({action: 'Suppression physique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
-
-            return unite
-        } catch (_: any) {
-            throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
-        }
-    }
+    
 }

@@ -3,34 +3,65 @@ import { FetcherFilter, Pagination } from "src/common/types"
 import { z } from "zod"
 import { errors } from "./structure.constant"
 
-export class UniteFetcher extends FetcherFilter {
+export class StructureFetcher extends FetcherFilter {
 }
 
-export class UniteSaver {
+
+
+export class StructureFull {
+
   @ApiProperty()
-  libelle: string
+  nom: string
+
+  @ApiProperty()
+  email: string
+
+  @ApiProperty()
+  telephone: string
+
+  @ApiProperty()
+  adresse: string
+
+  @ApiProperty()
+  logo: string
+
+}
+
+export class Structure extends StructureFull{
+  @ApiProperty()
+  id?: string 
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  updatedAt: Date
+
 }
 
 // ============= RESPONSE
-export class UniteSelect {
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  libelle: string
-}
-export class Unite extends UniteSelect {
-  @ApiProperty()
-  createdAt: Date
-}
-
 // ================VALIDATION
 
 export const saverSchema = z
   .object({
-    libelle: z.string({
-      required_error: errors.LABEL_REQUIRED,
-      invalid_type_error: errors.LABEL_MUST_BE_STRING,
-    })
+    nom: z.string({
+      required_error: errors.NOM_REQUIRED,
+      invalid_type_error: errors.NOM_MUST_BE_STRING,
+    }),
+    email: z.string({
+      required_error: errors.EMAIL_REQUIRED,
+      invalid_type_error: errors.EMAIL_MUST_BE_STRING,
+    }),
+    telephone: z.string({
+      required_error: errors.TELEPHONE_REQUIRED,
+      invalid_type_error: errors.TELEPHONE_MUST_BE_STRING,
+    }),
+    adresse: z.string({
+      required_error: errors.ADRESSE_REQUIRED,
+      invalid_type_error: errors.ADRESSE_MUST_BE_STRING,
+    }),
+    logo: z.string({
+      invalid_type_error: errors.LOGO_MUST_BE_STRING,
+    }).nullable().optional(),
   })
   .required();
