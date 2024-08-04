@@ -573,7 +573,7 @@ export class ProductionService {
             // await this.db.vente.deleteMany({
             //   where: {
             //     stockVente: {
-            //       stockProdFiniId: { in: stockIds }
+            //       stockProduiFiniId: { in: stockIds }
             //     }
             //   }
             // });

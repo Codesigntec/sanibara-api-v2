@@ -44,6 +44,9 @@ export class VenteTable{
     @ApiProperty()
     tva: number
 
+    @ApiProperty()
+    etat: boolean
+
     // @ApiProperty()
     // paye: number
     

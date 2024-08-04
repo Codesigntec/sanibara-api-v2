@@ -59,6 +59,7 @@ export class VentesService {
                 reference: true,
                 dateVente: true,
                 reliquat: true,
+                etat: true,
                 montant: true,
                 tva: true,
                 createdAt: true,
@@ -106,16 +107,16 @@ export class VentesService {
     
         return await this.db.$transaction(async (tx) => {
             try {
-
-                const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
+            
      
-              if (totalPaiements > data.montant) {
-                throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
-               }
                if (data.dateVente > new Date()) {
                 throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                }
-              if (data.etat) {
+               const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
+               if (data.etat) {
+                    if (totalPaiements > data.montant) {
+                    throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
+                    }
                     // Check quantities before creating stockVente records
                     for (const stockVente of data.stockVente) {
                         const stock = await tx.stockProduiFini.findUnique({
@@ -132,7 +133,6 @@ export class VentesService {
                         }
                     }
               }
-            
                 const vente = await tx.vente.create({
                     data: {
                         reference: data.reference,
@@ -187,8 +187,8 @@ export class VentesService {
 
             } catch (error: any) {
                 if (error.status) {
+                    console.log(error);
                     throw new HttpException(error.message, error.status);
-                console.log(error);
                 }
                 else{
                     console.log(error);
@@ -201,41 +201,55 @@ export class VentesService {
 
 
     update = async (id: string, data: Vente, userId: string): Promise<Vente> => {
-  
         return await this.db.$transaction(async (tx) => {
-
             let lastStockVente: any;
             try {
                 const check = await tx.vente.findUnique({
                     where: { id: id },
                     select: { id: true, paiements: true, stockVente: true }
                 });
-
+    
                 if (!check) {
                     throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
                 }
                 let ach = check;
-                // Calcul du montant total des paiements
-               const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
-                if (totalPaiements > data.montant) {
+    
+                const totalPaiementsOld = check.paiements.reduce((acc, paiement) => acc + (Number(paiement.montant) || 0), 0);
+                if (data.paiements[0].montant > data.montant) {
                     throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
                 }
                 if (data.dateVente > new Date()) {
                     throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                 }
 
-                  lastStockVente = check.stockVente;
+                console.log("===========================totalPaiements===========================");
+                 
 
+                console.log("===========================data.montant==============================");
+                    
+                console.log(data.montant)
 
-                await tx.stockVente.deleteMany({
-                    where: {
-                      venteId: id,
-                    }
-                  });
-
+                console.log("===========================data.paiements=================================");
+                    
+                console.log(data.paiements)
     
+    
+                // lastStockVente = check.stockVente;
+                // for (const stockVente of check.stockVente) {
+                //     const existingStock = await tx.stockVente.findUnique({
+                //         where: { id: stockVente.id }
+                //     });
+                //     if (existingStock) {
+                //         console.log(`ID trouvé pour suppression: ${stockVente.id}`);
+                //         await tx.stockVente.delete({
+                //             where: { id: stockVente.id }
+                //         });
+                //     } else {
+                //         console.log(`ID non trouvé pour suppression: ${stockVente.id}`);
+                //     }
+                // }
+                
                 if (data.etat) {
-                    // Check quantities before updating stockVente records
                     for (const stockVente of data.stockVente) {
                         const stock = await tx.stockProduiFini.findUnique({
                             where: { id: stockVente.stockProduiFiniId }
@@ -253,7 +267,6 @@ export class VentesService {
                         }
                     }
                 }
-
                 const updatedVente = await tx.vente.update({
                     where: { id },
                     data: {
@@ -262,16 +275,15 @@ export class VentesService {
                         tva: data.tva,
                         paiements: {
                             create: data.paiements
-                              .filter((paiement) => Number(paiement.montant) !== 0)
-                              .map((paiement) => ({
-                                montant: totalPaiements - Number(paiement.montant),
-                              })),
-                          },
+                                .map((paiement) => ({
+                                    montant: Number(paiement.montant) - totalPaiementsOld,
+                                })),
+                        },
                         etat: data.etat,
                         reliquat: data.montant - Number(data.paiements[0].montant),
                         dateVente: new Date(data.dateVente),
                         client: {
-                            connect: { id: data.clientId     }
+                            connect: { id: data.clientId }
                         },
                     },
                     include: {
@@ -281,59 +293,71 @@ export class VentesService {
                     }
                 });
 
+
+                // await Promise.all(data.stockVente.map(async (stockVente) => {
+                //     await tx.stockVente.create({
+                //         data: {
+                //             quantiteVendue: stockVente.quantiteVendue,
+                //             prix_unitaire: stockVente.prix_unitaire,
+                //             stockProduiFini: {
+                //                 connect: { id: stockVente.stockProduiFiniId }
+                //             },
+                //             vente: {
+                //                 connect: { id: id }
+                //             }
+                //         }
+                //     });
+                // }));
+
+                   // Récupérer les IDs existants
+                    const existingStockVente = await tx.stockVente.findMany({
+                        where: { venteId: id },
+                        select: { id: true, stockProduiFiniId: true, venteId: true }
+                    });
+                    // Convertir les résultats en un ensemble pour une recherche rapide
+                    const existingMap = new Map(existingStockVente.map(e => (
+                        [`${e.stockProduiFiniId}_${e.venteId}`, e.id]
+                    )));
+
+                    // Traitement des entrées stockVente
                     await Promise.all(data.stockVente.map(async (stockVente) => {
-                        // Create stockVente records with the vente ID
+                        const key = `${stockVente.stockProduiFiniId}_${id}`;
+                        if (existingMap.has(key)) {
+                        // Mise à jour si l'entrée existe
+                        await tx.stockVente.update({
+                            where: { id: existingMap.get(key) },
+                            data: {
+                            quantiteVendue: stockVente.quantiteVendue,
+                            prix_unitaire: stockVente.prix_unitaire,
+                            }
+                        });
+                        } else {
+                        // Création si l'entrée n'existe pas
                         await tx.stockVente.create({
-                        data: {
+                            data: {
                             quantiteVendue: stockVente.quantiteVendue,
                             prix_unitaire: stockVente.prix_unitaire,
                             stockProduiFini: {
                                 connect: { id: stockVente.stockProduiFiniId }
                             },
                             vente: {
-                                connect: { id: id }
+                                connect: { id: id}
                             }
+                            }
+                        });
                         }
-                    });
-                }));
 
-                // Update stockProduiFini quantities if etat is true
-                // if (data.etat) {
-                //     await Promise.all(data.stockVente.map(async (stockVente) => {
-                //         const check = await tx.stockProduiFini.findUnique({
-                //             where: { id: stockVente.stockProduiFiniId },
-                //             select: { id: true }
-                //         });
-    
-                //         if (!check) {
-                //             throw new HttpException(errors.NOT_PRODUI_FINI_EXIST, HttpStatus.BAD_REQUEST);
-                //         }
-    
-                //         await tx.stockProduiFini.update({
-                //             where: { id: stockVente.stockProduiFiniId },
-                //             data: {
-                //                 qt_produit: { decrement: stockVente.quantiteVendue }
-                //             },
-                //             select: { id: true }
-                //         });
-                //     }));
-                // }
-
-                //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
-
- 
-                await Promise.all([ 
-                      // Supprimez les paiements dont le montant est égal à zéro
+                    }));
+                await Promise.all(
                     ach.paiements
-                    .filter((p:PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined) 
-                    .forEach((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
-                ]);    
-
-                const description = `Mise à jour de la vente: ${data.reference}`
-                this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+                        .filter((p: PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined)
+                        .map((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
+                );
     
-                
-                return  await tx.vente.findUnique({
+                const description = `Mise à jour de la vente: ${data.reference}`;
+                this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res));
+    
+                return await tx.vente.findUnique({
                     where: { id: updatedVente.id },
                     include: {
                         client: true,
@@ -341,35 +365,33 @@ export class VentesService {
                         stockVente: true
                     }
                 });
-     
+    
             } catch (error: any) {
-
-
-                await Promise.all(lastStockVente.map(async (stockVente: any) => {
-                    // Create stockVente records with the vente ID
-                    await tx.stockVente.create({
-                    data: {
-                        quantiteVendue: stockVente.quantiteVendue,
-                        prix_unitaire: stockVente.prix_unitaire,
-                        stockProduiFini: {
-                            connect: { id: stockVente.stockProduiFiniId }
-                        },
-                        vente: {
-                            connect: { id: id }
-                        }
-                    }
-                });
-            }));
-
-
-            console.log(error);
-            
-            if (error.status){
+                console.log('Error during transaction:', error);
+    
+                // if (lastStockVente) {
+                //     await Promise.all(lastStockVente.map(async (stockVente: any) => {
+                //         await tx.stockVente.create({
+                //             data: {
+                //                 quantiteVendue: stockVente.quantiteVendue,
+                //                 prix_unitaire: stockVente.prix_unitaire,
+                //                 stockProduiFini: {
+                //                     connect: { id: stockVente.stockProduiFiniId }
+                //                 },
+                //                 vente: {
+                //                     connect: { id: id }
+                //                 }
+                //             }
+                //         });
+                //     }));
+                // }
+    
+                if (error.status) {
                     throw new HttpException(error.message, error.status);
+                } else {
+                    throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+                }
             }
-
-            else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
         });
     }
     

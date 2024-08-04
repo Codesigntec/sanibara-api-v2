@@ -19,6 +19,7 @@ import { DepenseModule } from './resources/depense/depense.module';
 import { AchatsModule } from './resources/achat/achat.module';
 import { ProductionModule } from './resources/production/production.module';
 import { VenteModule } from './resources/ventes/vente.module';
+import { StructureModule } from './resources/structure/structure.module';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { VenteModule } from './resources/ventes/vente.module';
     TraceModule,
     AchatsModule,
     ProductionModule,
-    VenteModule
+    VenteModule,
+    StructureModule
   ],
   controllers: [AppController],
   providers: [AppService],
