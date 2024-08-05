@@ -20,6 +20,7 @@ export class StructureService {
         const struct = await this.db.structure.findMany({
             select: { id: true,  },
         })
+        
 console.log(data);
 
         let structure: Structure;
