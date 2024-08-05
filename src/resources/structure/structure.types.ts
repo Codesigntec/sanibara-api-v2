@@ -29,7 +29,7 @@ export class StructureFull {
 
 export class Structure extends StructureFull{
   @ApiProperty()
-  id?: string 
+  id: string 
 
   @ApiProperty()
   createdAt: Date
@@ -44,6 +44,7 @@ export class Structure extends StructureFull{
 
 export const saverSchema = z
   .object({
+    id: z.string().nullable().optional(),
     nom: z.string({
       required_error: errors.NOM_REQUIRED,
       invalid_type_error: errors.NOM_MUST_BE_STRING,

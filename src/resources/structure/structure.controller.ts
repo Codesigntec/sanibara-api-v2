@@ -31,6 +31,15 @@ export class StructureController {
         return await this.service.saveOrUpdate(data, userId)
     }
 
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: Structure })
+    async list(): Promise<Structure[]> {
+        return await this.service.list()
+    }
+    
 
 
    

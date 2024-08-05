@@ -20,10 +20,11 @@ export class StructureService {
         const struct = await this.db.structure.findMany({
             select: { id: true,  },
         })
+console.log(data);
 
         let structure: Structure;
 
-        if (struct.length > 0) {
+        if (struct.length <= 0) {
               
          structure = await this.db.structure.create({
             data: {
@@ -31,11 +32,10 @@ export class StructureService {
                 email: data.email,
                 telephone: data.telephone,
                 adresse: data.adresse,
-                logo: data.logo,
+                logo: data.logo ? data.logo : "",
             },
             select: { id: true, nom: true, email: true, telephone: true, logo: true, adresse: true, createdAt: true, updatedAt: true }
         })
-
         }else{
               
             structure = await this.db.structure.update({
@@ -55,39 +55,20 @@ export class StructureService {
         this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
         return structure
+    } 
+    list = async (): Promise<Structure[]> => { // Retourne un tableau de Structure
+        const structures = await this.db.structure.findMany({
+            select: { 
+                id: true, 
+                nom: true,
+                email: true,
+                telephone: true,
+                adresse: true,
+                logo: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+        return structures as Structure[]; // Assurez-vous que le type correspond
     }
-
-    // update = async (id: string, data: UniteSaver, userId: string): Promise<Unite> => {
-    //     const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
-    //     if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
-
-    //     const checkFirst = await this.db.unite.findFirst({ 
-    //         where: { 
-    //             id: {
-    //                 not: id
-    //             },
-    //             libelle: { 
-    //                 equals: data.libelle,
-    //                 mode: 'insensitive'
-    //             } 
-    //         }
-    //     })
-    //     if (checkFirst !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-
-    //     const unite = await this.db.unite.update({
-    //         where: { id },
-    //         data: {
-    //             libelle: data.libelle
-    //         },
-    //         select: { id: true, libelle: true, createdAt: true }
-    //     })
-
-    //     const description = `Modification de l'unité: ${check.libelle} -> ${data.libelle}`
-    //     this.trace.logger({action: 'Modification', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
-
-
-    //     return unite
-    // }
-
-    
 }
