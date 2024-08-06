@@ -74,6 +74,23 @@ export class StatistiqueClient{
   magasin: string
 }
 
+// export class StockPFini{
+
+//   @ApiProperty()
+//   id: string
+
+//   @ApiProperty()
+//   magasin:{
+//     id: string
+//     nom: string
+//   }
+
+//   @ApiProperty()
+//   produitFini:{
+//     id: string
+//     designation: string
+//   }
+// }
 // ================VALIDATION
 
 export const saverSchema = z

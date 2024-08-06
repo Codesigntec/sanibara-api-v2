@@ -225,13 +225,101 @@ export class ClientService {
         return client
     }
 
-    statistique = async (id: string): Promise<StatistiqueClient[]> => {  
-        const check = await this.db.client.findUnique({ where: { id: id }, select: { nom: true } })
-        if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);{
-            
-        }
-      return null;
-    }
+    // statistique = async (id: string): Promise<StatistiqueClient[]> => {  
+    //     const check = await this.db.client.findUnique({ where: { id: id }, select: { nom: true } })
+    //     if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+        
+    //     let statistique: StatistiqueClient[] = []
 
+    //     const vente = await this.db.vente.findMany({
+    //         where: { clientId: id },
+    //         select: { id: true, montant: true, createdAt: true, stockVente: true, dateVente: true, paiements: true, reliquat: true, tva: true },
+    //     })
+
+    //     if (vente.length > 0) {
+    //       let stocks: any;
+    //       let stockProduitFini: any ;
+    //         vente.forEach(ventes => {
+    //              stocks = ventes.stockVente.forEach(stock => {
+    //                  stockProduitFini = this.db.stockProduiFini.findUnique({
+    //                     where: { id: stock.stockProduiFiniId },
+    //                     select: { id: true, magasin:{ select: { id: true, nom: true } }, produitFini: { select: { id: true, designation: true }} }
+    //                 })
+    //             })
+
+    //             const stat: StatistiqueClient = {
+    //                 montant: ventes.montant,
+    //                 tva: ventes.tva,
+    //                 date: ventes.dateVente,
+    //                 paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
+    //                 reliquat: ventes.reliquat,
+    //                 magasin: stockProduitFini.magasin.nom
+    //             }
+    //             statistique.push(stat)
+    //         })
+    //         return statistique;
+    //     }
+    //   return null;
+    // }
+
+
+    statistique = async (id: string): Promise<StatistiqueClient[]> => {
+        const check = await this.db.client.findUnique({
+            where: { id: id },
+            select: { nom: true }
+        });
+        if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+    
+        const vente = await this.db.vente.findMany({
+            where: { clientId: id },
+            select: {
+                id: true, 
+                montant: true, 
+                createdAt: true, 
+                stockVente: true, 
+                dateVente: true, 
+                paiements: true, 
+                reliquat: true, 
+                tva: true
+            }
+        });
+    
+        if (vente.length === 0) {
+            return null;
+        }
+    
+        const statistique: StatistiqueClient[] = [];
+    
+        for (const ventes of vente) {
+            const stocks = await Promise.all(
+                ventes.stockVente.map(async (stock) => {
+                    return await this.db.stockProduiFini.findUnique({
+                        where: { id: stock.stockProduiFiniId },
+                        select: { 
+                            id: true, 
+                            magasin: { select: { id: true, nom: true } }, 
+                            produitFini: { select: { id: true, designation: true } } 
+                        }
+                    });
+                })
+            );
+    
+            // Suppose there is only one stock per vente, adjust as needed
+            const stockProduitFini = stocks.length > 0 ? stocks[0] : null;
+    
+            const stat: StatistiqueClient = {
+                montant: ventes.montant,
+                tva: ventes.tva,
+                date: ventes.dateVente,
+                paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
+                reliquat: ventes.reliquat,
+                magasin: stockProduitFini?.magasin.nom ?? 'Unknown'
+            };
+            statistique.push(stat);
+        }
+    
+        return statistique;
+    }
+    
     
 }
