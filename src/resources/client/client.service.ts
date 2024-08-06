@@ -304,33 +304,34 @@ export class ClientService {
         }
     
         const statistique: StatistiqueClient[] = [];
-    
+
+
         for (const ventes of vente) {
-            const stocks = await Promise.all(
-                ventes.stockVente.map(async (stock) => {
-                    return await this.db.stockProduiFini.findUnique({
-                        where: { id: stock.stockProduiFiniId },
-                        select: { 
-                            id: true, 
-                            magasin: { select: { id: true, nom: true } }, 
-                            produitFini: { select: { id: true, designation: true } } 
-                        }
-                    });
-                })
-            );
+            for (const stock of ventes.stockVente) {
+                const stockProduitFini = await this.db.stockProduiFini.findUnique({
+                    where: { id: stock.stockProduiFiniId },
+                    select: { 
+                        id: true, 
+                        magasin: { select: { id: true, nom: true } }, 
+                        produitFini: { select: { id: true, designation: true } } 
+                    }
+                });
     
-            // Suppose there is only one stock per vente, adjust as needed
-            const stockProduitFini = stocks.length > 0 ? stocks[0] : null;
-    
-            const stat: StatistiqueClient = {
-                montant: ventes.montant,
-                tva: ventes.tva,
-                date: ventes.dateVente,
-                paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
-                reliquat: ventes.reliquat,
-                magasin: stockProduitFini?.magasin.nom ?? 'Unknown'
-            };
-            statistique.push(stat);
+                if (stockProduitFini) {
+                    const stat: StatistiqueClient = {
+                        produit: stockProduitFini.produitFini.designation,
+                        montant: ventes.montant,
+                        tva: ventes.tva,
+                        pu: stock.prix_unitaire,
+                        quantite: stock.quantiteVendue,
+                        date: ventes.dateVente,
+                        paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
+                        reliquat: ventes.reliquat,
+                        magasin: stockProduitFini.magasin.nom
+                    };
+                    statistique.push(stat);
+                }
+            }
         }
     
         const totalPages = Math.ceil(totalCount / limit);

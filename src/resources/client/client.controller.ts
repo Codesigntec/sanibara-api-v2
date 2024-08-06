@@ -58,7 +58,7 @@ export class ClientController {
         return await this.service.list(filter, paginationQuery)
     }
 
-    @Get('/statistique/:id')
+    @Get('/statistiques/:id')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)

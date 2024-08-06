@@ -59,7 +59,16 @@ export class StatistiqueClient{
   montant: number
 
   @ApiProperty()
+  produit: string
+
+  @ApiProperty()
   tva: number
+
+  @ApiProperty()
+  pu: number
+
+  @ApiProperty()
+  quantite: number
 
   @ApiProperty()
   date: Date

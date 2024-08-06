@@ -21,12 +21,8 @@ export class StructureService {
             select: { id: true,  },
         })
         
-console.log(data);
-
         let structure: Structure;
-
         if (struct.length <= 0) {
-              
          structure = await this.db.structure.create({
             data: {
                 nom: data.nom,
@@ -56,7 +52,8 @@ console.log(data);
         this.trace.logger({action: 'Ajout', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
         return structure
-    } 
+    }
+
     list = async (): Promise<Structure[]> => { // Retourne un tableau de Structure
         const structures = await this.db.structure.findMany({
             select: { 
