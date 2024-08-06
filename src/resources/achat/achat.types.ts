@@ -7,10 +7,14 @@ import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 
 export class AchatFetcher extends FetcherFilter {
   statutAchat?: StatutAchat
+
 }
 
 export class StockMatiereFetcher extends FetcherFilter {
   magasinId?: string | null
+  achat?: {
+    fournisseurId?: string;
+} | null;
 }
 
 export class LigneAchatFetcher{
@@ -47,7 +51,6 @@ export class PaiementFull{
   @ApiProperty()
   updatedAt: Date
 }
-
 
 
 export class PaiementSave{

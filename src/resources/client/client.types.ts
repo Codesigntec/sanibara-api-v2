@@ -53,7 +53,26 @@ export class Client extends ClientSelect {
   createdAt: Date
 }
 
+export class StatistiqueClient{
 
+  @ApiProperty()
+  montant: number
+
+  @ApiProperty()
+  tva: number
+
+  @ApiProperty()
+  date: Date
+
+  @ApiProperty()
+  paye: number
+
+  @ApiProperty()
+  reliquat: number
+
+  @ApiProperty()
+  magasin: string
+}
 
 // ================VALIDATION
 

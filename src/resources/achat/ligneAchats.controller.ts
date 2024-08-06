@@ -107,4 +107,34 @@ export class LigneAchatController {
         const magasinId = req.params.id
         return await this.service.matierePremiereByStore(magasinId)
     }
+
+
+
+    @Get('/getAll/LigneAchats/ByProvider')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: LigneAchatFull })
+
+
+    async getAllLigneAchatsByProvider(
+        @Query('page') page?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('magasinId') magasinId?: string | null,
+        @Query('direction') direction?: string | null,
+        @Query('idProviders') idProviders?: string | null, 
+    ) : Promise<Pagination<LigneAchatFull>> {
+        const paginationQuery : PaginationQuery = {
+            page: Number(page),
+            size: Number(size),
+            orderBy: order,
+            orderDirection: direction
+        }
+
+        const filter : StockMatiereFetcher = {
+            magasinId: magasinId
+        }
+        return await this.service.getAllLigneAchatsByProvider(filter, idProviders, paginationQuery)
+    }
 }

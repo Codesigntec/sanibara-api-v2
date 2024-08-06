@@ -257,7 +257,6 @@ model Client {
   @@map("clients")
 }
 
-
 model StockVente {
   id                String           @id @default(cuid())
   quantiteVendue    Int

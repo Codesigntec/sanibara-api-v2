@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs'
-import { ClientFetcher, ClientSaver, Client, ClientSelect } from './client.types';
+import { ClientFetcher, ClientSaver, Client, ClientSelect, StatistiqueClient } from './client.types';
 import { errors } from './client.constant';
 import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
@@ -225,6 +225,13 @@ export class ClientService {
         return client
     }
 
+    statistique = async (id: string): Promise<StatistiqueClient[]> => {  
+        const check = await this.db.client.findUnique({ where: { id: id }, select: { nom: true } })
+        if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);{
+            
+        }
+      return null;
+    }
 
     
 }

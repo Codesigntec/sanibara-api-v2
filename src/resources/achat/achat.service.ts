@@ -76,12 +76,12 @@ export class AchatService {
 
         // Correction du filtrage par statut
         if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
-          conditions.statutAchat = statutAchat;
-        }
+              conditions.statutAchat = statutAchat;
+         }
         let order = {}
         if (query.orderBy) {
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
-        }
+              order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+          }
             const achats = await this.db.achat.findMany({
                 take: limit,
                 skip: offset,
@@ -135,10 +135,9 @@ export class AchatService {
                 },
                 orderBy: order,
             });
-        const totalCount = await this.db.achat.count({ where: conditions });
-        const totalPages = Math.ceil(totalCount / limit);
+            const totalCount = await this.db.achat.count({ where: conditions });
+            const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<AchatFull> = {
-
             data: achats,
             totalPages,
             totalCount,
@@ -246,7 +245,6 @@ export class AchatService {
       
         return achat;
       };
-
 
       //==============================UPDATE====================================
       update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
@@ -463,7 +461,7 @@ export class AchatService {
 
       //=============================================PAIEMENT===========================================
 
-    // Méthode pour ajouter un paiement à un achat existant
+      // Méthode pour ajouter un paiement à un achat existant
       savePaiementToAchat = async (achatId: string, paiement: PaiementSave, userId: string): Promise<PaiementFull> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
         const achat = await this.db.achat.findUnique({
@@ -628,7 +626,6 @@ export class AchatService {
           }
       }
       //=============================================COUT====================================================
-
       // Méthode pour ajouter un cou à un achat existant
       saveCoutToAchat = async (achatId: string, data: CoutSaver, userId: string): Promise<CoutSaver> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
@@ -701,7 +698,6 @@ export class AchatService {
       
             return coutSaver
       }
-
       //=============================DESTROY====================================
 
       destroyCout = async (id: string, userId: string): Promise<CoutSaver> => {
@@ -726,8 +722,6 @@ export class AchatService {
               throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
           }
       }
-
-
       // Méthode pour ajouter un cou à un achat existant
       saveLigneAchatToAchat = async (achatId: string, data: LigneAchatSave, userId: string): Promise<LigneAchat> => {
         // Récupérer l'achat existant par son ID avec les paiements associés
@@ -827,7 +821,6 @@ export class AchatService {
         return ligneUpdate
       }
 
-
       getAllLigneAchats = async (filter: StockMatiereFetcher, query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
         let conditions = { ...filter };
     
@@ -882,10 +875,8 @@ export class AchatService {
     
         return pagination;
     };
-    
-      
-        //=============================DESTROY====================================
-
+  
+    //=============================DESTROY==================================== 
       destroyLigneAchat = async (id: string, userId: string): Promise<LigneAchatSelect> => {
           const check = await this.db.ligneAchat.findUnique({ where: { id: id }, select: { references: true } })
           if (!check) throw new HttpException(errors.NOT_EXIST_LIGNE, HttpStatus.BAD_REQUEST);
@@ -973,4 +964,77 @@ export class AchatService {
          
         return filteredLigneAchat
     }
+
+    getAllLigneAchatsByProvider = async (filter: StockMatiereFetcher, idProviders: string, query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
+      let conditions = { ...filter };
+  
+      if (filter.magasinId !== undefined && filter.magasinId !== null) {
+          conditions = { ...conditions, magasinId: filter.magasinId};
+      }
+
+    //   if (idProviders) {
+    //     conditions = {
+    //         ...conditions,
+    //         achat: {
+    //             fournisseurId: idProviders
+    //         }
+    //     };
+    // }
+
+        if (idProviders) {
+          conditions.achat = {
+              fournisseurId: idProviders
+          };
+      }
+
+      const limit = query.size ? query.size : 10;
+      const offset = query.page ? (query.page - 1) * limit : 0;
+      let order = {};
+      if (query.orderBy) {
+          order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc';
+      }
+  
+      const ligneAchats = await this.db.ligneAchat.findMany({
+          where: conditions,
+          include: {
+              matiere: true,
+              magasin: true,
+              achat: true
+          },
+      });
+  
+      // Cumuler les quantités des produits ayant la même désignation de matière première et le même prix unitaire
+      const cumulatedMap = new Map<string, LigneAchatFull>();
+  
+      ligneAchats.forEach((item) => {
+          const key = `${item.matiere.designation}-${item.prixUnitaire}`;
+          if (!cumulatedMap.has(key)) {
+              cumulatedMap.set(key, { ...item });
+          } else {
+              const existingItem = cumulatedMap.get(key);
+              if (existingItem) {
+                  existingItem.quantite += item.quantite;
+                  existingItem.quantiteLivre += item.quantiteLivre
+              }
+          }
+      });
+  
+      // Convertir la map en tableau
+      const cumulatedArray = Array.from(cumulatedMap.values());
+  
+      // Paginer les résultats cumulatifs
+      const paginatedData = cumulatedArray.slice(offset, offset + limit);
+      const totalCount = cumulatedArray.length;
+      const totalPages = Math.ceil(totalCount / limit);
+      const pagination: Pagination<LigneAchatFull> = {
+          data: paginatedData,
+          totalPages,
+          totalCount,
+          currentPage: query.page ? query.page : 1,
+          size: limit,
+      };
+  
+      return pagination;
+  };
+  
 }
