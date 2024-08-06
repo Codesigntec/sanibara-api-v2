@@ -263,14 +263,19 @@ export class ClientService {
     // }
 
 
-    statistique = async (id: string): Promise<StatistiqueClient[]> => {
+    statistique = async (id: string, query: PaginationQuery): Promise<Pagination<StatistiqueClient>> => {
         const check = await this.db.client.findUnique({
             where: { id: id },
             select: { nom: true }
         });
         if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
     
+        const limit = query.size ? query.size : 10;
+        const offset = query.page ? (query.page - 1) * limit : 0;
+    
         const vente = await this.db.vente.findMany({
+            take: limit,
+            skip: offset,
             where: { clientId: id },
             select: {
                 id: true, 
@@ -284,8 +289,18 @@ export class ClientService {
             }
         });
     
+        const totalCount = await this.db.vente.count({
+            where: { clientId: id }
+        });
+    
         if (vente.length === 0) {
-            return null;
+            return {
+                data: [],
+                totalPages: 0,
+                totalCount: 0,
+                currentPage: query.page ? query.page : 1,
+                size: limit
+            };
         }
     
         const statistique: StatistiqueClient[] = [];
@@ -318,8 +333,17 @@ export class ClientService {
             statistique.push(stat);
         }
     
-        return statistique;
+        const totalPages = Math.ceil(totalCount / limit);
+    
+        return {
+            data: statistique,
+            totalPages,
+            totalCount,
+            currentPage: query.page ? query.page : 1,
+            size: limit
+        };
     }
+    
     
     
 }

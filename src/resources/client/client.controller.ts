@@ -3,7 +3,7 @@ import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } fr
 import { ClientService } from './client.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { Client, ClientFetcher, ClientSaver, ClientSelect, saverSchema } from './client.types';
+import { Client, ClientFetcher, ClientSaver, ClientSelect, saverSchema, StatistiqueClient } from './client.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
 
 @Controller('customers')
@@ -57,6 +57,42 @@ export class ClientController {
         }
         return await this.service.list(filter, paginationQuery)
     }
+
+    @Get('/statistique/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ 
+        schema: {
+            allOf: [
+                { $ref: getSchemaPath(Pagination) },
+                {
+                    properties: { 
+                        data: {
+                            type: 'array',
+                            items: { $ref: getSchemaPath(StatistiqueClient) }
+                        }
+                    } 
+                }
+            ]
+        }
+    })
+    async statistique(
+        @Param('id') id: string,
+        @Query('page') page?: string | null,
+        @Query('size') size?: string | null,
+        @Query('order') order?: string | null,
+        @Query('direction') direction?: string | null
+      ): Promise<Pagination<StatistiqueClient>> {
+        const paginationQuery: PaginationQuery = {
+            page: page ? Number(page) : undefined,
+            size: size ? Number(size) : undefined,
+            orderBy: order,
+            orderDirection: direction
+        };
+        return await this.service.statistique(id, paginationQuery);
+    }
+
 
     @Get('/select')
     @Version('2')
