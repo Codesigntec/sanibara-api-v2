@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Cout, Etat, LigneAchat, PrismaClient, StatutAchat } from '@prisma/client';
 import { TraceService } from '../trace/trace.service';
-import { Achat, AchatFetcher, AchatFull, AchatSaver, CoutSaver, LigneAchatByStore, LigneAchatFull, LigneAchatSave,
-   LigneAchatSelect, ligneLivraison, Livraison, PaiementFull, PaiementSave,
+import { Achat, AchatFetcher, AchatFull, AchatReturn, AchatSaver, CoutSaver, LigneAchatByStore, LigneAchatFull, LigneAchatSave,
+   LigneAchatSelect, ligneLivraison, Livraison, Paiement, PaiementFull, PaiementSave,
    StockMatiereFetcher, } from './achat.types';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { errors } from './achat.constant';
@@ -69,7 +69,7 @@ export class AchatService {
       });
   }
   
-    list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatFull>> => {
+    list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatReturn>> => {
         let conditions = {...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
@@ -135,10 +135,39 @@ export class AchatService {
                 },
                 orderBy: order,
             });
+    
+            let AchatReturn: AchatReturn[] = []
+
+              for (const achat of achats) {
+                // Trouver toutes les lignes d'achat liées à cet achat
+                const ligneAchats = await this.db.ligneAchat.findMany({
+                  where: {
+                    achatId: achat.id,
+                  },
+                  select: {
+                    id: true,
+                    productionLigneAchat: {
+                      select: {
+                        id: true, // Sélectionner l'ID de la productionLigneAchat pour vérifier l'existence
+                      },
+                    },
+                  },
+                });
+              
+                // Vérifier si l'achat est lié à une production
+                const estLieAProduction = ligneAchats.some((ligneAchat) => ligneAchat.productionLigneAchat.length > 0);
+                if (estLieAProduction) {
+                  AchatReturn.push({ ...achat, hasProductionLink: true });
+                } else {
+                  AchatReturn.push({ ...achat, hasProductionLink: false });
+                }
+              }
+
+
             const totalCount = await this.db.achat.count({ where: conditions });
             const totalPages = Math.ceil(totalCount / limit);
-        const pagination: Pagination<AchatFull> = {
-            data: achats,
+            const pagination: Pagination<AchatReturn> = {
+            data: AchatReturn,
             totalPages,
             totalCount,
             currentPage: query.page ? query.page : 1,
@@ -148,9 +177,9 @@ export class AchatService {
     }
 
     //==============================SAVE====================================
-
      saveAchat = async (data: AchatSaver, userId: string): Promise<Achat> => {
-
+      console.log("DATA", data);
+      
       for (const ligne of data.ligneAchats) {
         if (!ligne.matiere || !ligne.matiere.id) {
           throw new HttpException(errors.MATIERE_INVALID, HttpStatus.BAD_REQUEST);
@@ -248,7 +277,8 @@ export class AchatService {
 
       //==============================UPDATE====================================
       update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
-
+        console.log("DATA", data);
+        
         const check = await this.db.achat.findUnique({ where: { id: achatId }, select: { 
           libelle: true ,
           ligneAchats: {
@@ -272,7 +302,7 @@ export class AchatService {
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
 
-      let ach = check;
+       let ach = check;
 
         const fournisseurData = data.fournisseur.id ? {
           connect: {
@@ -294,18 +324,17 @@ export class AchatService {
         if (data.tva != null) {
           montantTVA = (data.tva / 100) * totalMatieresPremieres;
         }
-        
         // Ajout du montant total des matières premières au montant total de l'achat
         const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
-    
         // Calcul du montant total des paiements
-        const oldPaiements = ach.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
-        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0) + oldPaiements;
-       
+        // const oldPaiements = ach.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
+        // const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0) + oldPaiements;
+        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
         // Vérification si les paiements dépassent le montant total de l'achat
         if (totalPaiements > totalAchat) {
           throw new HttpException(errors.INVALID_PAIEMENT, HttpStatus.BAD_REQUEST);
         }
+
         // Mettre à jour l'achat avec les nouvelles données
         const achat = await this.db.achat.update({
           where: {
@@ -322,6 +351,7 @@ export class AchatService {
             ligneAchats: {
               create: data.ligneAchats.map((ligne) => ({
                 prixUnitaire: ligne.prixUnitaire,
+                quantiteLivre: ligne.quantiteLivre,
                 quantite: ligne.quantite,
                 datePeremption: new Date(ligne.datePeremption),
                 references: ligne.references,
@@ -345,18 +375,11 @@ export class AchatService {
               })),
             },
             paiements: {
-              create: data.paiements
-                .filter((paiement) => Number(paiement.montant) !== 0)
-                .map((paiement) => ({
-                  montant: Number(paiement.montant),
-                })),
+              update: {
+                where: { id: ach.paiements[0].id },
+                data: { montant: data.paiements[0].montant },
+              },
             },
-            
-            // paiements: {
-            //   create: data.paiements.map((paiement) => ({
-            //     montant: Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant),
-            //   })),
-            // },
           },
           select: {
             id: true,
@@ -366,8 +389,10 @@ export class AchatService {
           },
         });
 
-          //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+        console.log("=============================ERREUR=========================");
+        
 
+          //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
           await Promise.all([
             ...ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } })),
             ...ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } })),
@@ -381,6 +406,7 @@ export class AchatService {
         const description = `Mise à jour de l'achat: ${data.libelle}`;
         this.trace.logger({ action: 'Mise à jour', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
       
+        
         return achat;
       };
       
@@ -410,7 +436,8 @@ export class AchatService {
 
     //=============================REMOVE====================================
 
-    remove = async (id: string, userId: string): Promise<Achat> => {
+    remove = async (id: string, userId: string, etat: string): Promise<Achat> => {
+
         const check = await this.db.achat.findUnique({ where: { id: id }, select: { libelle: true, removed: true } })
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
@@ -903,15 +930,19 @@ export class AchatService {
 
         const check = await this.db.ligneAchat.findUnique({ 
           where: { id }, 
-          select: { references: true, achatId: true, quantite: true } 
+          select: { references: true, achatId: true, quantite: true, quantiteLivre: true } 
         });
+
+        if (!check) {
+          throw new HttpException('Ligne d\'achat introuvable', HttpStatus.NOT_FOUND);
+        }
 
         if (data.quantiteLivre > check.quantite) {
           throw new HttpException(errors.QUANTITE_ERROR, HttpStatus.BAD_REQUEST);
         }
         const ligneUpdate = await this.db.ligneAchat.update({
           where: { id },
-          data: {quantiteLivre: data.quantiteLivre },
+          data: {quantiteLivre: data.quantiteLivre + check.quantiteLivre },
           select: {
             quantiteLivre: true,
           },

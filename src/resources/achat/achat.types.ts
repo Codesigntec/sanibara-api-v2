@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
-import {  z } from "zod"
+import {  optional, z } from "zod"
 import { errors } from "./achat.constant"
 import { Etat, StatutAchat } from "@prisma/client"
 import { FournisseurSelect } from "../fournisseur/fournisseur.types"
@@ -311,8 +311,14 @@ export class AchatFull extends Achat {
 
   @ApiProperty()
   updatedAt: Date
+
+ 
 }
 
+export class AchatReturn extends AchatFull {
+  @ApiProperty()
+  hasProductionLink : boolean
+}
 
 
 // ================VALIDATION
@@ -326,7 +332,6 @@ const MatiereInputSchema = z.object({
     }
   ),
 });
-
 const MagasinInputSchema = z.object({
   id: z.string({
     required_error: errors.MAGASIN_REQUIRED,
@@ -343,6 +348,7 @@ const LigneAchatInputSchema = z.object({
     required_error: errors.QUANTITY_REQUIRED,
     invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
   }),
+  quantiteLivre: z.number().optional(),
   datePeremption: z.string(),
   references: z.string(
     {
@@ -363,7 +369,7 @@ const CoutInputSchema = z.object({
     required_error: errors.MONTANT_REQUIRED,
     invalid_type_error: errors.MONTANT_MUST_BE_NUMBER_CHARGE,
   }),
-  motif: z.string().optional().or(z.literal('')),
+  motif: z.string().optional().nullable(),
 });
 
 const PaiementInputSchema = z.object({

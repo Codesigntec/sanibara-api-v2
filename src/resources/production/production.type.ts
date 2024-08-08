@@ -300,7 +300,7 @@ export class tableReturn{
   dateFin: Date
 
   @ApiProperty()
-  coutTotal : number
+  coutTotalProduction : number
 
   @ApiProperty()
   hasStockVenteLink : boolean

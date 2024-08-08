@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { Achat, AchatFetcher, AchatFull, AchatSaver, AchatSaverSchema, Cout, LigneAchatFull, Paiement } from "./achat.types";
+import { Achat, AchatFetcher, AchatFull, AchatReturn, AchatSaver, AchatSaverSchema, Cout, LigneAchatFull, Paiement } from "./achat.types";
 
 
 @Controller('achats')
@@ -34,7 +34,7 @@ export class AchatController {
                     properties: { 
                         data: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(AchatFull) }
+                            items: { $ref: getSchemaPath(AchatReturn) }
                         }
                     } 
                 }
@@ -50,7 +50,7 @@ export class AchatController {
         @Query('direction') direction?: string | null,
         @Req() req?: AuthorizedRequest
         
-    ) : Promise<Pagination<AchatFull>> {
+    ) : Promise<Pagination<AchatReturn>> {
         const filter : AchatFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
@@ -120,7 +120,7 @@ export class AchatController {
         return await this.service.destroy(id, userId)
     }
 
-    @Delete('/:id')
+    @Delete('/:id/hasProductionLink/:etat')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
@@ -128,7 +128,8 @@ export class AchatController {
     async remove(@Req() req: AuthorizedRequest): Promise<Achat> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.remove(id, userId)
+        const etat = req.params.etat
+        return await this.service.remove(id, userId, etat)
     }
   
     

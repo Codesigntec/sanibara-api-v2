@@ -26,7 +26,6 @@ async function bootstrap() {
   //   }),
   // );
 
-
   //==================SWAGGER===================x
   const config = new DocumentBuilder()
     .setTitle('Sanibara v2 api')
