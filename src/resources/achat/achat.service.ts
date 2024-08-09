@@ -185,6 +185,10 @@ export class AchatService {
             id: data.fournisseur.id,
           },
         } : undefined;
+
+        if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
+          throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
+        }
     
         // Calcul du montant total des matières premières
         const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
@@ -268,139 +272,168 @@ export class AchatService {
       };
 
       //==============================UPDATE====================================
-      update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
-        console.log("DATA", data);
-        
-        const check = await this.db.achat.findUnique({ where: { id: achatId }, select: { 
-          libelle: true ,
-          ligneAchats: {
-            select:{
-              id: true,
-            }
+update = async (achatId: string, data: AchatSaver, userId: string): Promise<Achat> => {
+
+  // Start transaction
+  const achat = await this.db.$transaction(async (tx) => {
+      // Fetch existing achat and relations
+      const check = await tx.achat.findUnique({
+          where: { id: achatId },
+          select: {
+              libelle: true,
+              ligneAchats: { select: { id: true } },
+              couts: { select: { id: true } },
+              paiements: { select: { id: true, montant: true } },
           },
-          couts: {
-            select:{
-              id: true,
-            }
-          },
-          paiements: {
-            select:{
-              id: true,
-              montant: true,
-            }
-          },
+      });
 
-        } })
-        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+      if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
+      const fournisseurData = data.fournisseur.id ? {
+          connect: { id: data.fournisseur.id },
+      } : undefined;
 
-       let ach = check;
+      // Calculate totals
+      const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => acc + (ligne.prixUnitaire * ligne.quantite), 0);
+      const totalCouts = data.couts.reduce((acc, cout) => acc + cout.montant, 0);
+      const montantTVA = data.tva ? (data.tva / 100) * totalMatieresPremieres : 0;
+      const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
+      const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
 
-        const fournisseurData = data.fournisseur.id ? {
-          connect: {
-            id: data.fournisseur.id,
-          },
-        } : undefined;
-
-        // Calcul du montant total des matières premières
-        const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
-          const prixTotal = ligne.prixUnitaire * ligne.quantite;
-          return acc + prixTotal;
-        }, 0);
-
-        // Calcul du montant total des coûts
-        const totalCouts = data.couts.reduce((acc, cout) => acc + cout.montant, 0);
-
-        // Calcul du montant de la TVA en fonction du taux
-        let montantTVA: number ;
-        if (data.tva != null) {
-          montantTVA = (data.tva / 100) * totalMatieresPremieres;
-        }
-        // Ajout du montant total des matières premières au montant total de l'achat
-        const totalAchat = totalMatieresPremieres + (totalCouts ?? 0) + (montantTVA ?? 0);
-        // Calcul du montant total des paiements
-        // const oldPaiements = ach.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
-        // const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0) + oldPaiements;
-        const totalPaiements = data.paiements.reduce((acc, paiement) => acc + paiement.montant, 0);
-        // Vérification si les paiements dépassent le montant total de l'achat
-        if (totalPaiements > totalAchat) {
+      if (totalPaiements > totalAchat) {
           throw new HttpException(errors.INVALID_PAIEMENT, HttpStatus.BAD_REQUEST);
-        }
+      }
 
-        // Mettre à jour l'achat avec les nouvelles données
-        const achat = await this.db.achat.update({
-          where: {
-            id: achatId,
-          },
-          data: {
-            libelle: data.libelle,
-            date: new Date(data.date),
-            statutAchat: data.statutAchat,
-            etat: data.etat,
-            updatedAt: new Date(),
-            tva: data.tva,
-            fournisseur: fournisseurData,
-            ligneAchats: {
+      const ligneAchats = await tx.ligneAchat.findMany({
+          where: { achatId: achatId },
+          select: { id: true, qt_Utilise: true },
+      });
+      const estLieAProduction = ligneAchats.some((ligneAchat) => ligneAchat.qt_Utilise > 0);
+
+      let ligneA = {};
+      if (!estLieAProduction) {
+          ligneA = {
               create: data.ligneAchats.map((ligne) => ({
-                prixUnitaire: ligne.prixUnitaire,
-                quantiteLivre: ligne.quantiteLivre,
-                quantite: ligne.quantite,
-                datePeremption: new Date(ligne.datePeremption),
-                references: ligne.references,
-                matiere: {
-                  connect: {
-                    id: ligne.matiere.id,
-                  },
-                },
-                magasin: {
-                  connect: {
-                    id: ligne.magasin.id,
-                  },
-                },
+                  prixUnitaire: ligne.prixUnitaire,
+                  quantiteLivre: ligne.quantiteLivre,
+                  quantite: ligne.quantite,
+                  datePeremption: new Date(ligne.datePeremption),
+                  references: ligne.references,
+                  matiere: { connect: { id: ligne.matiere.id } },
+                  magasin: { connect: { id: ligne.magasin.id } },
               })),
-            },
-            couts: {
-              create: data.couts.map((cout) => ({
-                libelle: cout.libelle,
-                montant: cout.montant,
-                motif: cout.motif,
+          };
+       }else{
+          ligneA = {
+              update: data.ligneAchats.map((ligne) => ({
+                  where: { id: ligne.id },
+                  data: {
+                      quantiteLivre: ligne.quantiteLivre,
+                      quantite: ligne.quantite,
+                      datePeremption: new Date(ligne.datePeremption),
+                      references: ligne.references,
+                      matiere: { connect: { id: ligne.matiere.id } },
+                      magasin: { connect: { id: ligne.magasin.id } },
+                  },
               })),
+          };
+      }
+     
+      let coutDAchat: {};
+
+      if (check.couts.length === 0) {
+        coutDAchat = {
+          create: data.couts.map((cout) => ({
+            create: {
+              libelle: cout.libelle,
+              montant: cout.montant,
+              motif: cout.motif,
             },
-            paiements: {
-              update: {
-                where: { id: ach.paiements[0].id },
-                data: { montant: data.paiements[0].montant },
-              },
+          }))
+        }
+      }else{
+
+        coutDAchat = {
+          upsert: data.couts.map((cout) => ({
+            where: { id: cout.id ?? -1 },
+            update: { montant: cout.montant, libelle: cout.libelle, motif: cout.motif },
+            create: { montant: cout.montant, libelle: cout.libelle, motif: cout.motif },
+          }))
+        }
+        
+        // coutDAchat = {
+        //   update: data.couts.map((ligne) => ({
+        //     where: { id: ligne.id },
+        //     data: { montant: ligne.montant, libelle: ligne.libelle, motif: ligne.motif},
+        // })),
+        // }
+      }
+
+      let paiementAchat = {};
+
+      if (check.paiements.length === 0) {
+        // if (check.paiements.length > 0) {
+        //   tx.paiement.delete({ where: { id:  check.paiements[0].id } })
+        // }
+        paiementAchat ={
+          create: data.paiements.map((paiement) => ({
+            create: {
+              montant: paiement.montant,
             },
+          }))
+        }
+      }else{
+        paiementAchat = {
+          update: {
+            where: { id: check.paiements[0].id },
+            data: { montant: data.paiements[0].montant },
+          },
+        }        
+      }
+      
+      // Update achat
+      const updatedAchat = await tx.achat.update({
+          where: { id: achatId },
+          data: {
+              libelle: data.libelle,
+              date: new Date(data.date),
+              statutAchat: data.statutAchat,
+              etat: data.etat,
+              updatedAt: new Date(),
+              tva: data.tva,
+              fournisseur: fournisseurData,
+              ligneAchats: ligneA,
+              couts: coutDAchat,
+              paiements: paiementAchat,
           },
           select: {
-            id: true,
-            libelle: true,
-            numero: true,
-            createdAt: true,
+              id: true,
+              libelle: true,
+              numero: true,
+              createdAt: true,
           },
-        });
+      });
 
-        console.log("=============================ERREUR=========================");
-        
-
-          //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+      if (!estLieAProduction) {
           await Promise.all([
-            ...ach.ligneAchats.map((l) => this.db.ligneAchat.delete({ where: { id: l.id } })),
-            ...ach.couts.map((c) => this.db.cout.delete({ where: { id: c.id } })),
-            //====================delete tout les pay inferieur a 0============================
-            // Supprimez les paiements dont le montant est égal à zéro
-            ach.paiements
-            .filter((p) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined) 
-            .forEach((p) => this.db.paiement.delete({ where: { id: p.id } }))
+              ...check.ligneAchats.map((l) => tx.ligneAchat.delete({ where: { id: l.id } })),
+              // ...check.couts.map((c) => tx.cout.delete({ where: { id: c.id } })),
           ]);
-      
-        const description = `Mise à jour de l'achat: ${data.libelle}`;
-        this.trace.logger({ action: 'Mise à jour', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-      
-        
-        return achat;
-      };
+      }
+      await Promise.all(
+          check.paiements
+              .filter((p) => p.montant <= 0)
+              .map((p) => tx.paiement.delete({ where: { id: p.id } })),
+      );
+      const description = `Mise à jour de l'achat: ${data.libelle}`;
+      await this.trace.logger({ action: 'Mise à jour', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
+
+      return updatedAchat;
+  });
+
+  return achat;
+};
+
       
     //============================ARCHIVER==============================
     archive = async (id: string, userId: string): Promise<Achat> => {

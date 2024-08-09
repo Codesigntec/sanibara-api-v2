@@ -343,6 +343,7 @@ const MagasinInputSchema = z.object({
 });
 
 const LigneAchatInputSchema = z.object({
+  id: z.string().optional(),
   prixUnitaire: z.number({
     required_error: errors.UNIT_PRICE_REQUIRED,
     invalid_type_error: errors.UNIT_PRICE_MUST_BE_NUMBER,
@@ -364,6 +365,7 @@ const LigneAchatInputSchema = z.object({
 });
 
 const CoutInputSchema = z.object({
+  id: z.string().optional(),
   libelle: z.string({
     required_error: errors.LABEL_REQUIRED,
     invalid_type_error: errors.LABEL_MUST_BE_STRING,
