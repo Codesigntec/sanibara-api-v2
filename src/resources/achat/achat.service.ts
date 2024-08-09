@@ -146,23 +146,16 @@ export class AchatService {
                   },
                   select: {
                     id: true,
-                    productionLigneAchat: {
-                      select: {
-                        id: true, // Sélectionner l'ID de la productionLigneAchat pour vérifier l'existence
-                      },
-                    },
+                    qt_Utilise: true
                   },
                 });
-              
-                // Vérifier si l'achat est lié à une production
-                const estLieAProduction = ligneAchats.some((ligneAchat) => ligneAchat.productionLigneAchat.length > 0);
+                const estLieAProduction = ligneAchats.some((ligneAchat) => ligneAchat.qt_Utilise > 0);
                 if (estLieAProduction) {
-                  AchatReturn.push({ ...achat, hasProductionLink: true });
-                } else {
-                  AchatReturn.push({ ...achat, hasProductionLink: false });
+                  AchatReturn.push({ ...achat, hasProductionLink: true});
+                }else{
+                  AchatReturn.push({ ...achat, hasProductionLink: false});
                 }
               }
-
 
             const totalCount = await this.db.achat.count({ where: conditions });
             const totalPages = Math.ceil(totalCount / limit);
@@ -175,7 +168,6 @@ export class AchatService {
         }
         return pagination
     }
-
     //==============================SAVE====================================
      saveAchat = async (data: AchatSaver, userId: string): Promise<Achat> => {
       console.log("DATA", data);
@@ -440,19 +432,67 @@ export class AchatService {
 
         const check = await this.db.achat.findUnique({ where: { id: id }, select: { libelle: true, removed: true } })
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+       
+        const newRemovedState = !check.removed;
 
         const achat = await this.db.achat.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: newRemovedState
             },
             select: {
                 id: true,
                 numero: true,
                 libelle: true,
+                ligneAchats: true,
                 createdAt: true,
             }
         })
+
+
+        if (etat === 'true') {
+
+          const ligneAchats = await this.db.ligneAchat.findMany({
+            where: {
+              achatId: achat.id,
+            },
+            select: {
+              id: true,
+              productionLigneAchat: {
+                select: {
+                  id: true, 
+                },
+              },
+            },
+          });
+
+          const listIdProduction: string[] = []
+        
+          ligneAchats.forEach(async (l) => {
+            l.productionLigneAchat.forEach(async (pl) => {
+              listIdProduction.push(pl.id)
+            })
+          })
+
+
+          
+
+
+
+          // Mettre à jour les ventes liées aux stockVente
+          // await this.db.vente.updateMany({
+          //   where: {
+          //     stockVente: {
+          //       some: {
+          //         stockProduiFiniId: { in: stockIds }
+          //       }
+          //     }
+          //   },
+          //   data: {
+          //     removed: newRemovedState
+          //   }
+          // });
+        }
 
         const description = `Suppression logique de l'achat: ${check.libelle}`
         this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))

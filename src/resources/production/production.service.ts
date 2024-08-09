@@ -575,21 +575,20 @@ export class ProductionService {
       this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
  
       if (etat === 'true') {
-  
-              // Mettre à jour les ventes liées aux stockVente
-              await this.db.vente.updateMany({
-                where: {
-                  stockVente: {
-                    some: {
-                      stockProduiFiniId: { in: stockIds }
-                    }
-                  }
-                },
-                data: {
-                  removed: newRemovedState
+          // Mettre à jour les ventes liées aux stockVente
+          await this.db.vente.updateMany({
+            where: {
+              stockVente: {
+                some: {
+                  stockProduiFiniId: { in: stockIds }
                 }
-              });
-          }
+              }
+            },
+            data: {
+              removed: newRemovedState
+            }
+          });
+        }
 
       return magasin
     }

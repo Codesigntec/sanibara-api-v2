@@ -317,7 +317,10 @@ export class AchatFull extends Achat {
 
 export class AchatReturn extends AchatFull {
   @ApiProperty()
-  hasProductionLink : boolean
+  hasProductionLink : boolean = false
+
+  // @ApiProperty()
+  // qt_used : number
 }
 
 

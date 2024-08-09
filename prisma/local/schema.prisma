@@ -44,6 +44,9 @@ model LigneAchat {
 
   productionLigneAchat ProductionLigneAchat[]
 
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+
   createdAt      DateTime                 @default(now()) @map("created_at")
   updatedAt      DateTime                 @updatedAt @map("updated_at")
 
@@ -202,6 +205,7 @@ model StockProduiFini {
   @@map("stock_produi_fini")
 }
 
+
 model Vente {
    
   id          String   @id @default(cuid())
@@ -266,6 +270,9 @@ model StockVente {
 
   stockProduiFini   StockProduiFini  @relation(fields: [stockProduiFiniId], references: [id])
   vente             Vente            @relation(fields: [venteId], references: [id], onDelete: Cascade)
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
 
   @@map("stock_vente")
   @@unique([stockProduiFiniId, venteId])
