@@ -43,6 +43,7 @@ export class MatiereService {
             }
             conditions = { ...conditions, createdAt: dateFilter };
         }
+        
         conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         let order = {}
@@ -84,6 +85,7 @@ export class MatiereService {
 
         return pagination
     }
+
 
     select = async (): Promise<MatiereSelect[]> => {
         const matieres = await this.db.matierePremiere.findMany({
@@ -173,7 +175,7 @@ export class MatiereService {
         // let filters = { }
         // if (data.categorieId) { conditions = { ...conditions, categorieId: data.categorieId } }
         if (data.uniteId) { conditions = { ...conditions, uniteId: data.uniteId } }
-        // if(data.paymentMethode){ conditions = { ...conditions, paymentMethode: data.paymentMethode } }
+        // if(data.paymentMethode){ conditions = { ...conditions, paymentnew Date(data.debut)Methode: data.paymentMethode } }
 
         if (data.debut || data.fin) {
             let dateFilter = {};

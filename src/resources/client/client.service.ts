@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs'
-import { ClientFetcher, ClientSaver, Client, ClientSelect } from './client.types';
+import { ClientFetcher, ClientSaver, Client, ClientSelect, StatistiqueClient } from './client.types';
 import { errors } from './client.constant';
 import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
@@ -206,4 +206,145 @@ export class ClientService {
             throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
         }
     }
+
+    findOne = async (id: string): Promise<Client> => {
+        const client = await this.db.client.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                numero: true,
+                nom: true,
+                telephone: true,
+                email: true,
+                adresse: true,
+                societe: true,
+                createdAt: true,
+            }
+        })
+        if (client === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+        return client
+    }
+
+    // statistique = async (id: string): Promise<StatistiqueClient[]> => {  
+    //     const check = await this.db.client.findUnique({ where: { id: id }, select: { nom: true } })
+    //     if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+        
+    //     let statistique: StatistiqueClient[] = []
+
+    //     const vente = await this.db.vente.findMany({
+    //         where: { clientId: id },
+    //         select: { id: true, montant: true, createdAt: true, stockVente: true, dateVente: true, paiements: true, reliquat: true, tva: true },
+    //     })
+
+    //     if (vente.length > 0) {
+    //       let stocks: any;
+    //       let stockProduitFini: any ;
+    //         vente.forEach(ventes => {
+    //              stocks = ventes.stockVente.forEach(stock => {
+    //                  stockProduitFini = this.db.stockProduiFini.findUnique({
+    //                     where: { id: stock.stockProduiFiniId },
+    //                     select: { id: true, magasin:{ select: { id: true, nom: true } }, produitFini: { select: { id: true, designation: true }} }
+    //                 })
+    //             })
+
+    //             const stat: StatistiqueClient = {
+    //                 montant: ventes.montant,
+    //                 tva: ventes.tva,
+    //                 date: ventes.dateVente,
+    //                 paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
+    //                 reliquat: ventes.reliquat,
+    //                 magasin: stockProduitFini.magasin.nom
+    //             }
+    //             statistique.push(stat)
+    //         })
+    //         return statistique;
+    //     }
+    //   return null;
+    // }
+
+
+    statistique = async (id: string, query: PaginationQuery): Promise<Pagination<StatistiqueClient>> => {
+        const check = await this.db.client.findUnique({
+            where: { id: id },
+            select: { nom: true }
+        });
+        if (check === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+    
+        const limit = query.size ? query.size : 10;
+        const offset = query.page ? (query.page - 1) * limit : 0;
+    
+        const vente = await this.db.vente.findMany({
+            take: limit,
+            skip: offset,
+            where: { clientId: id },
+            select: {
+                id: true, 
+                montant: true, 
+                createdAt: true, 
+                stockVente: true, 
+                dateVente: true, 
+                paiements: true, 
+                reliquat: true, 
+                tva: true
+            }
+        });
+    
+        const totalCount = await this.db.vente.count({
+            where: { clientId: id }
+        });
+    
+        if (vente.length === 0) {
+            return {
+                data: [],
+                totalPages: 0,
+                totalCount: 0,
+                currentPage: query.page ? query.page : 1,
+                size: limit
+            };
+        }
+    
+        const statistique: StatistiqueClient[] = [];
+
+
+        for (const ventes of vente) {
+            for (const stock of ventes.stockVente) {
+                const stockProduitFini = await this.db.stockProduiFini.findUnique({
+                    where: { id: stock.stockProduiFiniId },
+                    select: { 
+                        id: true, 
+                        magasin: { select: { id: true, nom: true } }, 
+                        produitFini: { select: { id: true, designation: true } } 
+                    }
+                });
+    
+                if (stockProduitFini) {
+                    const stat: StatistiqueClient = {
+                        produit: stockProduitFini.produitFini.designation,
+                        montant: ventes.montant,
+                        tva: ventes.tva,
+                        pu: stock.prix_unitaire,
+                        quantite: stock.quantiteVendue,
+                        date: ventes.dateVente,
+                        paye: ventes.paiements.reduce((acc: number, val: any) => acc + val.montant, 0),
+                        reliquat: ventes.reliquat,
+                        magasin: stockProduitFini.magasin.nom
+                    };
+                    statistique.push(stat);
+                }
+            }
+        }
+    
+        const totalPages = Math.ceil(totalCount / limit);
+    
+        return {
+            data: statistique,
+            totalPages,
+            totalCount,
+            currentPage: query.page ? query.page : 1,
+            size: limit
+        };
+    }
+    
+    
+    
 }

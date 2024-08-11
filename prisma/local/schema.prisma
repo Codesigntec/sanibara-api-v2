@@ -29,6 +29,7 @@ model LigneAchat {
   prixUnitaire   Float                    @map("prix_unitaire")
   quantite       Int
   quantiteLivre  Int?
+  qt_Utilise     Int?
   references     String?                  @map("references")
   datePeremption DateTime?                @map("date_peremption")
   
@@ -40,6 +41,11 @@ model LigneAchat {
 
   magasinId      String                   @map("magasin_id")
   magasin        MagasinMatierePremiere   @relation(fields: [magasinId], references: [id])
+
+  productionLigneAchat ProductionLigneAchat[]
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
 
   createdAt      DateTime                 @default(now()) @map("created_at")
   updatedAt      DateTime                 @updatedAt @map("updated_at")
@@ -61,6 +67,7 @@ model Achat {
   id             String        @id @default(cuid())
   numero         Int           @default(autoincrement())
   libelle        String
+  reference      String?
   date           DateTime
   tva            Int           @default(0)
 
@@ -110,8 +117,11 @@ model ProduitFini {
   designation String
   description String?
   numero      Int      @default(autoincrement())
+
   uniteId     String   @map("unite_id")
   unite       Unite    @relation(fields: [uniteId], references: [id])
+
+  stockProdFini StockProduiFini[]
 
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
@@ -119,6 +129,117 @@ model ProduitFini {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("produits_finis")
+}
+
+model ProductionLigneAchat {
+  id          String   @id @default(cuid())
+  qt_Utilise  Int?
+
+  ligneAchatId   String   @map("ligne_achat_id")
+  ligneAchat    LigneAchat    @relation(fields: [ligneAchatId], references: [id], onDelete: Cascade)
+
+  productionId   String   @map("production_id")
+  productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@map("production_ligne_achat")
+}
+
+model CoutProduction {
+  id         String   @id @default(cuid())
+  libelle    String
+  montant    Float
+  motif      String?
+  prodId     String   @map("prod_id")
+  production Productions    @relation(fields: [prodId], references: [id], onDelete: Cascade)
+
+  @@map("couts_productions")
+}
+
+model Productions {
+  id          String   @id @default(cuid())
+  reference   String
+  description String?
+  coutTotalProduction Float
+  beneficeDetails Float
+  beneficeGros Float
+  numero      Int      @default(autoincrement())
+  dateDebut   DateTime
+  dateFin     DateTime? 
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  stockProdFini StockProduiFini[]
+  coutProduction CoutProduction[]
+  productionLigneAchat  ProductionLigneAchat[]
+
+  @@map("productions")
+}
+
+model StockProduiFini {
+  id             String   @id @default(cuid())
+  reference      String
+  numero         Int      @default(autoincrement())
+  pu_gros        Float
+  pu_detail      Float
+  qt_produit     Int
+  datePeremption DateTime?
+
+  prodFiniId     String   @map("produit_fini_id")
+  produitFini    ProduitFini    @relation(fields: [prodFiniId], references: [id])
+
+  productionId   String   @map("produition__id")
+  productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)
+
+  magasinId      String   @map("magasin_id")
+  magasin        MagasinProduitFini    @relation(fields: [magasinId], references: [id])
+
+  stockVente     StockVente[] 
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+
+  @@map("stock_produi_fini")
+}
+
+
+model Vente {
+   
+  id          String   @id @default(cuid())
+  reference   String
+  numero      Int      @default(autoincrement())
+  dateVente   DateTime
+  montant     Float
+  tva         Float
+  reliquat    Float
+  etat        Boolean  @default(true)
+  
+  stockVente  StockVente[]
+  paiements   PaiementVente[] 
+
+  clientId     String   @map("client_id")
+  client       Client    @relation(fields: [clientId], references: [id])
+
+  archive   Boolean  @default(false)
+  removed   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ventes")
+}
+
+model PaiementVente {
+  id         String   @id @default(cuid())
+  montant    Float
+  venteId    String   @map("achat_id")
+  vente      Vente    @relation(fields: [venteId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("paiements_vente")
 }
 
 model Client {
@@ -129,12 +250,32 @@ model Client {
   email     String?
   adresse   String?
   societe   String?
+
+  vente Vente[]
+
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("clients")
+}
+
+model StockVente {
+  id                String           @id @default(cuid())
+  quantiteVendue    Int
+  prix_unitaire     Float            @default(0)
+  stockProduiFiniId String           @map("stock_produi_fini_id")
+  venteId           String           @map("vente_id")
+
+  stockProduiFini   StockProduiFini  @relation(fields: [stockProduiFiniId], references: [id])
+  vente             Vente            @relation(fields: [venteId], references: [id], onDelete: Cascade)
+
+  archive     Boolean  @default(false)
+  removed     Boolean  @default(false)
+
+  @@map("stock_vente")
+  @@unique([stockProduiFiniId, venteId])
 }
 
 model Fournisseur {
@@ -195,6 +336,7 @@ model MagasinProduitFini {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   accesUtilisateursProduitsFinis MagasinUtilisateurProduitFini[]
+  stockProdFini StockProduiFini[]
 
   @@map("magasins_produits_finis")
 }

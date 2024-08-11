@@ -1,11 +1,24 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { FetcherFilter } from "src/common/types"
-import { string, z } from "zod"
+import {  optional, z } from "zod"
 import { errors } from "./achat.constant"
 import { Etat, StatutAchat } from "@prisma/client"
 import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 
 export class AchatFetcher extends FetcherFilter {
+  statutAchat?: StatutAchat
+
+}
+
+export class StockMatiereFetcher extends FetcherFilter {
+  magasinId?: string | null
+  achat?: {
+    fournisseurId?: string;
+} | null;
+}
+
+export class LigneAchatFetcher{
+
 }
 
 class MatiereInput {
@@ -40,7 +53,6 @@ export class PaiementFull{
 }
 
 
-
 export class PaiementSave{
   @ApiProperty()
   montant: number
@@ -54,7 +66,12 @@ export class LigneAchatSelect {
   @ApiProperty()
   references: string
 }
+export class ligneLivraison {
 
+  @ApiProperty()
+  quantiteLivre: number = 0
+
+}
 export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
@@ -65,6 +82,9 @@ export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
   quantiteLivre: number = 0
+
+  @ApiProperty()
+  qt_Utilise: number = 0
 
   @ApiProperty()
   datePeremption: Date | null
@@ -80,7 +100,91 @@ export class LigneAchatFull extends LigneAchatSelect {
 
   @ApiProperty()
   updatedAt: Date
+}
 
+export class AchatAvecTva{
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  libelle: string;
+
+  @ApiProperty()
+  tva?: number;
+
+  @ApiProperty()
+  couts?: Cout[];
+
+  ligneAchats?: LigneAchatA[]
+
+}
+
+export class Livraison{
+  @ApiProperty()
+  quantiteLivre : number
+}
+
+export class LigneAchatA{
+  @ApiProperty()
+  id: string
+}
+
+export class LigneAchatByStore{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  prixUnitaire: number;
+
+  @ApiProperty()
+  quantite: number;
+
+  @ApiProperty()
+  quantiteLivre: number = 0;
+
+  @ApiProperty()
+  matiere: MatiereInput
+
+  @ApiProperty()
+  achat: AchatAvecTva
+
+}
+
+
+export class LigneAchatProduction extends LigneAchatSelect {
+  @ApiProperty()
+  prixUnitaire: number;
+
+  @ApiProperty()
+  quantite: number;
+
+  @ApiProperty()
+  quantiteLivre: number = 0;
+
+  @ApiProperty()
+  qt_Utilise: number = 0;
+
+  @ApiProperty()
+  datePeremption: Date | null;
+
+  @ApiProperty()
+  matiere: MatiereInput;
+
+  @ApiProperty()
+  magasin: MagasinInput;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  achat: AchatAvecTva
+
+  @ApiProperty()
+  references: string; // Ajout de la propriété manquante
 }
 
 
@@ -108,7 +212,7 @@ export class LigneAchatSave {
   magasinId: string
 }
 
-// =============COUT================
+// ================COUT==================
 export class CoutSelect {
   @ApiProperty()
   id: string
@@ -166,8 +270,6 @@ export class AchatSaver {
 }
 
 
-
-
 // ============= RESPONSE ACHAT ================
 export class AchatSelect {
   @ApiProperty()
@@ -209,9 +311,17 @@ export class AchatFull extends Achat {
 
   @ApiProperty()
   updatedAt: Date
+
+ 
 }
 
+export class AchatReturn extends AchatFull {
+  @ApiProperty()
+  hasProductionLink : boolean = false
 
+  // @ApiProperty()
+  // qt_used : number
+}
 
 
 // ================VALIDATION
@@ -225,7 +335,6 @@ const MatiereInputSchema = z.object({
     }
   ),
 });
-
 const MagasinInputSchema = z.object({
   id: z.string({
     required_error: errors.MAGASIN_REQUIRED,
@@ -234,6 +343,7 @@ const MagasinInputSchema = z.object({
 });
 
 const LigneAchatInputSchema = z.object({
+  id: z.string().optional(),
   prixUnitaire: z.number({
     required_error: errors.UNIT_PRICE_REQUIRED,
     invalid_type_error: errors.UNIT_PRICE_MUST_BE_NUMBER,
@@ -242,6 +352,7 @@ const LigneAchatInputSchema = z.object({
     required_error: errors.QUANTITY_REQUIRED,
     invalid_type_error: errors.QUANTITY_MUST_BE_NUMBER,
   }),
+  quantiteLivre: z.number().optional(),
   datePeremption: z.string(),
   references: z.string(
     {
@@ -254,6 +365,7 @@ const LigneAchatInputSchema = z.object({
 });
 
 const CoutInputSchema = z.object({
+  id: z.string().optional(),
   libelle: z.string({
     required_error: errors.LABEL_REQUIRED,
     invalid_type_error: errors.LABEL_MUST_BE_STRING,
@@ -262,7 +374,7 @@ const CoutInputSchema = z.object({
     required_error: errors.MONTANT_REQUIRED,
     invalid_type_error: errors.MONTANT_MUST_BE_NUMBER_CHARGE,
   }),
-  motif: z.string().optional().or(z.literal('')),
+  motif: z.string().optional().nullable(),
 });
 
 const PaiementInputSchema = z.object({
@@ -276,6 +388,13 @@ const frs = z.object({
   id: z.string(), 
 });
 
+
+const MagasinQuantiteLivreShema = z.object({
+  quantiteLivre: z.number({
+    required_error: 'La quantité est requise.',
+    invalid_type_error: 'La quantité doit être un nombre.',
+  }).min(0, 'La quantité doit être positive.'),
+});
 
 //===============Export=================
 
@@ -308,3 +427,5 @@ export const PaiementSaverSchema = PaiementInputSchema;
 export const CoutSaverSchema = CoutInputSchema;
 
 export const LigneAchatSchema = LigneAchatInputSchema;
+
+ export const MagasinQuantiteLivre = MagasinQuantiteLivreShema;

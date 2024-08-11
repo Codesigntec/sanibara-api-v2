@@ -4,7 +4,7 @@ import { AuthorizedRequest, Pagination, PaginationQuery } from "src/common/types
 import { AchatService } from "./achat.service";
 import { ZodPipe } from "src/validation/zod.pipe";
 import { AuthGuard } from "../auth/auth.guard";
-import { Achat, AchatFetcher, AchatFull, AchatSaver, AchatSaverSchema, Cout, LigneAchatFull, Paiement } from "./achat.types";
+import { Achat, AchatFetcher, AchatFull, AchatReturn, AchatSaver, AchatSaverSchema, Cout, LigneAchatFull, Paiement } from "./achat.types";
 
 
 @Controller('achats')
@@ -20,7 +20,7 @@ export class AchatController {
     constructor(private service: AchatService) { }
 
 
-    @Get('/')
+    @Get('/:statutAchat')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
@@ -34,7 +34,7 @@ export class AchatController {
                     properties: { 
                         data: {
                             type: 'array',
-                            items: { $ref: getSchemaPath(AchatFull) }
+                            items: { $ref: getSchemaPath(AchatReturn) }
                         }
                     } 
                 }
@@ -48,7 +48,9 @@ export class AchatController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
-    ) : Promise<Pagination<AchatFull>> {
+        @Req() req?: AuthorizedRequest
+        
+    ) : Promise<Pagination<AchatReturn>> {
         const filter : AchatFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
@@ -57,9 +59,9 @@ export class AchatController {
             page: Number(page),
             size: Number(size),
             orderBy: order,
-            orderDirection: direction
+            orderDirection: direction,
         }
-        return await this.service.list(filter, paginationQuery)
+        return await this.service.list(filter,req.params.statutAchat, paginationQuery)
     }
 
     
@@ -71,6 +73,15 @@ export class AchatController {
     @ApiOkResponse({ type: AchatFull })
     async save(@Body() data: AchatSaver, @Req() req: AuthorizedRequest): Promise<Achat> {
         return await this.service.saveAchat(data, req.userId)
+    }
+
+    @Get('/findByid/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: AchatFull })
+    async findById(@Req() req: AuthorizedRequest): Promise<AchatFull> {
+        return await this.service.findById(req.params.id)
     }
 
     @Put('/:id')
@@ -109,7 +120,7 @@ export class AchatController {
         return await this.service.destroy(id, userId)
     }
 
-    @Delete('/:id')
+    @Delete('/:id/hasProductionLink/:etat')
     @Version('2')
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard)
@@ -117,7 +128,8 @@ export class AchatController {
     async remove(@Req() req: AuthorizedRequest): Promise<Achat> {
         const userId = req.userId
         const id = req.params.id
-        return await this.service.remove(id, userId)
+        const etat = req.params.etat
+        return await this.service.remove(id, userId, etat)
     }
   
     

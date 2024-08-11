@@ -53,8 +53,53 @@ export class Client extends ClientSelect {
   createdAt: Date
 }
 
+export class StatistiqueClient{
 
+  @ApiProperty()
+  montant: number
 
+  @ApiProperty()
+  produit: string
+
+  @ApiProperty()
+  tva: number
+
+  @ApiProperty()
+  pu: number
+
+  @ApiProperty()
+  quantite: number
+
+  @ApiProperty()
+  date: Date
+
+  @ApiProperty()
+  paye: number
+
+  @ApiProperty()
+  reliquat: number
+
+  @ApiProperty()
+  magasin: string
+}
+
+// export class StockPFini{
+
+//   @ApiProperty()
+//   id: string
+
+//   @ApiProperty()
+//   magasin:{
+//     id: string
+//     nom: string
+//   }
+
+//   @ApiProperty()
+//   produitFini:{
+//     id: string
+//     designation: string
+//   }
+// }
 // ================VALIDATION
 
 export const saverSchema = z

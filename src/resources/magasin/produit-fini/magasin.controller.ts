@@ -76,6 +76,8 @@ export class MagasinController {
         return await this.service.select()
     }
 
+    
+
     @Post('/')
     @Version('2')
     @HttpCode(HttpStatus.OK)

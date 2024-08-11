@@ -65,7 +65,8 @@ const errors = {
 
     MAGASIN_INVALID: "Invalid or missing 'magasin'",
 
-    MATIERE_INVALID: "Invalid or missing 'matiere'"
+    MATIERE_INVALID: "La matière est invalide.",
+    LIBELLE_INVALID: "Le libellé est invalide.",
 }
 
 

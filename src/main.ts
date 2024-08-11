@@ -3,15 +3,28 @@ import { AppModule } from './app.module';
 import helmet from 'helmet';
 import * as compression from 'compression'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet())// utilise le middleware Helmet pour sécuriser l'application en configurant divers en-têtes HTTP
   app.use(compression())//utilise le middleware de compression pour compresser les réponses HTTP et améliorer les performances.
+  
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   const port = Number(process.env.PORT) || 3002
   const host = process.env.HOST || 'localhost'
+
+  
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //   }),
+  // );
 
   //==================SWAGGER===================x
   const config = new DocumentBuilder()
@@ -45,3 +58,5 @@ async function bootstrap() {
   await app.listen(port);
 }
 bootstrap();
+
+
