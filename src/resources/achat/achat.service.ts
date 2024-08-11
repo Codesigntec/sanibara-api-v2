@@ -190,6 +190,12 @@ export class AchatService {
           throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
         }
     
+        let dateAchat: Date;
+        if (data.date === null || data.date === undefined || data.date === '') {
+          dateAchat = new Date();
+        } else {
+          dateAchat = new Date(data.date);
+        }
         // Calcul du montant total des matières premières
         const totalMatieresPremieres = data.ligneAchats.reduce((acc, ligne) => {
           const prixTotal = ligne.prixUnitaire * ligne.quantite;
@@ -217,7 +223,7 @@ export class AchatService {
         const achat = await this.db.achat.create({
           data: {
             libelle: data.libelle,
-            date: new Date(data.date),
+            date: dateAchat,
             statutAchat: data.statutAchat,
             etat: data.etat,
             createdAt: new Date(),

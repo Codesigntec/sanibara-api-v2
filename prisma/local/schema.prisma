@@ -136,7 +136,7 @@ model ProductionLigneAchat {
   qt_Utilise  Int?
 
   ligneAchatId   String   @map("ligne_achat_id")
-  ligneAchat    LigneAchat    @relation(fields: [ligneAchatId], references: [id])
+  ligneAchat    LigneAchat    @relation(fields: [ligneAchatId], references: [id], onDelete: Cascade)
 
   productionId   String   @map("production_id")
   productions    Productions    @relation(fields: [productionId], references: [id], onDelete: Cascade)

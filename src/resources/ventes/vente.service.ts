@@ -157,7 +157,6 @@ export class VentesService {
                 })
 
             await Promise.all(data.stockVente.map(async (stockVente) => {
-                 // Create stockVente records with the vente ID
                  await tx.stockVente.create({
                     data: {
                         quantiteVendue: stockVente.quantiteVendue,
@@ -192,7 +191,6 @@ export class VentesService {
                 }
                 else{
                     console.log(error);
-                    
                     throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
                 } 
             }
@@ -221,33 +219,6 @@ export class VentesService {
                 if (data.dateVente > new Date()) {
                     throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                 }
-
-                console.log("===========================totalPaiements===========================");
-                 
-
-                console.log("===========================data.montant==============================");
-                    
-                console.log(data.montant)
-
-                console.log("===========================data.paiements=================================");
-                    
-                console.log(data.paiements)
-    
-    
-                // lastStockVente = check.stockVente;
-                // for (const stockVente of check.stockVente) {
-                //     const existingStock = await tx.stockVente.findUnique({
-                //         where: { id: stockVente.id }
-                //     });
-                //     if (existingStock) {
-                //         console.log(`ID trouvé pour suppression: ${stockVente.id}`);
-                //         await tx.stockVente.delete({
-                //             where: { id: stockVente.id }
-                //         });
-                //     } else {
-                //         console.log(`ID non trouvé pour suppression: ${stockVente.id}`);
-                //     }
-                // }
                 
                 if (data.etat) {
                     for (const stockVente of data.stockVente) {
@@ -293,67 +264,53 @@ export class VentesService {
                     }
                 });
 
+                // Récupérer les IDs existants
+                const existingStockVente = await tx.stockVente.findMany({
+                    where: { venteId: id },
+                    select: { id: true, stockProduiFiniId: true, venteId: true }
+                });
+                // Convertir les résultats en un ensemble pour une recherche rapide
+                const existingMap = new Map(existingStockVente.map(e => (
+                    [`${e.stockProduiFiniId}_${e.venteId}`, e.id]
+                )));
 
-                // await Promise.all(data.stockVente.map(async (stockVente) => {
-                //     await tx.stockVente.create({
-                //         data: {
-                //             quantiteVendue: stockVente.quantiteVendue,
-                //             prix_unitaire: stockVente.prix_unitaire,
-                //             stockProduiFini: {
-                //                 connect: { id: stockVente.stockProduiFiniId }
-                //             },
-                //             vente: {
-                //                 connect: { id: id }
-                //             }
-                //         }
-                //     });
-                // }));
-
-                   // Récupérer les IDs existants
-                    const existingStockVente = await tx.stockVente.findMany({
-                        where: { venteId: id },
-                        select: { id: true, stockProduiFiniId: true, venteId: true }
-                    });
-                    // Convertir les résultats en un ensemble pour une recherche rapide
-                    const existingMap = new Map(existingStockVente.map(e => (
-                        [`${e.stockProduiFiniId}_${e.venteId}`, e.id]
-                    )));
-
-                    // Traitement des entrées stockVente
-                    await Promise.all(data.stockVente.map(async (stockVente) => {
-                        const key = `${stockVente.stockProduiFiniId}_${id}`;
-                        if (existingMap.has(key)) {
-                        // Mise à jour si l'entrée existe
-                        await tx.stockVente.update({
-                            where: { id: existingMap.get(key) },
-                            data: {
-                            quantiteVendue: stockVente.quantiteVendue,
-                            prix_unitaire: stockVente.prix_unitaire,
-                            }
-                        });
-                        } else {
-                        // Création si l'entrée n'existe pas
-                        await tx.stockVente.create({
-                            data: {
-                            quantiteVendue: stockVente.quantiteVendue,
-                            prix_unitaire: stockVente.prix_unitaire,
-                            stockProduiFini: {
-                                connect: { id: stockVente.stockProduiFiniId }
-                            },
-                            vente: {
-                                connect: { id: id}
-                            }
-                            }
-                        });
+                // Traitement des entrées stockVente
+                await Promise.all(data.stockVente.map(async (stockVente) => {
+                    const key = `${stockVente.stockProduiFiniId}_${id}`;
+                    if (existingMap.has(key)) {
+                    // Mise à jour si l'entrée existe
+                    await tx.stockVente.update({
+                        where: { id: existingMap.get(key) },
+                        data: {
+                        quantiteVendue: stockVente.quantiteVendue,
+                        prix_unitaire: stockVente.prix_unitaire,
                         }
+                    });
+                    } else {
+                    // Création si l'entrée n'existe pas
+                    await tx.stockVente.create({
+                        data: {
+                        quantiteVendue: stockVente.quantiteVendue,
+                        prix_unitaire: stockVente.prix_unitaire,
+                        stockProduiFini: {
+                            connect: { id: stockVente.stockProduiFiniId }
+                        },
+                        vente: {
+                            connect: { id: id}
+                        }
+                        }
+                    });
+                    }
 
                     }));
+
                 await Promise.all(
                     ach.paiements
                         .filter((p: PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined)
                         .map((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
                 );
-    
+                console.log("ACH: ", ach);
+                
                 const description = `Mise à jour de la vente: ${data.reference}`;
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res));
     
