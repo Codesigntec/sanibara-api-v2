@@ -186,9 +186,9 @@ export class AchatService {
           },
         } : undefined;
 
-        if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
-          throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
-        }
+        // if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
+        //   throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
+        // }
     
         let dateAchat: Date;
         if (data.date === null || data.date === undefined || data.date === '') {
@@ -219,10 +219,19 @@ export class AchatService {
         if (totalPaiements > totalAchat) {
           throw new HttpException(errors.MONTANT_DEPASSE_MONTANT_A_PAYE, HttpStatus.BAD_REQUEST);
         }
+       let libelle: string = '';
+
+       if (!data.libelle) {
+        const action = data.statutAchat === StatutAchat.ACHETER ? 'Achat' : 'Commande';
+        libelle = `${action} du ${new Date(dateAchat).toLocaleDateString()}`;
+      } else {
+        libelle = data.libelle;
+      }
+      
 
         const achat = await this.db.achat.create({
           data: {
-            libelle: data.libelle,
+            libelle: libelle,
             date: dateAchat,
             statutAchat: data.statutAchat,
             etat: data.etat,
@@ -234,7 +243,8 @@ export class AchatService {
                 prixUnitaire: ligne.prixUnitaire,
                 quantite: ligne.quantite,
                 qt_Utilise: 0,
-                quantiteLivre: StatutAchat.ACHETER === data.statutAchat ? ligne.quantite: 0,
+                // quantiteLivre: StatutAchat.ACHETER === data.statutAchat ? ligne.quantite: 0,
+                quantiteLivre: data.statutAchat === StatutAchat.COMMANDE ? ligne.quantiteLivre : ligne.quantite,
                 datePeremption: new Date(ligne.datePeremption),
                 references: ligne.references,
                 matiere: {
@@ -378,9 +388,6 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
       let paiementAchat = {};
 
       if (check.paiements.length === 0) {
-        // if (check.paiements.length > 0) {
-        //   tx.paiement.delete({ where: { id:  check.paiements[0].id } })
-        // }
         paiementAchat ={
           create: data.paiements.map((paiement) => ({
             create: {
@@ -394,6 +401,9 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
             where: { id: check.paiements[0].id },
             data: { montant: data.paiements[0].montant },
           },
+          create: data.paiements.filter((paiement) => !paiement.id).map((paiement) => ({
+            montant: paiement.montant,
+          })),
         }        
       }
       
@@ -410,7 +420,7 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
               fournisseur: fournisseurData,
               ligneAchats: ligneA,
               couts: coutDAchat,
-              paiements: paiementAchat,
+              // paiements: paiementAchat,
           },
           select: {
               id: true,
