@@ -228,7 +228,6 @@ export class AchatService {
         libelle = data.libelle;
       }
       
-
         const achat = await this.db.achat.create({
           data: {
             libelle: libelle,

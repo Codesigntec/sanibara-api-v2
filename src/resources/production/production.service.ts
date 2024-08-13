@@ -103,10 +103,25 @@ export class ProductionService {
               },
             },
           });
-          // if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
-          const dateDebut = new Date(data.dateDebut);
-          const dateFin = new Date(data.dateFin);
+          let referenceProd: string = '';
+          if(data.reference === null || data.reference === undefined || data.reference === ''){
+            referenceProd = `REF_PROD-${new Date().getTime()}`;
+          }
+          let dateDebut: Date;
+          let dateFin: Date;
+        
+          if(data.dateDebut === null || data.dateDebut === undefined ){
+            dateDebut = new Date();
+          }else{
+           dateDebut = new Date(data.dateDebut);
+          }
+
+          if(data.dateFin === null || data.dateFin === undefined ){
+            dateFin = new Date();
+          }else{
+            dateFin = new Date(data.dateFin);
+          }
           
           if (dateDebut > dateFin) {
             throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
@@ -132,7 +147,7 @@ export class ProductionService {
 
           const production = await tx.productions.create({
             data: {
-              reference: data.reference,
+              reference: referenceProd,
               dateDebut: dateDebut,
               description: data.description,
               dateFin: dateFin,
@@ -336,10 +351,6 @@ export class ProductionService {
             coutProduction: true
           },
       })
-
-      console.log("=========================DATA=========================");
-      console.log(production);
-      
       
       if (production === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
       return production
