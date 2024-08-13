@@ -513,13 +513,13 @@ const CoutProduction = z.object({
 const ProdSaveSchema = z.object({
   description: z.string({
     invalid_type_error: errors.DESCRIPTION_MUST_BE_STRING,
-  }),
+  }).optional(),
   reference: z.string({
     invalid_type_error: errors.REFERENCE_MUST_BE_STRING,
-  }),
+  }).optional(),
   dateDebut: z.string({
     invalid_type_error: errors.DATE_DEBUT_MUST_BE_DATE,
-  }),
+  }).optional(),
   coutTotalProduction: z.number({
     invalid_type_error: errors.MONTANT_COUT_TOTAL_MUST_BE_NUMBER,
   }),
@@ -531,7 +531,7 @@ const ProdSaveSchema = z.object({
   }),
   dateFin: z.string({
     invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
-  }),
+  }).optional(),
   coutProduction: z.array(CoutProduction),
   stockProdFini: z.array(StockProduiFiniDtoSchema),
   productionLigneAchat: z.array(ProductionLigneAchatDtoSchema),

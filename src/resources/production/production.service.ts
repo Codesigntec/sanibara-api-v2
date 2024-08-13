@@ -93,6 +93,8 @@ export class ProductionService {
      }
 
     save = async(data: ProdSave, userId: string): Promise<ProdReturn> =>{
+      console.log("=============================DATA===============================");
+      console.log(data);
       return await this.db.$transaction(async (tx) => {
         try {
           const check = await tx.productions.findFirst({
@@ -103,7 +105,6 @@ export class ProductionService {
               },
             },
           });
-
           let referenceProd: string = '';
           if(data.reference === null || data.reference === undefined || data.reference === ''){
             referenceProd = `REF_PROD-${new Date().getTime()}`;
@@ -144,12 +145,34 @@ export class ProductionService {
           if (hasDuplicates) {
             throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
           } 
+          let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);
+
+          let designationAll: string[] = await Promise.all(
+            stockId.map(async (id) => {
+              const produit = await tx.produitFini.findUnique({
+                where: { id: id },
+                select: { designation: true }
+              });
+              return produit?.designation || '';  
+            })
+          );
+
+          let descriptionProd: string = "";
+          if (data.description === null || data.description === undefined || data.description === '') {
+            if (dateDebut === dateFin) {
+              descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() ;
+            }else{
+              descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() + " au " + dateFin.toDateString();
+            }
+            
+          }
+          
 
           const production = await tx.productions.create({
             data: {
               reference: referenceProd,
               dateDebut: dateDebut,
-              description: data.description,
+              description: descriptionProd,
               dateFin: dateFin,
               coutTotalProduction: data.coutTotalProduction,
               beneficeDetails: data.beneficeDetails,
@@ -293,7 +316,7 @@ export class ProductionService {
                   datePeremption: new Date(check.datePeremption),
                   references: check.references,
                   quantiteLivre: check.quantiteLivre,
-                  qt_Utilise: check.qt_Utilise + ligne.qt_Utilise ,
+                  qt_Utilise: check.qt_Utilise + ligne.qt_Utilise,
                   matiere: {
                       connect: {
                           id: check.matiereId,
