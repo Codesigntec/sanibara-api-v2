@@ -140,9 +140,6 @@ export class ProductionController {
     async update(@Body() data: ProdUpdate, @Req() req: AuthorizedRequest): Promise<ProdReturn> {
         const userId = req.userId
         const id = req.params.id
-        console.log("===================================================================");
-        console.log(data);
-        
         return await this.service.update(id, data, userId)
     }
 

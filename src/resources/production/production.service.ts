@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { ProdReturn, ProdSave, ProductionFetcher, Productions, ProductionsReturn, ProductionsSaver, ProdUpdate, tableReturn } from "./production.type";
+import { ProdReturn, ProdSave, ProductionFetcher, ProductionsReturn, ProdUpdate, tableReturn } from "./production.type";
 import { errors } from "./production.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
 
@@ -42,6 +42,7 @@ export class ProductionService {
           }
           conditions = { ...conditions, createdAt: dateFilter };
       }
+
       conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
       let order = {}
@@ -93,8 +94,6 @@ export class ProductionService {
      }
 
     save = async(data: ProdSave, userId: string): Promise<ProdReturn> =>{
-      console.log("=============================DATA===============================");
-      console.log(data);
       return await this.db.$transaction(async (tx) => {
         try {
           const check = await tx.productions.findFirst({
@@ -157,16 +156,28 @@ export class ProductionService {
             })
           );
 
+          // let descriptionProd: string = "";
+          // if (data.description === null || data.description === undefined || data.description === '') {
+          //   if (dateDebut === dateFin) {
+          //     descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() ;
+          //   }else{
+          //     descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() + " au " + dateFin.toDateString();
+          //   }
+          // }
+
           let descriptionProd: string = "";
+
           if (data.description === null || data.description === undefined || data.description === '') {
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
+            const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
+
             if (dateDebut === dateFin) {
-              descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() ;
-            }else{
-              descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() + " au " + dateFin.toDateString();
+              descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
+            } else {
+              descriptionProd = "Production de [ " + designationAll.join(', ') + "] du " + dateDebutFormatted + " au " + dateFinFormatted;
             }
-            
           }
-          
 
           const production = await tx.productions.create({
             data: {
@@ -397,12 +408,24 @@ export class ProductionService {
                         }
                     } 
                 })
-                // if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-
+            
                 let productionOld = check;
-                
-                const dateDebut = new Date(data.dateDebut);
-                const dateFin = new Date(data.dateFin);
+
+                let dateDebut: Date;
+                let dateFin: Date;
+              
+                if(data.dateDebut === null || data.dateDebut === undefined ){
+                  dateDebut = new Date();
+                }else{
+                 dateDebut = new Date(data.dateDebut);
+                }
+      
+                if(data.dateFin === null || data.dateFin === undefined ){
+                  dateFin = new Date();
+                }else{
+                  dateFin = new Date(data.dateFin);
+                }
+
                 
                 if (dateDebut > dateFin) {
                   throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);

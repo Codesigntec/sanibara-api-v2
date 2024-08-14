@@ -1051,6 +1051,7 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
                 quantite: true,
                 prixUnitaire: true,
                 qt_Utilise: true,
+                datePeremption: true,
                 quantiteLivre: true,
                 matiere: {
                     select: {
