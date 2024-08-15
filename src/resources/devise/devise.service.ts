@@ -56,7 +56,7 @@ export class DeviseService {
     save = async (data: DeviseSaver, userId: string): Promise<Devise> => {
 
         const totalCount = await this.db.devise.count();
-        if (totalCount.valueOf.length <= 1) {
+        if (totalCount > 0) {
             throw new HttpException(errors.DEVISE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
         }
 
