@@ -65,7 +65,8 @@ export class MatiereService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             },
@@ -109,6 +110,7 @@ export class MatiereService {
                     select: {
                         id: true,
                         libelle: true,
+                        symbole: true,
                         createdAt: true
                     }
                 }
@@ -149,7 +151,8 @@ export class MatiereService {
                         unite: {
                             select: {
                                 id: true,
-                                libelle: true
+                                libelle: true,
+                                symbole: true
                             }
                         }
                     }
@@ -208,7 +211,8 @@ export class MatiereService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             },
@@ -267,7 +271,8 @@ export class MatiereService {
                         unite: {
                             select: {
                                 id: true,
-                                libelle: true
+                                libelle: true,
+                                symbole: true
                             }
                         }
                     }
@@ -302,7 +307,8 @@ export class MatiereService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             }
@@ -333,7 +339,8 @@ export class MatiereService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             }
@@ -363,7 +370,8 @@ export class MatiereService {
                     unite: {
                         select: {
                             id: true,
-                            libelle: true
+                            libelle: true,
+                            symbole: true
                         }
                     }
                 }

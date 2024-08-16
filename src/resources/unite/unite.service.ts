@@ -4,6 +4,7 @@ import { UniteFetcher, UniteSaver, Unite, UniteSelect } from './unite.types';
 import { errors } from './unite.constant';
 import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
+import { symbol } from 'zod';
 
 @Injectable()
 export class UniteService {
@@ -28,7 +29,7 @@ export class UniteService {
             take: limit,
             skip: offset,
             where: conditions,
-            select: { id: true, libelle: true, createdAt: true, },
+            select: { id: true, libelle: true, symbole: true, createdAt: true, },
             orderBy: order
         })
 
@@ -49,7 +50,7 @@ export class UniteService {
     select = async (): Promise<UniteSelect[]> => {
         const unites = await this.db.unite.findMany({ 
             where: { removed: false, archive: false },
-            select: { id: true, libelle: true }
+            select: { id: true, libelle: true, symbole: true, }
         })
         return unites
     }
@@ -57,19 +58,20 @@ export class UniteService {
     save = async (data: UniteSaver, userId: string): Promise<Unite> => {
         const check = await this.db.unite.findFirst({ 
             where: { 
-                libelle: { 
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                } 
+                OR: [
+                    { libelle: { equals: data.libelle, mode: 'insensitive' } },
+                    { symbole: { equals: data.symbole, mode: 'insensitive' } }
+                ]
             }
-        })
+        });
         if (check !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
         const unite = await this.db.unite.create({
             data: {
-                libelle: data.libelle
+                libelle: data.libelle,
+                symbole: data.symbole
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, libelle: true, symbole: true, createdAt: true }
         })
 
         const description = `Ajout de l'unité: ${data.libelle}`
@@ -82,25 +84,36 @@ export class UniteService {
         const check = await this.db.unite.findUnique({ where:  {id: id }, select: { libelle: true } })
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
+        // const checkFirst = await this.db.unite.findFirst({ 
+        //     where: { 
+        //         id: {
+        //             not: id
+        //         },
+        //         libelle: { 
+        //             equals: data.libelle,
+        //             equals: data.symbole,
+        //             mode: 'insensitive'
+        //         } 
+        //     }
+        // })
+
         const checkFirst = await this.db.unite.findFirst({ 
             where: { 
-                id: {
-                    not: id
-                },
-                libelle: { 
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                } 
+                OR: [
+                    { libelle: { equals: data.libelle, mode: 'insensitive' } },
+                    { symbole: { equals: data.symbole, mode: 'insensitive' } }
+                ]
             }
-        })
+        });
         if (checkFirst !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
         const unite = await this.db.unite.update({
             where: { id },
             data: {
-                libelle: data.libelle
+                libelle: data.libelle,
+                symbole: data.symbole
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, libelle: true, symbole: true, createdAt: true }
         })
 
         const description = `Modification de l'unité: ${check.libelle} -> ${data.libelle}`
@@ -119,7 +132,7 @@ export class UniteService {
             data: {
                 archive: !check.archive
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, libelle: true, symbole: true, createdAt: true }
         })
 
         const description = `Archivage de l'unité: ${check.libelle}`
@@ -137,7 +150,7 @@ export class UniteService {
             data: {
                 removed: !check.removed
             },
-            select: { id: true, libelle: true, createdAt: true }
+            select: { id: true, libelle: true, symbole: true, createdAt: true }
         })
 
         const description = `Suppression logique de l'unité: ${check.libelle}`
@@ -154,7 +167,7 @@ export class UniteService {
         try {
             const unite = await this.db.unite.delete({
                 where: { id },
-                select: { id: true, libelle: true, createdAt: true }
+                select: { id: true, libelle: true, symbole: true, createdAt: true }
             })
 
             const description = `Suppression physique de l'unité: ${check.libelle}`

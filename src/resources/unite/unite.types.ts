@@ -9,12 +9,18 @@ export class UniteFetcher extends FetcherFilter {
 export class UniteSaver {
   @ApiProperty()
   libelle: string
+
+  @ApiProperty()
+  symbole: string
 }
 
 // ============= RESPONSE
 export class UniteSelect {
   @ApiProperty()
   id: string
+
+  @ApiProperty()
+  symbole: string
 
   @ApiProperty()
   libelle: string
@@ -31,6 +37,10 @@ export const saverSchema = z
     libelle: z.string({
       required_error: errors.LABEL_REQUIRED,
       invalid_type_error: errors.LABEL_MUST_BE_STRING,
+    }),
+    symbole: z.string({
+      required_error: errors.SYMBOLE_REQUIRED,
+      invalid_type_error: errors.SYMBOLE_MUST_BE_STRING,
     })
   })
   .required();

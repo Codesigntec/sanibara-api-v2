@@ -205,7 +205,6 @@ model StockProduiFini {
   @@map("stock_produi_fini")
 }
 
-
 model Vente {
    
   id          String   @id @default(cuid())
@@ -391,6 +390,7 @@ model Access {
 model Unite {
   id        String   @id @default(cuid())
   libelle   String
+  symbole  String
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
