@@ -318,7 +318,11 @@ export class ProductionService {
               where:  {id: ligne.id }, 
               select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
               quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
-
+              
+              console.log("ligne achat");
+              console.log(check);
+              
+              
             const ligneUpdate = await this.db.ligneAchat.update({
               where: { id: check.id },
               data: {
@@ -340,6 +344,10 @@ export class ProductionService {
                   },
               },
           })
+
+          console.log("ligneUpdate");
+          console.log(ligneUpdate);
+
           })
         
           const description = `Ajout du produit fini: ${data.description}`;
@@ -551,36 +559,36 @@ export class ProductionService {
                       }))
                     ]);
 
-                    // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
-                    const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
-                      existingLignes.some(e => e?.id === ligne.id)
-                    );
+                  // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
+                  const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
+                    existingLignes.some(e => e?.id === ligne.id)
+                  );
 
-                    const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
-                      existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
-                    );
-                    await Promise.all([
-                      // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
-                      ...validProductionLigneAchat.map(async (ligne) => {
-                        console.log("Augmentation de la quantité utilisée pour la ligne d'achat :", ligne);
-                        return tx.ligneAchat.update({
-                          where: { id: ligne.id },
-                          data: {
-                            qt_Utilise: { increment: ligne.qt_Utilise ?? 0 }
-                          }
-                        });
-                      }),
-                      // Mise à jour des anciennes lignes d'achat en diminuant la quantité utilisée
-                      ...validCheckProductionLigneAchat.map(async (oldLigne) => {
-                        console.log("Diminution de la quantité utilisée pour la ligne d'achat :", oldLigne);
-                        return tx.ligneAchat.update({
-                          where: { id: oldLigne.ligneAchatId },
-                          data: {
-                            qt_Utilise: { decrement: oldLigne.qt_Utilise ?? 0 }
-                          }
-                        });
-                      })
-                    ]);
+                  const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
+                    existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
+                  );
+                  await Promise.all([
+                    // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
+                    ...validProductionLigneAchat.map(async (ligne) => {
+                      console.log("Augmentation de la quantité utilisée pour la ligne d'achat :", ligne);
+                      return tx.ligneAchat.update({
+                        where: { id: ligne.id },
+                        data: {
+                          qt_Utilise: { increment: ligne.qt_Utilise ?? 0 }
+                        }
+                      });
+                    }),
+                    // Mise à jour des anciennes lignes d'achat en diminuant la quantité utilisée
+                    ...validCheckProductionLigneAchat.map(async (oldLigne) => {
+                      console.log("Diminution de la quantité utilisée pour la ligne d'achat :", oldLigne);
+                      return tx.ligneAchat.update({
+                        where: { id: oldLigne.ligneAchatId },
+                        data: {
+                          qt_Utilise: { decrement: oldLigne.qt_Utilise ?? 0 }
+                        }
+                      });
+                    })
+                  ]);
 
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))

@@ -108,7 +108,6 @@ export class VentesService {
         return await this.db.$transaction(async (tx) => {
             try {
             
-     
                if (data.dateVente > new Date()) {
                 throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                }
@@ -133,9 +132,25 @@ export class VentesService {
                         }
                     }
               }
+              
+              let dateVente: Date;
+              if (data.dateVente === null || data.dateVente === undefined) {
+                dateVente = new Date();
+              }else{
+                dateVente = new Date(data.dateVente);
+              }
+
+              let references: string = "";
+              
+              if (data.reference === null || data.reference === undefined) {
+                references = data.etat ? "REF_DEVIS_" : "REF_VENTE_" + Date.now();
+              }else{
+                references = data.reference
+              }
+
                 const vente = await tx.vente.create({
                     data: {
-                        reference: data.reference,
+                        reference: references,
                         montant: data.montant,
                         tva: data.tva ? data.tva : 0,
                         paiements: {
@@ -145,7 +160,7 @@ export class VentesService {
                           },
                         etat: data.etat,
                         reliquat: data.montant - totalPaiements,
-                        dateVente: new Date(data.dateVente),
+                        dateVente: dateVente,
                         client:{
                             connect:{id: data.clientId}
                         },
@@ -156,7 +171,9 @@ export class VentesService {
                     }
                 })
 
-            await Promise.all(data.stockVente.map(async (stockVente) => {
+
+                if (data.etat) {
+                await Promise.all(data.stockVente.map(async (stockVente) => {
                  await tx.stockVente.create({
                     data: {
                         quantiteVendue: stockVente.quantiteVendue,
@@ -167,9 +184,10 @@ export class VentesService {
                         vente: {
                             connect: { id: vente.id }
                         }
-                    }
-                });
-            }));
+                      }
+                    });
+                 }));
+               }
 
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
