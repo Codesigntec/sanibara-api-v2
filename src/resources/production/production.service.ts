@@ -519,12 +519,25 @@ export class ProductionService {
                     },
                 })
 
-              //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
-              await Promise.all([
-                ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
-                ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
-                ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
-              ]);
+                // Récupérer les IDs des produits finis liés à StockVente
+                const stockVenteProductIds = await this.db.stockVente.findMany({
+                  select: {
+                    stockProduiFiniId: true
+                  }
+                }).then(results => results.map(stock => stock.stockProduiFiniId));
+                
+                // Vérifier si au moins un produit fini de cette production est lié à StockVente
+               const hasStockVenteLink = check.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
+
+                if (!hasStockVenteLink) {
+                    //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+                  await Promise.all([
+                    ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
+                    ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
+                    ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
+                  ]);
+                  
+                }
 
               // Filtrer et supprimer les entités supprimées avant de retourner la production
               productions.stockProdFini = productions.stockProdFini.filter(stock =>
