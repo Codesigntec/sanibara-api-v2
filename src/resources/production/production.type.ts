@@ -378,18 +378,6 @@ export class coutProduction extends coutProdSave{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // =======================STOCKS PRODUIT FINI===============================
 
 export class UniteSelect{
@@ -412,6 +400,14 @@ export class ProduitDtoStock {
   unite: UniteSelect;
 }
 
+export class StockVente{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  quantiteVendue: number
+}
 
 export class StockReturn{
 
@@ -435,6 +431,10 @@ export class StockReturn{
 
   @ApiProperty()
   qt_produit: number
+
+
+  @ApiProperty()
+  stockVente: StockVente[]
 
   @ApiProperty()
   magasin: MagasinProduitFiniDto
@@ -529,6 +529,12 @@ const ProdSaveSchema = z.object({
     }).optional().nullable(),
     z.literal('')
   ]),
+  dateFin: z.union([
+    z.string({
+      invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
+    }).optional().nullable(),
+    z.literal('')
+  ]),
   coutTotalProduction: z.number({
     invalid_type_error: errors.MONTANT_COUT_TOTAL_MUST_BE_NUMBER,
   }),
@@ -538,12 +544,6 @@ const ProdSaveSchema = z.object({
   beneficeGros: z.number({
     invalid_type_error: errors.MONTANT_BENEFICE_GROS_MUST_BE_NUMBER,
   }),
-  dateFin: z.union([
-    z.string({
-      invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
-    }).optional().nullable(),
-    z.literal('')
-  ]),
   coutProduction: z.array(CoutProduction),
   stockProdFini: z.array(StockProduiFiniDtoSchema),
   productionLigneAchat: z.array(ProductionLigneAchatDtoSchema),

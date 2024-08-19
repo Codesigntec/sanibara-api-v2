@@ -76,9 +76,6 @@ export class ProductionService {
           orderBy: order
       })
 
-      
-
-
       const totalCount = await this.db.productions.count({ where: conditions });
 
       const totalPages = Math.ceil(totalCount / limit);
@@ -155,15 +152,6 @@ export class ProductionService {
               return produit?.designation || '';  
             })
           );
-
-          // let descriptionProd: string = "";
-          // if (data.description === null || data.description === undefined || data.description === '') {
-          //   if (dateDebut === dateFin) {
-          //     descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() ;
-          //   }else{
-          //     descriptionProd = "Prodcution de [ " + designationAll.join(', ')+ "] le " + dateDebut.toDateString() + " au " + dateFin.toDateString();
-          //   }
-          // }
 
           let descriptionProd: string = "";
 
