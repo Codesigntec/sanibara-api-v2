@@ -20,6 +20,7 @@ import { AchatsModule } from './resources/achat/achat.module';
 import { ProductionModule } from './resources/production/production.module';
 import { VenteModule } from './resources/ventes/vente.module';
 import { StructureModule } from './resources/structure/structure.module';
+import { DashboardModule } from './resources/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { StructureModule } from './resources/structure/structure.module';
     AchatsModule,
     ProductionModule,
     VenteModule,
-    StructureModule
+    StructureModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [AppService],
