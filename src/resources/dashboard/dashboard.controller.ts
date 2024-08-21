@@ -28,14 +28,14 @@ export class DashboardController {
         return await this.service.dataDashboardEntete()
     }
 
-    // @Get('/:id')
-    // @Version('2')
-    // @HttpCode(HttpStatus.OK)
-    // @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: [DeviseSelect] })
-    // async findOne(@Param('id') id: string): Promise<DeviseSelect[]> {
-    //     return await this.service.select()
-    // }
+    @Get('/joursData')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    async jourData(): Promise<Record<string, number[]>> {
+        return await this.service.joursData()
+    }
+
 
     
 }

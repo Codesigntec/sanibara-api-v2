@@ -77,7 +77,7 @@ export class DashboardService {
     }
 
 
-    joursData = async (): Promise<number[]> => {
+    joursData = async (): Promise<Record<string, number[]>> => {
 
         const now = new Date();
         const startOfWeekDate = startOfWeek(now, { weekStartsOn: 1 });  
@@ -95,25 +95,26 @@ export class DashboardService {
          const resultatsProduction: number[] = new Array(jours.length).fill(0);
          const resultatsApprovisionnement: number[] = new Array(jours.length).fill(0);
          const resultatsCharges: number[] = new Array(jours.length).fill(0);
+         const resultatsVente: number[] = new Array(jours.length).fill(0);
 
-         for (let i = 0; i < jours.length; i++) {
+        for (let i = 0; i < jours.length; i++) {
 
-            const jour = jours[i];
+        const jour = jours[i];
 
-            const totalCout = await this.db.productions.aggregate({
-            _sum: {
-                coutTotalProduction: true,
+        const total = await this.db.productions.aggregate({
+        _sum: {
+            coutTotalProduction: true,
+        },
+        where: {
+            removed: false,
+            archive: false,
+            dateDebut: {
+            gte: jour,
+            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
             },
-            where: {
-                removed: false,
-                archive: false,
-                dateDebut: {
-                gte: jour,
-                lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
-                },
-            },
-            });
-            resultatsProduction[i] = totalCout._sum.coutTotalProduction || 0;
+        },
+        });
+        resultatsProduction[i] = total._sum.coutTotalProduction || 0;
         }
 
         for (let i = 0; i < jours.length; i++) {
@@ -162,7 +163,7 @@ export class DashboardService {
 
             const jour = jours[i];
 
-            const totalCout = await this.db.depense.aggregate({
+            const total = await this.db.depense.aggregate({
             _sum: {
                 montant: true,
             },
@@ -175,12 +176,37 @@ export class DashboardService {
                 },
             },
             });
-            resultatsCharges[i] = totalCout._sum.montant || 0;
-        }
+            resultatsCharges[i] = total._sum.montant || 0;
+         }
 
+
+        for (let i = 0; i < jours.length; i++) {
+
+            const jour = jours[i];
+
+            const total = await this.db.vente.aggregate({
+            _sum: {
+                montant: true,
+            },
+            where: {
+                removed: false,
+                archive: false,
+                dateVente: {
+                gte: jour,
+                lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+                },
+            },
+            });
+            resultatsVente[i] = total._sum.montant || 0;
+         }
+        
+         resultatsTotal['productions'] = resultatsProduction;
+         resultatsTotal['approvisionnements'] = resultatsApprovisionnement;
+         resultatsTotal['charges'] = resultatsCharges;
+         resultatsTotal['ventes'] = resultatsVente;
 
         
-        return resultatsProduction;
+        return resultatsTotal;
     }
 
     
