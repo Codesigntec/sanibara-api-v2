@@ -36,6 +36,15 @@ export class DashboardController {
         return await this.service.joursData()
     }
 
+    @Get('/data/annee')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    async anneeData(): Promise<Record<string, number[]>> {
+        return await this.service.anneeData()
+    }
+
+    
 
     
 }
