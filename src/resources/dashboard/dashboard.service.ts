@@ -4,7 +4,7 @@ import { errors } from './dashboard.constant';
 import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
 import { DashboardFetcher, DataDashboardEntete, JoursData } from './dashboard.types';
-import { eachDayOfInterval, endOfWeek, format, startOfWeek } from 'date-fns';
+import { eachDayOfInterval, eachMonthOfInterval, endOfWeek, endOfYear, format, startOfWeek, startOfYear } from 'date-fns';
 
 @Injectable()
 export class DashboardService {
@@ -208,6 +208,113 @@ export class DashboardService {
         
         return resultatsTotal;
     }
+ 
+
+    anneeData = async (): Promise<Record<string, number[]>> => {
+
+        const now = new Date();
+        const startOfYearDate = startOfYear(now);  
+        const endOfYearDate = endOfYear(now);
+
+        // Récupère les mois de l'année en cours
+        const mois = eachMonthOfInterval({
+            start: startOfYearDate,
+            end: endOfYearDate,
+        });
+
+        // Initialise un objet pour stocker les résultats par mois
+        const resultatsTotal: Record<string, number[]> = {};
+        // Initialise des tableaux pour stocker les résultats par mois
+        const resultatsProduction: number[] = new Array(mois.length).fill(0);
+        const resultatsApprovisionnement: number[] = new Array(mois.length).fill(0);
+        const resultatsCharges: number[] = new Array(mois.length).fill(0);
+        const resultatsVente: number[] = new Array(mois.length).fill(0);
+
+        for (let i = 0; i < mois.length; i++) {
+            const debutMois = mois[i];
+            const finMois = new Date(debutMois.getFullYear(), debutMois.getMonth() + 1, 0); // Dernier jour du mois
+
+            const totalProduction = await this.db.productions.aggregate({
+                _sum: {
+                    coutTotalProduction: true,
+                },
+                where: {
+                    removed: false,
+                    archive: false,
+                    dateDebut: {
+                        gte: debutMois,
+                        lt: finMois,
+                    },
+                },
+            });
+            resultatsProduction[i] = totalProduction._sum.coutTotalProduction || 0;
+
+            const achats = await this.db.achat.findMany({
+                where: {
+                    removed: false,
+                    archive: false,
+                    date: {
+                        gte: debutMois,
+                        lt: finMois,
+                    },
+                },
+                include: {
+                    ligneAchats: true,
+                    couts: true,
+                },
+            });
+
+            let totalCout = 0;
+            achats.forEach(achat => {
+                const totalLigneAchats = achat.ligneAchats.reduce(
+                    (sum, ligne) => sum + (ligne.quantite * ligne.prixUnitaire), 
+                    0
+                );
+                const montantTVA = (totalLigneAchats * achat.tva) / 100;
+                totalCout += totalLigneAchats + montantTVA;
+                totalCout += achat.couts.reduce((sum, cout) => sum + cout.montant, 0);
+            });
+            resultatsApprovisionnement[i] = totalCout;
+
+            const totalCharges = await this.db.depense.aggregate({
+                _sum: {
+                    montant: true,
+                },
+                where: {
+                    removed: false,
+                    archive: false,
+                    date: {
+                        gte: debutMois,
+                        lt: finMois,
+                    },
+                },
+            });
+            resultatsCharges[i] = totalCharges._sum.montant || 0;
+
+            const totalVente = await this.db.vente.aggregate({
+                _sum: {
+                    montant: true,
+                },
+                where: {
+                    removed: false,
+                    archive: false,
+                    dateVente: {
+                        gte: debutMois,
+                        lt: finMois,
+                    },
+                },
+            });
+            resultatsVente[i] = totalVente._sum.montant || 0;
+        }
+
+        resultatsTotal['productions'] = resultatsProduction;
+        resultatsTotal['approvisionnements'] = resultatsApprovisionnement;
+        resultatsTotal['charges'] = resultatsCharges;
+        resultatsTotal['ventes'] = resultatsVente;
+
+        return resultatsTotal;
+    }
+
 
     
 }
