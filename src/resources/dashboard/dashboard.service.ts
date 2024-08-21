@@ -158,6 +158,25 @@ export class DashboardService {
             resultatsApprovisionnement[i] = totalCout;
           }
 
+        for (let i = 0; i < jours.length; i++) {
+
+            const jour = jours[i];
+
+            const totalCout = await this.db.depense.aggregate({
+            _sum: {
+                montant: true,
+            },
+            where: {
+                removed: false,
+                archive: false,
+                date: {
+                gte: jour,
+                lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+                },
+            },
+            });
+            resultatsCharges[i] = totalCout._sum.montant || 0;
+        }
 
 
         
