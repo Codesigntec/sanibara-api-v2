@@ -6,7 +6,7 @@ import { errors } from "./notifications.constant"
 export class DeviseFetcher extends FetcherFilter {
 }
 
-export class DeviseSaver {
+export class NotificationSaver {
   @ApiProperty()
   libelle: string
 
@@ -14,24 +14,6 @@ export class DeviseSaver {
   symbole: string
 }
 
-// ============= RESPONSE
-export class DeviseSelect {
-  @ApiProperty()
-  id: string
-
-  @ApiProperty()
-  libelle: string
-}
-export class Devise extends DeviseSelect {
-  @ApiProperty()
-  numero: number
-
-  @ApiProperty()
-  symbole: string
-
-  @ApiProperty()
-  createdAt: Date
-}
 
 // ================VALIDATION
 

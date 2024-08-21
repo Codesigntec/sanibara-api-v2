@@ -481,5 +481,5 @@ model Notification {
   type       String?
   createdAt     DateTime    @default(now()) @map("created_at")
 
-  @@map("Notifications")
+  @@map("notifications")
 }
