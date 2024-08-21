@@ -4,9 +4,10 @@ import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
 import { ZodPipe } from 'src/validation/zod.pipe';
 import { DashboardService } from './dashboard.service';
+import { DataDashboardEntete } from './dashboard.types';
 
-@Controller('devises')
-@ApiTags('Devises')
+@Controller('dashboard')
+// @ApiTags('Devises')
 // @ApiExtraModels(Pagination, Dashboard)
 @ApiResponse({ status: 200, description: 'Successful.'})
 @ApiResponse({ status: 401, description: 'Unauthorized.'})
@@ -19,14 +20,13 @@ export class DashboardController {
 
 
 
-    // @Get('/select')
-    // @Version('2')
-    // @HttpCode(HttpStatus.OK)
-    // @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: Devise })
-    // async select(): Promise<DeviseSelect[]> {
-    //     return await this.service.select()
-    // }
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    async dataDashboardEntete(): Promise<DataDashboardEntete> {
+        return await this.service.dataDashboardEntete()
+    }
 
     // @Get('/:id')
     // @Version('2')

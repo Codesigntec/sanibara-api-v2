@@ -14,6 +14,46 @@ export class DashboardSaver {
   symbole: string
 }
 
+export class DataDashboardEntete {
+
+  @ApiProperty()
+  nbr_de_production: number
+
+  @ApiProperty()
+  nbr_de_approvisionnement: number
+
+  @ApiProperty()
+  nbr_de_vente: number
+
+  @ApiProperty()
+  nbr_de_charge_fixes: number
+}
+
+export class JoursData {
+
+  @ApiProperty()
+  dimanche: number
+
+  @ApiProperty()
+  lundi: number
+
+  @ApiProperty()
+  mardi: number
+
+  @ApiProperty()
+  mercredi: number
+
+  @ApiProperty()
+  jeudi: number
+
+  @ApiProperty()
+  vendredi: number
+
+  @ApiProperty()
+  samedi: number
+}
+
+
 // ================VALIDATION
 
 export const saverSchema = z
