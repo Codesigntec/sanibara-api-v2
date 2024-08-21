@@ -473,3 +473,13 @@ model Structure {
 
   @@map("structures")
 }
+
+model Notification {
+  id         String   @id @default(cuid())
+  message    String
+  is_read    Boolean  @default(false)
+  type       String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("Notifications")
+}

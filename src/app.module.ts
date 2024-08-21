@@ -42,7 +42,8 @@ import { DashboardModule } from './resources/dashboard/dashboard.module';
     ProductionModule,
     VenteModule,
     StructureModule,
-    DashboardModule
+    DashboardModule,
+    NotificationModule
   ],
   controllers: [AppController],
   providers: [AppService],

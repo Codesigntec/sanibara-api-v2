@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { DeviseController } from './devise.controller'
-import { DeviseService } from './notifications.service';
 import { DatabaseModule } from 'src/database/database.module';
 import { TraceService } from '../trace/trace.service';
 import { PrismaService } from 'src/database/prisma.service';
@@ -9,7 +7,7 @@ import { PrismaService } from 'src/database/prisma.service';
   imports: [
     DatabaseModule,
   ],
-  controllers: [DeviseController],
-  providers: [DeviseService, TraceService, PrismaService]
+  controllers: [NotificationController],
+  providers: [NotificationService, TraceService, PrismaService]
 })
-export class DeviseModule { }
+export class NotificationModule { }

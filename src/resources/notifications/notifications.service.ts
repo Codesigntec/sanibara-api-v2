@@ -6,7 +6,7 @@ import { TraceService } from '../trace/trace.service';
 import { Pagination, PaginationQuery } from 'src/common/types';
 
 @Injectable()
-export class DeviseService {
+export class NotificationService {
 
     constructor(
         private db: PrismaClient,
