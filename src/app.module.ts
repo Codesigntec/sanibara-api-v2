@@ -21,10 +21,16 @@ import { ProductionModule } from './resources/production/production.module';
 import { VenteModule } from './resources/ventes/vente.module';
 import { StructureModule } from './resources/structure/structure.module';
 import { DashboardModule } from './resources/dashboard/dashboard.module';
+import { NotificationModule } from './resources/notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { NotificationService } from './resources/notifications/notifications.service';
+import { PrismaModule } from 'prisma/prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
+    PrismaModule,
     MatiereModule,
     ProduitModule,
     AuthModule,

@@ -3,8 +3,8 @@ import { ApiExtraModels, ApiOkResponse, ApiResponse, ApiTags, getSchemaPath } fr
 import { NotificationService } from './notifications.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthorizedRequest, Pagination, PaginationQuery } from 'src/common/types';
-import { Devise, DeviseFetcher, DeviseSaver, DeviseSelect, saverSchema } from './notifications.types';
 import { ZodPipe } from 'src/validation/zod.pipe';
+import { NotificationLIst } from './notifications.types';
 
 @Controller('notifications')
 // @ApiTags('Devises')
@@ -20,25 +20,34 @@ export class NotificationController {
 
 
 
-    // @Get('/select')
-    // @Version('2')
-    // @HttpCode(HttpStatus.OK)
-    // @UseGuards(AuthGuard)
+    @Get('/')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
     // @ApiOkResponse({ type: Devise })
-    // async select(): Promise<DeviseSelect[]> {
-    //     return await this.service.select()
-    // }
+    async list(): Promise<NotificationLIst[]> {
+        return await this.service.list()
+    }
 
-    // @Post('/')
-    // @Version('2')
-    // @HttpCode(HttpStatus.OK)
-    // @UsePipes(new ZodPipe(saverSchema))
-    // @UseGuards(AuthGuard)
-    // @ApiOkResponse({ type: [DeviseSelect] })
-    // async save(@Body() data: DeviseSaver, @Req() req: AuthorizedRequest): Promise<Devise> {
-    //     const userId = req.userId
-    //     return await this.service.save(data, userId)
-    // }
 
+    @Delete('/:id/destroy')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    async destroy(@Req() req: AuthorizedRequest): Promise<string> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.destroy(id, userId)
+    }
+
+    @Delete('/:id')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    async remove(@Req() req: AuthorizedRequest): Promise<string> {
+        const userId = req.userId
+        const id = req.params.id
+        return await this.service.remove(id, userId)
+    }
 
 }

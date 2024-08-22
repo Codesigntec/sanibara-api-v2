@@ -14,6 +14,23 @@ export class NotificationSaver {
   symbole: string
 }
 
+export class NotificationLIst {
+
+  @ApiProperty()
+  message: string
+
+  @ApiProperty()
+  is_read: boolean
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  type: string
+
+  @ApiProperty()
+  idObject: string
+}
 
 // ================VALIDATION
 

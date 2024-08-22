@@ -1,10 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Devise, PrismaClient } from '@prisma/client';
-import {  NotificationSaver } from './notifications.types';
+import {  NotificationLIst, NotificationSaver } from './notifications.types';
 import { errors } from './notifications.constant';
 import { TraceService } from '../trace/trace.service';
-import { Pagination, PaginationQuery } from 'src/common/types';
 import { subDays } from 'date-fns';
+
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class NotificationService {
@@ -14,63 +15,67 @@ export class NotificationService {
         private trace: TraceService
     ) { }
 
-    save = async (): Promise<NotificationSaver> => {
-      
-        const produits = await this.db.ligneAchat.findMany({
-            where: {
-                datePeremption: {
-                    lte: subDays(new Date(), 7) // Produits expirant dans les 7 jours
-                },
-            },
-            select: {
-                id: true,
-                quantite: true,
-                quantiteLivre: true,
-                datePeremption: true,
-                matiere: {
-                    select: {
-                        id: true,
-                        designation: true
-                    }
-                },
-                magasin: {
-                    select: {
-                        id: true,
-                        nom: true
-                    }
-                }
-                
-            }
-            
-          });
-    
-        for (const produit of produits) {
-            await this.db.notification.create({
-                data: {
-                    type: 'expiration',
-                    message: `Le produit ${produit.matiere.designation} dans le magasin [ ${produit.magasin.nom} ]est sur le point d'expirer.`,
-                }
-            });
-        }
 
-    }
- 
-    destroy = async (id: string, userId: string): Promise<Devise> => {
-        const check = await this.db.devise.findUnique({ where: { id: id }, select: { libelle: true } })
+
+
+
+  list = async (): Promise<NotificationLIst[]> => {
+    const data = await this.db.notification.findMany({
+        where: {
+            is_read: false
+        },
+        select: {
+            id: true,
+            message: true,
+            is_read: true,
+            createdAt: true,
+            type: true,
+            idObject: true
+        }
+    });
+
+    return data;
+  }
+
+    destroy = async (id: string, userId: string): Promise<string> => {
+        const check = await this.db.notification.findUnique({ where: { id: id }, select: { id: true } })
         if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
         try {
-            const devise = await this.db.devise.delete({
+            const devise = await this.db.notification.delete({
                 where: { id },
-                select: { id: true, numero: true, libelle: true, symbole: true, createdAt: true }
+                select: { id: true }
             })
 
-            const description = `Suppression physique du devise: ${check.libelle}`
+            const description = `Suppression physique de la notification: ${check.id}`
             this.trace.logger({ action: 'Suppression physique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
-            return devise
+            return "Supprision effectuee avec succes"
         } catch (_: any) {
             throw new HttpException(errors.NOT_REMOVABLE, HttpStatus.BAD_REQUEST);
         }
+    }
+
+
+    remove = async (id: string, userId: string): Promise<string> => {
+        const check = await this.db.notification.findUnique({ where: { id: id }, select: { id: true, is_read: true } })
+        if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
+
+        const notif = await this.db.notification.update({
+            where: { id },
+            data: {
+                is_read: !check.is_read
+            },
+            select: {
+                id: true,
+            }
+            // select: { id: true, numero: true, libelle: true, createdAt: true }
+        })
+
+        const description = `Suppression logique de la notification: ${check.id}`
+        this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
+
+
+        return "Supprimerion effectuee avec succes"
     }
 }
