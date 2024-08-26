@@ -38,9 +38,6 @@ export class AppService {
   async checkExpiringProducts() {
       try {
       // Check for expiring products
-
-      const produitsData = await this.db.ligneAchat.findMany();
-      
       const produits = await this.db.ligneAchat.findMany({
           where: {
           datePeremption: {
@@ -80,7 +77,6 @@ export class AppService {
               data: {
               type: 'expiration',
               message:`[${produit.quantite - produit.qt_Utilise}] de [${produit.matiere.designation}] dans le [${produit.magasin.nom}] expire le ${this.formatDetailedDate(produit.datePeremption.toDateString())}.`,
-              // message: `La quantité [ ${produit.quantite - produit.qt_Utilise} ] du produit [ ${produit.matiere.designation} ] dans le magasin [ ${produit.magasin.nom} ] est sur le point d'expirer. Date d'expiration : ${this.formatDetailedDate(produit.datePeremption.toDateString())}.`,
               is_read: false,
               idObject: `1_${produit.id}`,
               },
@@ -125,7 +121,6 @@ export class AppService {
               data: {
               type: 'expiration',
               message: `Le produit [${produitFini.produitFini.designation}] dans [${produitFini.magasin.nom}] expire le ${this.formatDetailedDate(produitFini.datePeremption.toDateString())}.`,
-              // message: `Le produit [ ${produitFini.produitFini.designation} ] dans le magasin [ ${produitFini.magasin.nom} ] est sur le point d'expirer. Date d'expiration : ${this.formatDetailedDate(produitFini.datePeremption.toDateString())}`,
               is_read: false,
               idObject: `2_${produitFini.id}`,
               },

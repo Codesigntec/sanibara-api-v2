@@ -23,8 +23,8 @@ import { StructureModule } from './resources/structure/structure.module';
 import { DashboardModule } from './resources/dashboard/dashboard.module';
 import { NotificationModule } from './resources/notifications/notifications.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { NotificationService } from './resources/notifications/notifications.service';
 import { PrismaModule } from 'prisma/prisma.module';
+import { ResultatsModule } from './resources/resultats/resultats.module';
 
 @Module({
   imports: [
@@ -49,7 +49,8 @@ import { PrismaModule } from 'prisma/prisma.module';
     VenteModule,
     StructureModule,
     DashboardModule,
-    NotificationModule
+    NotificationModule,
+    ResultatsModule
   ],
   controllers: [AppController],
   providers: [AppService],
