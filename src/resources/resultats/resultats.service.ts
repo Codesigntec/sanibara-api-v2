@@ -56,12 +56,22 @@ export class ResultatsService {
       }
     }
     
+      const startedDate = new Date(debut);
+      const endDate = new Date(fin);
+      
+      endDate.setHours(23, 59, 59, 999);
+      const depense = await this.db.depense.findMany();
+
+      console.log("Date depense", depense[0].createdAt);
+      console.log("Start Date", startedDate);
+      console.log("End Date", endDate);
+            
    
     const depense_charges = await this.db.depense.findMany({
       where: {
         createdAt: {
-          gte: new Date(debut),
-          lte: new Date(fin)
+          gte: startedDate,
+          lte: endDate
         },
         removed: false,
         archive: false
@@ -70,17 +80,15 @@ export class ResultatsService {
       select: { createdAt: true, montant: true }
     });
     
-    depense_charges.forEach((depense) => {
-      // card.charges_fixes = card.charges_fixes ? card.charges_fixes + depense.montant : depense.montant
-      card.charges_fixes = depense_charges.reduce((total, depense) => total + depense.montant, 0);
-
-    })
-
+    card.charges_fixes = depense_charges.reduce((total, depense) => total + depense.montant, 0);
+    // depense_charges.forEach((depense) => {
+    //   card.charges_fixes = depense_charges.reduce((total, depense) => total + depense.montant, 0);
+    // })
     const description = `Retour des résultats de la card ${debut} - ${fin}`
     this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
     return card
   }
      
-    
+  
 }
