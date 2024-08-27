@@ -21,6 +21,11 @@ export class StatMonth{
   @ApiProperty()
   year?: number | null
 }
+
+export class StatYear{
+  @ApiProperty()
+  year?: number | null
+}
 export class Card {
 
   @ApiProperty()

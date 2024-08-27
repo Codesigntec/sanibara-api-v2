@@ -2,8 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { errors } from './resultats.constant';
 import { TraceService } from '../trace/trace.service';
-import { Card, FinancialData, FlitreCard, StatMonth } from './resultats.types';
-import { eachDayOfInterval } from 'date-fns';
+import { Card, FinancialData, FlitreCard, StatMonth, StatYear } from './resultats.types';
+import { eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 
 @Injectable()
 export class ResultatsService {
@@ -232,11 +232,11 @@ export class ResultatsService {
     // Date de fin du mois (dernier jour à 23:59:59.999)
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-        // Récupère les jours de la semaine en cours
-      const jours = eachDayOfInterval({
-        start: startDate,
-        end: endDate,
-      });
+    // Récupère les jours de la semaine en cours
+    const jours = eachDayOfInterval({
+      start: startDate,
+      end: endDate,
+    });
 
     const financialData: FinancialData = {
       productions: Array(31).fill(0),
@@ -307,11 +307,148 @@ export class ResultatsService {
       financialData.productions[i] = total._sum.coutTotalProduction || 0;
     }
 
-//------------------- Calculer les approvisionnements ----------------------------------
+  //------------------- Calculer les approvisionnements ----------------------------------
+  for (let i = 0; i < jours.length; i++) {
+    const jour = jours[i];
+    
+    // Récupérer tous les achats pour le jour donné
+    const achats = await this.db.achat.findMany({
+      where: {
+        removed: false,
+        archive: false,
+        date: {
+          gte: jour,
+          lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Fin du jour
+        },
+      },
+      include: {
+        ligneAchats: true,
+        couts: true,
+      },
+    });
 
+    // Calculer le coût total pour ce jour-là
+    let totalCout = 0;
+
+    achats.forEach(achat => {
+      // Calcul du coût des lignes d'achat
+      const totalLigneAchats = achat.ligneAchats.reduce(
+        (sum, ligne) => sum + (ligne.quantite * ligne.prixUnitaire), 
+        0
+      );
+      // Ajouter la TVA au total
+      const montantTVA = (totalLigneAchats * achat.tva) / 100;
+      
+      // Ajouter le coût total des lignes d'achat plus la TVA
+      totalCout += totalLigneAchats + montantTVA;
+
+      // Ajouter les coûts supplémentaires (sans TVA)
+      totalCout += achat.couts.reduce((sum, cout) => sum + cout.montant, 0);
+    });
+
+    // Stocker le résultat pour le jour en cours
+    financialData.approvisionnements[i] = totalCout;
+  }
+  console.log("financialData", financialData);
+    
+
+    return financialData;
+  }
+
+
+  statistiqueYears = async (data: StatYear, userId: string): Promise<FinancialData> => { 
+
+    let { year } = data;
+
+    if (year === null || year === 0 || year === undefined) {
+      year = new Date().getFullYear();
+    }
+
+    // Date de début du mois (1er jour à 00:00)
+    const startDate = new Date(year, 0 - 1, 1, 0, 0, 0, 0);
+
+    // Date de fin du mois (dernier jour à 23:59:59.999)
+    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+
+      // Récupère les jours de la semaine en cours
+      const mois = eachMonthOfInterval({
+        start: startDate,
+        end: endDate,
+      });
+
+    const financialData: FinancialData = {
+      productions: Array(12).fill(0),
+      depenses: Array(12).fill(0),
+      ventes: Array(12).fill(0),
+      approvisionnements: Array(12).fill(0)
+    };
+
+      //------------------- Calculer les ventes ----------------------------------
+      for (let i = 0; i < mois.length; i++) {
+
+        const jour = mois[i];
   
-    for (let i = 0; i < jours.length; i++) {
-      const jour = jours[i];
+        const total = await this.db.vente.aggregate({
+        _sum: {
+            montant: true,
+        },
+        where: {
+            removed: false,
+            archive: false,
+            dateVente: {
+            gte: jour,
+            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            },
+        },
+        });
+        financialData.ventes[i] = total._sum.montant || 0;
+     }
+  
+  //------------------- Calculer les charges ----------------------------------
+      for (let i = 0; i < mois.length; i++) {
+  
+        const jour = mois[i];
+  
+        const total = await this.db.depense.aggregate({
+        _sum: {
+            montant: true,
+        },
+        where: {
+            removed: false,
+            archive: false,
+            date: {
+            gte: jour,
+            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            },
+        },
+        });
+        financialData.depenses[i] = total._sum.montant || 0;
+      }
+   //------------------- Calculer les productions ----------------------------------
+     
+    for (let i = 0; i < mois.length; i++) {
+  
+        const jour = mois[i];
+  
+        const total = await this.db.productions.aggregate({
+        _sum: {
+            coutTotalProduction: true,
+        },
+        where: {
+            removed: false,
+            archive: false,
+            dateDebut: {
+            gte: jour,
+            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            },
+        },
+        });
+        financialData.productions[i] = total._sum.coutTotalProduction || 0;
+      }
+  
+    //------------------- Calculer les approvisionnements ----------------------------------
+    for (let i = 0; i < mois.length; i++) {
+      const jour = mois[i];
       
       // Récupérer tous les achats pour le jour donné
       const achats = await this.db.achat.findMany({
@@ -328,10 +465,10 @@ export class ResultatsService {
           couts: true,
         },
       });
-
+  
       // Calculer le coût total pour ce jour-là
       let totalCout = 0;
-
+  
       achats.forEach(achat => {
         // Calcul du coût des lignes d'achat
         const totalLigneAchats = achat.ligneAchats.reduce(
@@ -343,11 +480,11 @@ export class ResultatsService {
         
         // Ajouter le coût total des lignes d'achat plus la TVA
         totalCout += totalLigneAchats + montantTVA;
-
+  
         // Ajouter les coûts supplémentaires (sans TVA)
         totalCout += achat.couts.reduce((sum, cout) => sum + cout.montant, 0);
       });
-
+  
       // Stocker le résultat pour le jour en cours
       financialData.approvisionnements[i] = totalCout;
     }
@@ -355,8 +492,7 @@ export class ResultatsService {
     
 
     return financialData;
+    
   }
-
-
   
 }
