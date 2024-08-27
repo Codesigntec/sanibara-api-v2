@@ -32,7 +32,8 @@ export class ResultatsService {
       ventes: 0,
       charges_fixes: 0,
       benefices_reels: 0,
-      benefices_previsionnels: 0
+      benefices_previsionnels_en_gros: 0,
+      benefices_previsionnels_en_detail: 0
     }
 
     let debut: string;
@@ -150,8 +151,56 @@ export class ResultatsService {
     //------------------- Calculer les charges liées à la production ------------------
     //------------------- Calculer les ventes ----------------------------------
     const ventes = await this.db.vente.findMany({
-      
+      where: {
+        etat: true,
+        createdAt: {
+          gte: startedDate,
+          lte: endDate
+        },
+        removed: false,
+        archive: false
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true, montant: true }
     })
+    
+
+   const ligneProduction = await this.db.stockProduiFini.findMany({
+    where: {
+      removed: false,
+      archive: false,
+      productions: {
+          createdAt: {
+            gte: startedDate,
+            lte: endDate
+          },
+      }
+    },
+    select: { 
+      id: true, 
+      pu_gros: true,
+      pu_detail: true,
+      qt_produit: true,
+    }
+   })
+
+    card.ventes = ventes.reduce((total, vente) => total + vente.montant, 0);
+    //------------------------- Calculer les ventes ----------------------------------
+    //------------------- Calculer les Bénéfices réels ----------------------------------
+    card.benefices_reels = card.ventes - (card.charges_fixes + card.approvisionnements + card.charge_production);
+    //------------------------- Calculer les Bêfices réels ----------------------------------
+    //------------------- Calculer les Bêfices prédédits ----------------------------------
+    let benefice_previsionnel_en_gros: number = 0;
+    let benefice_previsionnel_en_detail: number = 0;
+
+    ligneProduction.forEach(ligne => {
+      benefice_previsionnel_en_gros += (ligne.pu_gros * ligne.qt_produit);
+      benefice_previsionnel_en_detail += (ligne.pu_detail * ligne.qt_produit);
+    });
+
+    card.benefices_previsionnels_en_gros = benefice_previsionnel_en_gros - (card.charges_fixes + card.approvisionnements + card.charge_production);
+    card.benefices_previsionnels_en_detail = benefice_previsionnel_en_detail - (card.charges_fixes + card.approvisionnements + card.charge_production);
+    //------------------------- Calculer les Bêfices prédédits ----------------------------------
     
     const description = `Retour des résultats de la card ${debut} - ${fin}`
     this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))

@@ -32,7 +32,10 @@ export class Card {
   benefices_reels: number
 
   @ApiProperty()
-  benefices_previsionnels: number
+  benefices_previsionnels_en_gros: number
+
+  @ApiProperty()
+  benefices_previsionnels_en_detail: number
 }
 
 
