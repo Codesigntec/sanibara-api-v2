@@ -39,9 +39,12 @@ export class ResultatsService {
     let debut: string;
     let fin: string;
     
-    if (data.debut && data.fin) {
-      debut = data.debut;
-      fin = data.fin;
+    if (data.start !== null  && data.end !== null && data.start !== "" && data.end !== "") {
+      debut = data.start;
+      fin = data.end;
+      if (new Date(debut) > new Date(fin)) {
+        throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
+      }
     } else {
       const achat = await this.db.achat.findFirst({
         where: { removed: false, archive: false },
@@ -52,15 +55,31 @@ export class ResultatsService {
       debut = achat ? achat.createdAt.toISOString().split('T')[0] : "";
       fin = new Date().toISOString().split('T')[0];
 
-      if (!debut || !fin || new Date(debut) > new Date(fin)) {
-        throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
+      if (!debut || !fin ) {
+        throw new HttpException(errors.ERROR_CONVERT_DATE, HttpStatus.BAD_REQUEST);
       }
     }
+  
+    let startedDate: Date;
+    let endDate: Date;
+
+    if (debut === undefined || fin === undefined) {
+      throw new HttpException(errors.INVALID_DATE, HttpStatus.BAD_REQUEST);
+    }else{
+       startedDate = new Date(debut);
+       endDate = new Date(fin);
+    }
     
-      const startedDate = new Date(debut);
-      const endDate = new Date(fin);
       
       endDate.setHours(23, 59, 59, 999);
+
+      const charges = await this.db.achat.findMany();
+
+      //DEBUGGING
+      console.log("debut:", debut);
+      console.log("fin:", fin);
+      console.log("startedDate:", startedDate);
+      console.log("endDate:", endDate);
 
     //------------------- Calculer les charges fixeses ------------------
     const depense_charges = await this.db.depense.findMany({

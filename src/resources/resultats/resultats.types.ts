@@ -9,10 +9,10 @@ export class ResultatsFetcher extends FetcherFilter {
 
 export class FlitreCard{
   @ApiProperty()
-  debut?: string | null
+  start?: string | null
 
   @ApiProperty()
-  fin?: string | null
+  end?: string | null
 }
 export class Card {
 
