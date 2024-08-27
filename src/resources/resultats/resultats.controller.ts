@@ -2,7 +2,7 @@ import {  Body, Controller, Get, HttpCode, HttpStatus,Post,Req,UseGuards,Version
 import { ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { ResultatsService } from './resultats.service';
-import { Card, FinancialData, FlitreCard, StatMonth } from './resultats.types';
+import { Card, FinancialData, FlitreCard, StatMonth, StatYear } from './resultats.types';
 import { AuthorizedRequest } from 'src/common/types';
 
 @Controller('resultats')
@@ -44,7 +44,15 @@ export class ResultatsController {
         return await this.service.statistiqueMonths(data, userId)
     }
 
-    
+    @Post('/stats/years')
+    @Version('2')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AuthGuard)
+    @ApiOkResponse({ type: FlitreCard })
+    async statistiqueYears(@Body() data: StatYear, @Req() req: AuthorizedRequest): Promise<FinancialData> {
+        const userId = req.userId
+        return await this.service.statistiqueYears(data, userId)
+    }
 
     
 }

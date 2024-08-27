@@ -365,7 +365,7 @@ export class ResultatsService {
     }
 
     // Date de début du mois (1er jour à 00:00)
-    const startDate = new Date(year, 0 - 1, 1, 0, 0, 0, 0);
+    const startDate = new Date(year, 0, 1, 0, 0, 0, 0);
 
     // Date de fin du mois (dernier jour à 23:59:59.999)
     const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
@@ -397,7 +397,7 @@ export class ResultatsService {
             archive: false,
             dateVente: {
             gte: jour,
-            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            lt: new Date(jour.getFullYear(), jour.getMonth() + 1, 1), // Premier jour du mois suivant
             },
         },
         });
@@ -418,7 +418,7 @@ export class ResultatsService {
             archive: false,
             date: {
             gte: jour,
-            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            lt: new Date(jour.getFullYear(), jour.getMonth() + 1, 1), // Premier jour du mois suivant
             },
         },
         });
@@ -439,7 +439,7 @@ export class ResultatsService {
             archive: false,
             dateDebut: {
             gte: jour,
-            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
+            lt: new Date(jour.getFullYear(), jour.getMonth() + 1, 1), // Premier jour du mois suivant
             },
         },
         });
@@ -457,7 +457,7 @@ export class ResultatsService {
           archive: false,
           date: {
             gte: jour,
-            lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Fin du jour
+            lt: new Date(jour.getFullYear(), jour.getMonth() + 1, 1), // Premier jour du mois suivant
           },
         },
         include: {
