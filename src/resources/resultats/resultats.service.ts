@@ -118,10 +118,40 @@ export class ResultatsService {
     });
     
     card.approvisionnements = sommesTotalLigneAchat + sommesTotalCouts;
+    //------------------- Calculer d'approvisionnements -------------------------------
+    //------------------- Calculer les charges liées à la production ------------------
+    const production = await this.db.productions.findMany({
+      where: {
+        createdAt: {
+          gte: startedDate,
+          lte: endDate
+        },
+        removed: false,
+        archive: false
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { 
+        createdAt: true, 
+        coutProduction: {
+          select: {
+            montant: true
+          }
+        }
+      }        
+    });
     
-    //------------------- Calculer d'approvisionnements ------------------
+    let totalCoutProduction = 0;
+    
+    production.forEach(production => {
+      totalCoutProduction += production.coutProduction.reduce((total, cout) => total + cout.montant, 0);
+    });
 
-
+    card.charge_production = totalCoutProduction;
+    //------------------- Calculer les charges liées à la production ------------------
+    //------------------- Calculer les ventes ----------------------------------
+    const ventes = await this.db.vente.findMany({
+      
+    })
     
     const description = `Retour des résultats de la card ${debut} - ${fin}`
     this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
