@@ -60,13 +60,8 @@ export class ResultatsService {
       const endDate = new Date(fin);
       
       endDate.setHours(23, 59, 59, 999);
-      const depense = await this.db.depense.findMany();
 
-      console.log("Date depense", depense[0].createdAt);
-      console.log("Start Date", startedDate);
-      console.log("End Date", endDate);
-            
-   
+    //------------------- Calculer les charges fixeses ------------------
     const depense_charges = await this.db.depense.findMany({
       where: {
         createdAt: {
@@ -79,11 +74,55 @@ export class ResultatsService {
       orderBy: { createdAt: 'asc' },
       select: { createdAt: true, montant: true }
     });
-    
     card.charges_fixes = depense_charges.reduce((total, depense) => total + depense.montant, 0);
-    // depense_charges.forEach((depense) => {
-    //   card.charges_fixes = depense_charges.reduce((total, depense) => total + depense.montant, 0);
-    // })
+    //------------------- Calculer les charges fixeses ------------------
+    //------------------- Calculer d'approvisionnements ------------------
+    const achat_approvisionnements = await this.db.achat.findMany({
+      where: {
+        createdAt: {
+          gte: startedDate,
+          lte: endDate
+        },
+        removed: false,
+        archive: false
+      },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        createdAt: true,
+        tva: true,
+        ligneAchats: {
+          select: {
+            quantite: true,
+            prixUnitaire: true
+          }
+        },
+        couts: {
+          select: {
+            montant: true
+          }
+        }
+      }
+    });
+    
+    let sommesTotalCouts = 0;
+    let sommesTotalLigneAchat = 0;
+    
+    achat_approvisionnements.forEach(achat => {
+      // Cumuler tous les coûts de l'achat en cours
+      const totalCouts = achat.couts.reduce((total, cout) => total + cout.montant, 0);
+      sommesTotalCouts += totalCouts;
+    
+      // Cumuler tous les montants des lignes d'achat avec TVA
+      const totalLigneAchats = achat.ligneAchats.reduce((total, ligne) => total + (ligne.quantite * ligne.prixUnitaire), 0);
+      sommesTotalLigneAchat += totalLigneAchats * (1 + achat.tva / 100);
+    });
+    
+    card.approvisionnements = sommesTotalLigneAchat + sommesTotalCouts;
+    
+    //------------------- Calculer d'approvisionnements ------------------
+
+
+    
     const description = `Retour des résultats de la card ${debut} - ${fin}`
     this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
