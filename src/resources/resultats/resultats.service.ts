@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { errors } from './resultats.constant';
 import { TraceService } from '../trace/trace.service';
-import { Card, FlitreCard } from './resultats.types';
+import { Card, FinancialData, FlitreCard, StatMonth } from './resultats.types';
 
 @Injectable()
 export class ResultatsService {
@@ -69,18 +69,7 @@ export class ResultatsService {
        startedDate = new Date(debut);
        endDate = new Date(fin);
     }
-    
-      
       endDate.setHours(23, 59, 59, 999);
-
-      const charges = await this.db.achat.findMany();
-
-      //DEBUGGING
-      console.log("debut:", debut);
-      console.log("fin:", fin);
-      console.log("startedDate:", startedDate);
-      console.log("endDate:", endDate);
-
     //------------------- Calculer les charges fixeses ------------------
     const depense_charges = await this.db.depense.findMany({
       where: {
@@ -226,6 +215,34 @@ export class ResultatsService {
 
     return card
   }
-     
+  
+  statistiqueMonths = async (data: StatMonth, userId: string): Promise<FinancialData> => {
+
+    const { month, year } = data;
+
+    // Date de début du mois (1er jour à 00:00)
+    const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  
+    // Date de fin du mois (dernier jour à 23:59:59.999)
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  
+    // DEBUGGING
+    console.log("Start Date:", startDate);
+    console.log("End Date:", endDate);
+
+    const financialData: FinancialData = {
+      productions: Array(31).fill(0),
+      depenses: Array(31).fill(0),
+      ventes: Array(31).fill(0),
+      approvisionnements: Array(31).fill(0)
+    };
+
+    console.log("financialData", financialData);
+    
+
+    return financialData;
+  }
+
+
   
 }

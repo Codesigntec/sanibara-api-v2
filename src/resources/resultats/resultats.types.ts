@@ -14,6 +14,13 @@ export class FlitreCard{
   @ApiProperty()
   end?: string | null
 }
+export class StatMonth{
+  @ApiProperty()
+  month?: number | null
+
+  @ApiProperty()
+  year?: number | null
+}
 export class Card {
 
   @ApiProperty()
@@ -36,6 +43,18 @@ export class Card {
 
   @ApiProperty()
   benefices_previsionnels_en_detail: number
+}
+
+
+export class FinancialData {
+  @ApiProperty()
+  productions: number[];
+  @ApiProperty()
+  depenses: number[];
+  @ApiProperty()
+  ventes: number[];
+  @ApiProperty()
+  approvisionnements: number[];
 }
 
 
