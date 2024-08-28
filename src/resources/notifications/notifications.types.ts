@@ -1,12 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { FetcherFilter, Pagination } from "src/common/types"
+import { FetcherFilter } from "src/common/types"
 import { z } from "zod"
-import { errors } from "./unite.constant"
+import { errors } from "./notifications.constant"
 
-export class UniteFetcher extends FetcherFilter {
+export class DeviseFetcher extends FetcherFilter {
 }
 
-export class UniteSaver {
+export class NotificationSaver {
   @ApiProperty()
   libelle: string
 
@@ -14,20 +14,22 @@ export class UniteSaver {
   symbole: string
 }
 
-// ============= RESPONSE
-export class UniteSelect {
-  @ApiProperty()
-  id: string
+export class NotificationLIst {
 
   @ApiProperty()
-  symbole: string
+  message: string
 
   @ApiProperty()
-  libelle: string
-}
-export class Unite extends UniteSelect {
+  is_read: boolean
+
   @ApiProperty()
   createdAt: Date
+
+  @ApiProperty()
+  type: string
+
+  @ApiProperty()
+  idObject: string
 }
 
 // ================VALIDATION
@@ -39,8 +41,8 @@ export const saverSchema = z
       invalid_type_error: errors.LABEL_MUST_BE_STRING,
     }),
     symbole: z.string({
-      required_error: errors.SYMBOLE_REQUIRED,
-      invalid_type_error: errors.SYMBOLE_MUST_BE_STRING,
+      required_error: errors.SYMBOL_REQUIRED,
+      invalid_type_error: errors.SYMBOL_MUST_BE_STRING,
     })
   })
   .required();

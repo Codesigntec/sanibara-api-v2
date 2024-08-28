@@ -186,9 +186,9 @@ export class AchatService {
           },
         } : undefined;
 
-        if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
-          throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
-        }
+        // if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
+        //   throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
+        // }
     
         let dateAchat: Date;
         if (data.date === null || data.date === undefined || data.date === '') {
@@ -219,10 +219,18 @@ export class AchatService {
         if (totalPaiements > totalAchat) {
           throw new HttpException(errors.MONTANT_DEPASSE_MONTANT_A_PAYE, HttpStatus.BAD_REQUEST);
         }
+       let libelle: string = '';
 
+       if (!data.libelle) {
+        const action = data.statutAchat === StatutAchat.ACHETER ? 'Achat' : 'Commande';
+        libelle = `${action} du ${new Date(dateAchat).toLocaleDateString()}`;
+      } else {
+        libelle = data.libelle;
+      }
+      
         const achat = await this.db.achat.create({
           data: {
-            libelle: data.libelle,
+            libelle: libelle,
             date: dateAchat,
             statutAchat: data.statutAchat,
             etat: data.etat,
@@ -234,7 +242,8 @@ export class AchatService {
                 prixUnitaire: ligne.prixUnitaire,
                 quantite: ligne.quantite,
                 qt_Utilise: 0,
-                quantiteLivre: StatutAchat.ACHETER === data.statutAchat ? ligne.quantite: 0,
+                // quantiteLivre: StatutAchat.ACHETER === data.statutAchat ? ligne.quantite: 0,
+                quantiteLivre: data.statutAchat === StatutAchat.COMMANDE ? ligne.quantiteLivre : ligne.quantite,
                 datePeremption: new Date(ligne.datePeremption),
                 references: ligne.references,
                 matiere: {
@@ -321,7 +330,8 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
           ligneA = {
               create: data.ligneAchats.map((ligne) => ({
                   prixUnitaire: ligne.prixUnitaire,
-                  quantiteLivre: ligne.quantiteLivre,
+                  // quantiteLivre: ligne.quantiteLivre,
+                  quantiteLivre: data.statutAchat === StatutAchat.COMMANDE ? ligne.quantiteLivre : ligne.quantite,
                   quantite: ligne.quantite,
                   datePeremption: new Date(ligne.datePeremption),
                   references: ligne.references,
@@ -334,7 +344,8 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
               update: data.ligneAchats.map((ligne) => ({
                   where: { id: ligne.id },
                   data: {
-                      quantiteLivre: ligne.quantiteLivre,
+                      // quantiteLivre: ligne.quantiteLivre,
+                      quantiteLivre: data.statutAchat === StatutAchat.COMMANDE ? ligne.quantiteLivre : ligne.quantite,
                       quantite: ligne.quantite,
                       datePeremption: new Date(ligne.datePeremption),
                       references: ligne.references,
@@ -345,42 +356,19 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
           };
       }
      
-      let coutDAchat: {};
+      let coutDAchat: any;
 
-      if (check.couts.length === 0) {
-        coutDAchat = {
-          create: data.couts.map((cout) => ({
-            create: {
-              libelle: cout.libelle,
-              montant: cout.montant,
-              motif: cout.motif,
-            },
-          }))
-        }
-      }else{
-
-        coutDAchat = {
-          upsert: data.couts.map((cout) => ({
-            where: { id: cout.id ?? -1 },
-            update: { montant: cout.montant, libelle: cout.libelle, motif: cout.motif },
-            create: { montant: cout.montant, libelle: cout.libelle, motif: cout.motif },
-          }))
-        }
-        
-        // coutDAchat = {
-        //   update: data.couts.map((ligne) => ({
-        //     where: { id: ligne.id },
-        //     data: { montant: ligne.montant, libelle: ligne.libelle, motif: ligne.motif},
-        // })),
-        // }
-      }
-
+      coutDAchat = {
+        create: data.couts.map((cout) => ({
+          montant: cout.montant,
+          libelle: cout.libelle,
+          motif: cout.motif,
+        }))
+      };
+      
       let paiementAchat = {};
 
       if (check.paiements.length === 0) {
-        // if (check.paiements.length > 0) {
-        //   tx.paiement.delete({ where: { id:  check.paiements[0].id } })
-        // }
         paiementAchat ={
           create: data.paiements.map((paiement) => ({
             create: {
@@ -394,6 +382,9 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
             where: { id: check.paiements[0].id },
             data: { montant: data.paiements[0].montant },
           },
+          create: data.paiements.filter((paiement) => !paiement.id).map((paiement) => ({
+            montant: paiement.montant,
+          })),
         }        
       }
       
@@ -410,7 +401,7 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
               fournisseur: fournisseurData,
               ligneAchats: ligneA,
               couts: coutDAchat,
-              paiements: paiementAchat,
+              // paiements: paiementAchat,
           },
           select: {
               id: true,
@@ -423,7 +414,7 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
       if (!estLieAProduction) {
           await Promise.all([
               ...check.ligneAchats.map((l) => tx.ligneAchat.delete({ where: { id: l.id } })),
-              // ...check.couts.map((c) => tx.cout.delete({ where: { id: c.id } })),
+             ...check.couts.map((c) => tx.cout.delete({ where: { id: c.id } })),
           ]);
       }
       await Promise.all(
@@ -947,6 +938,8 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
                 magasin: true,
             },
         });
+        console.log("lignes achats", ligneAchats);
+        
     
         // Cumuler les quantités des produits ayant la même désignation de matière première et le même prix unitaire
         const cumulatedMap = new Map<string, LigneAchatFull>();
@@ -1042,6 +1035,7 @@ update = async (achatId: string, data: AchatSaver, userId: string): Promise<Acha
                 quantite: true,
                 prixUnitaire: true,
                 qt_Utilise: true,
+                datePeremption: true,
                 quantiteLivre: true,
                 matiere: {
                     select: {

@@ -378,18 +378,6 @@ export class coutProduction extends coutProdSave{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // =======================STOCKS PRODUIT FINI===============================
 
 export class UniteSelect{
@@ -412,6 +400,14 @@ export class ProduitDtoStock {
   unite: UniteSelect;
 }
 
+export class StockVente{
+
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  quantiteVendue: number
+}
 
 export class StockReturn{
 
@@ -435,6 +431,10 @@ export class StockReturn{
 
   @ApiProperty()
   qt_produit: number
+
+
+  @ApiProperty()
+  stockVente: StockVente[]
 
   @ApiProperty()
   magasin: MagasinProduitFiniDto
@@ -511,15 +511,30 @@ const CoutProduction = z.object({
 });
 
 const ProdSaveSchema = z.object({
-  description: z.string({
-    invalid_type_error: errors.DESCRIPTION_MUST_BE_STRING,
-  }),
-  reference: z.string({
-    invalid_type_error: errors.REFERENCE_MUST_BE_STRING,
-  }),
-  dateDebut: z.string({
-    invalid_type_error: errors.DATE_DEBUT_MUST_BE_DATE,
-  }),
+  description: z.union([
+    z.string({
+      invalid_type_error: errors.DESCRIPTION_MUST_BE_STRING,
+    }).optional().nullable(), // Accepte string, undefined, null
+    z.literal('')                      // Accepte chaîne vide
+  ]),
+  reference: z.union([
+    z.string({
+      invalid_type_error: errors.REFERENCE_MUST_BE_STRING,
+    }).optional().nullable(), 
+    z.literal('')
+  ]),
+  dateDebut: z.union([
+    z.string({
+      invalid_type_error: errors.DATE_DEBUT_MUST_BE_DATE,
+    }).optional().nullable(),
+    z.literal('')
+  ]),
+  dateFin: z.union([
+    z.string({
+      invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
+    }).optional().nullable(),
+    z.literal('')
+  ]),
   coutTotalProduction: z.number({
     invalid_type_error: errors.MONTANT_COUT_TOTAL_MUST_BE_NUMBER,
   }),
@@ -528,9 +543,6 @@ const ProdSaveSchema = z.object({
   }),
   beneficeGros: z.number({
     invalid_type_error: errors.MONTANT_BENEFICE_GROS_MUST_BE_NUMBER,
-  }),
-  dateFin: z.string({
-    invalid_type_error: errors.DATE_FIN_MUST_BE_DATE,
   }),
   coutProduction: z.array(CoutProduction),
   stockProdFini: z.array(StockProduiFiniDtoSchema),

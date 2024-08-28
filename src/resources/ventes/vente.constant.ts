@@ -16,6 +16,8 @@ const errors = {
     PAIEMENT_NOT_EXIST: "Ce paiement n'existe pas ou son ID n'est pas valide.",
     NOT_EXIST_PAIEMENT: "Ce paiement n'existe pas ou son ID n'est pas valide.",
     NOT_REMOVABLE_PAIEMENT: "Vous ne pouvez pas supprimer ce paiement car il est lié à un article.",
+    REFERENCES_MUST_BE_STRING: "La reference doit être en texte.",
+    TVA_MUST_BE_NUMBER: "La tva doit être un nombre.",
 }
 const infos = {
 

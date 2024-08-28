@@ -168,6 +168,9 @@ export class StockVenteFull{
 
     @ApiProperty()
     quantiteVendue: number
+
+    @ApiProperty()
+    quantiteDevis: number
     
     @ApiProperty()
     stockProduiFiniId: string
@@ -177,7 +180,7 @@ export class StockVenteFull{
 
     @ApiProperty()
     venteId: string
-    
+
 }
 
 
@@ -201,14 +204,25 @@ const PaiementInputSchema = z.object({
   });
 
 const saverSchemaVente = z.object({
-    reference: z.string(),
+    reference: z.union([
+      z.string({
+        invalid_type_error: errors.REFERENCES_MUST_BE_STRING,
+      }).optional().nullable(), // Accepte string, undefined, null
+      z.literal('')                      // Accepte chaîne vide
+    ]),
     montant: z.number(
         {
         required_error: errors.MONTANT_REQUIRED,
         invalid_type_error: errors.MONTANT_DOIT_ETRE_NOMBRE,
         }
     ),
-    tva: z.number().nullable(),
+    tva: z.union([
+      z.number({
+        invalid_type_error: errors.TVA_MUST_BE_NUMBER,
+      }).optional().nullable(), // Accepte string, undefined, null
+      z.literal(0)                      // Accepte chaîne vide
+    ]),
+    // tva: z.number().nullable(),
     paiements: z.array(PaiementInputSchema),
     etat: z.boolean(),
     dateVente: z.string(),

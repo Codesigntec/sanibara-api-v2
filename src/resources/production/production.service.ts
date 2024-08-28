@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { TraceService } from "../trace/trace.service";
-import { ProdReturn, ProdSave, ProductionFetcher, Productions, ProductionsReturn, ProductionsSaver, ProdUpdate, tableReturn } from "./production.type";
+import { ProdReturn, ProdSave, ProductionFetcher, ProductionsReturn, ProdUpdate, tableReturn } from "./production.type";
 import { errors } from "./production.constant";
 import { Pagination, PaginationQuery } from "src/common/types";
 
@@ -42,6 +42,7 @@ export class ProductionService {
           }
           conditions = { ...conditions, createdAt: dateFilter };
       }
+
       conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
       let order = {}
@@ -75,9 +76,6 @@ export class ProductionService {
           orderBy: order
       })
 
-      
-
-
       const totalCount = await this.db.productions.count({ where: conditions });
 
       const totalPages = Math.ceil(totalCount / limit);
@@ -103,10 +101,24 @@ export class ProductionService {
               },
             },
           });
-          // if (check !== null)  throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
+          let referenceProd: string = '';
+          if(data.reference === null || data.reference === undefined || data.reference === ''){
+            referenceProd = `REF_PROD-${new Date().getTime()}`;
+          }
+          let dateDebut: Date;
+          let dateFin: Date;
+        
+          if(data.dateDebut === null || data.dateDebut === undefined ){
+            dateDebut = new Date();
+          }else{
+           dateDebut = new Date(data.dateDebut);
+          }
 
-          const dateDebut = new Date(data.dateDebut);
-          const dateFin = new Date(data.dateFin);
+          if(data.dateFin === null || data.dateFin === undefined ){
+            dateFin = new Date();
+          }else{
+            dateFin = new Date(data.dateFin);
+          }
           
           if (dateDebut > dateFin) {
             throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
@@ -129,12 +141,37 @@ export class ProductionService {
           if (hasDuplicates) {
             throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
           } 
+          let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);
+
+          let designationAll: string[] = await Promise.all(
+            stockId.map(async (id) => {
+              const produit = await tx.produitFini.findUnique({
+                where: { id: id },
+                select: { designation: true }
+              });
+              return produit?.designation || '';  
+            })
+          );
+
+          let descriptionProd: string = "";
+
+          if (data.description === null || data.description === undefined || data.description === '') {
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
+            const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
+
+            if (dateDebut === dateFin) {
+              descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
+            } else {
+              descriptionProd = "Production de [ " + designationAll.join(', ') + "] du " + dateDebutFormatted + " au " + dateFinFormatted;
+            }
+          }
 
           const production = await tx.productions.create({
             data: {
-              reference: data.reference,
+              reference: referenceProd,
               dateDebut: dateDebut,
-              description: data.description,
+              description: descriptionProd,
               dateFin: dateFin,
               coutTotalProduction: data.coutTotalProduction,
               beneficeDetails: data.beneficeDetails,
@@ -269,7 +306,11 @@ export class ProductionService {
               where:  {id: ligne.id }, 
               select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
               quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
-
+              
+              console.log("ligne achat");
+              console.log(check);
+              
+              
             const ligneUpdate = await this.db.ligneAchat.update({
               where: { id: check.id },
               data: {
@@ -278,7 +319,7 @@ export class ProductionService {
                   datePeremption: new Date(check.datePeremption),
                   references: check.references,
                   quantiteLivre: check.quantiteLivre,
-                  qt_Utilise: check.qt_Utilise + ligne.qt_Utilise ,
+                  qt_Utilise: check.qt_Utilise + ligne.qt_Utilise,
                   matiere: {
                       connect: {
                           id: check.matiereId,
@@ -291,6 +332,10 @@ export class ProductionService {
                   },
               },
           })
+
+          console.log("ligneUpdate");
+          console.log(ligneUpdate);
+
           })
         
           const description = `Ajout du produit fini: ${data.description}`;
@@ -336,10 +381,6 @@ export class ProductionService {
             coutProduction: true
           },
       })
-
-      console.log("=========================DATA=========================");
-      console.log(production);
-      
       
       if (production === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
       return production
@@ -363,12 +404,24 @@ export class ProductionService {
                         }
                     } 
                 })
-                // if (checkFirst !== null && checkFirst.reference !== check.reference) throw new HttpException(errors.REFERENCE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-
+            
                 let productionOld = check;
-                
-                const dateDebut = new Date(data.dateDebut);
-                const dateFin = new Date(data.dateFin);
+
+                let dateDebut: Date;
+                let dateFin: Date;
+              
+                if(data.dateDebut === null || data.dateDebut === undefined ){
+                  dateDebut = new Date();
+                }else{
+                 dateDebut = new Date(data.dateDebut);
+                }
+      
+                if(data.dateFin === null || data.dateFin === undefined ){
+                  dateFin = new Date();
+                }else{
+                  dateFin = new Date(data.dateFin);
+                }
+
                 
                 if (dateDebut > dateFin) {
                   throw new HttpException(errors.DATE_DEBUT_MUST_BE_BEFORE_DATE_FIN, HttpStatus.BAD_REQUEST);
@@ -466,12 +519,25 @@ export class ProductionService {
                     },
                 })
 
-              //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
-              await Promise.all([
-                ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
-                ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
-                ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
-              ]);
+                // Récupérer les IDs des produits finis liés à StockVente
+                const stockVenteProductIds = await this.db.stockVente.findMany({
+                  select: {
+                    stockProduiFiniId: true
+                  }
+                }).then(results => results.map(stock => stock.stockProduiFiniId));
+                
+                // Vérifier si au moins un produit fini de cette production est lié à StockVente
+               const hasStockVenteLink = check.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
+
+                if (!hasStockVenteLink) {
+                    //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+                  await Promise.all([
+                    ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
+                    ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
+                    ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
+                  ]);
+                  
+                }
 
               // Filtrer et supprimer les entités supprimées avant de retourner la production
               productions.stockProdFini = productions.stockProdFini.filter(stock =>
@@ -494,36 +560,36 @@ export class ProductionService {
                       }))
                     ]);
 
-                    // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
-                    const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
-                      existingLignes.some(e => e?.id === ligne.id)
-                    );
+                  // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
+                  const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
+                    existingLignes.some(e => e?.id === ligne.id)
+                  );
 
-                    const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
-                      existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
-                    );
-                    await Promise.all([
-                      // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
-                      ...validProductionLigneAchat.map(async (ligne) => {
-                        console.log("Augmentation de la quantité utilisée pour la ligne d'achat :", ligne);
-                        return tx.ligneAchat.update({
-                          where: { id: ligne.id },
-                          data: {
-                            qt_Utilise: { increment: ligne.qt_Utilise ?? 0 }
-                          }
-                        });
-                      }),
-                      // Mise à jour des anciennes lignes d'achat en diminuant la quantité utilisée
-                      ...validCheckProductionLigneAchat.map(async (oldLigne) => {
-                        console.log("Diminution de la quantité utilisée pour la ligne d'achat :", oldLigne);
-                        return tx.ligneAchat.update({
-                          where: { id: oldLigne.ligneAchatId },
-                          data: {
-                            qt_Utilise: { decrement: oldLigne.qt_Utilise ?? 0 }
-                          }
-                        });
-                      })
-                    ]);
+                  const validCheckProductionLigneAchat = check.productionLigneAchat.filter(oldLigne =>
+                    existingLignes.some(e => e?.id === oldLigne.ligneAchatId)
+                  );
+                  await Promise.all([
+                    // Mise à jour des nouvelles lignes d'achat en augmentant la quantité utilisée
+                    ...validProductionLigneAchat.map(async (ligne) => {
+                      console.log("Augmentation de la quantité utilisée pour la ligne d'achat :", ligne);
+                      return tx.ligneAchat.update({
+                        where: { id: ligne.id },
+                        data: {
+                          qt_Utilise: { increment: ligne.qt_Utilise ?? 0 }
+                        }
+                      });
+                    }),
+                    // Mise à jour des anciennes lignes d'achat en diminuant la quantité utilisée
+                    ...validCheckProductionLigneAchat.map(async (oldLigne) => {
+                      console.log("Diminution de la quantité utilisée pour la ligne d'achat :", oldLigne);
+                      return tx.ligneAchat.update({
+                        where: { id: oldLigne.ligneAchatId },
+                        data: {
+                          qt_Utilise: { decrement: oldLigne.qt_Utilise ?? 0 }
+                        }
+                      });
+                    })
+                  ]);
 
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))

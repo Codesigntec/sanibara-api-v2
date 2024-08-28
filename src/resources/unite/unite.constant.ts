@@ -4,7 +4,10 @@ const errors = {
     NOT_REMOVABLE: 'Vous ne pouvez pas supprimer cette unité car elle peut-être liée à un article\nVous pouvez proceder à une suppresion logique ou l\'archivage.',
 
     LABEL_REQUIRED: "Le libellé est obligatoire.",
-    LABEL_MUST_BE_STRING: "Le libellé doit être en texte."
+    LABEL_MUST_BE_STRING: "Le libellé doit être en texte.",
+
+    SYMBOLE_REQUIRED: "Le symbole est obligatoire.",
+    SYMBOLE_MUST_BE_STRING: "Le symbole doit être en texte.",
 }
 const infos = {
 

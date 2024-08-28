@@ -20,10 +20,17 @@ import { AchatsModule } from './resources/achat/achat.module';
 import { ProductionModule } from './resources/production/production.module';
 import { VenteModule } from './resources/ventes/vente.module';
 import { StructureModule } from './resources/structure/structure.module';
+import { DashboardModule } from './resources/dashboard/dashboard.module';
+import { NotificationModule } from './resources/notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { PrismaModule } from 'prisma/prisma.module';
+import { ResultatsModule } from './resources/resultats/resultats.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
+    PrismaModule,
     MatiereModule,
     ProduitModule,
     AuthModule,
@@ -40,7 +47,10 @@ import { StructureModule } from './resources/structure/structure.module';
     AchatsModule,
     ProductionModule,
     VenteModule,
-    StructureModule
+    StructureModule,
+    DashboardModule,
+    NotificationModule,
+    ResultatsModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -24,6 +24,7 @@ export class VentesService {
                     select:{
                         quantiteVendue:true,
                         stockProduiFiniId: true,
+                        quantiteDevis: true,
                         prix_unitaire:true,
                         venteId: true
                     }
@@ -32,7 +33,6 @@ export class VentesService {
             }
         });
     }
-
 
 
     list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
@@ -108,12 +108,12 @@ export class VentesService {
         return await this.db.$transaction(async (tx) => {
             try {
             
-     
                if (data.dateVente > new Date()) {
                 throw new HttpException(errors.DATE_VENTE_INVALIDE, HttpStatus.BAD_REQUEST)
                }
                const totalPaiements = data.paiements.reduce((acc, paiement) => acc +  Number(paiement.montant) == null || Number(paiement.montant) == undefined ? 0 : Number(paiement.montant), 0);
-               if (data.etat) {
+               const isVente = data.etat;
+               if (isVente) {
                     if (totalPaiements > data.montant) {
                     throw new HttpException(errors.PAYE_SUPPERIEUR_MONTANT, HttpStatus.BAD_REQUEST)
                     }
@@ -133,9 +133,25 @@ export class VentesService {
                         }
                     }
               }
+              
+              let dateVente: Date;
+              if (data.dateVente === null || data.dateVente === undefined) {
+                dateVente = new Date();
+              }else{
+                dateVente = new Date(data.dateVente);
+              }
+
+              let references: string = "";
+
+              if (data.reference === null || data.reference === undefined || data.reference === '') {
+                references = data.etat ? "REF_VENTE_" + dateVente : "REF_DEVIS_" + dateVente;
+              }else{
+                references = data.reference
+              }
+
                 const vente = await tx.vente.create({
                     data: {
-                        reference: data.reference,
+                        reference: references,
                         montant: data.montant,
                         tva: data.tva ? data.tva : 0,
                         paiements: {
@@ -145,7 +161,7 @@ export class VentesService {
                           },
                         etat: data.etat,
                         reliquat: data.montant - totalPaiements,
-                        dateVente: new Date(data.dateVente),
+                        dateVente: dateVente,
                         client:{
                             connect:{id: data.clientId}
                         },
@@ -156,20 +172,31 @@ export class VentesService {
                     }
                 })
 
-            await Promise.all(data.stockVente.map(async (stockVente) => {
+                await Promise.all(data.stockVente.map(async (stockVente) => {
+                    
+                    let quantiteVendu: number = 0;
+                    let quantiteDevis: number = 0;
+                    if (isVente) {
+                        quantiteVendu = stockVente.quantiteVendue
+                        quantiteDevis = 0
+                    }else{
+                        quantiteVendu = 0
+                        quantiteDevis = stockVente.quantiteVendue
+                    }
                  await tx.stockVente.create({
                     data: {
-                        quantiteVendue: stockVente.quantiteVendue,
+                        quantiteVendue: quantiteVendu,
+                        quantiteDevis: quantiteDevis,
                         prix_unitaire: stockVente.prix_unitaire,
                         stockProduiFini: {
                             connect: { id: stockVente.stockProduiFiniId }
                         },
                         vente: {
-                            connect: { id: vente.id }
+                          connect: { id: vente.id }
                         }
-                    }
-                });
-            }));
+                      }
+                    });
+                 }));
 
                 const description = `Ajout de'une vente: ${data.reference}`
                 this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))
@@ -204,7 +231,7 @@ export class VentesService {
             try {
                 const check = await tx.vente.findUnique({
                     where: { id: id },
-                    select: { id: true, paiements: true, stockVente: true }
+                    select: { id: true, paiements: true, stockVente: true, etat: true }
                 });
     
                 if (!check) {
@@ -238,10 +265,26 @@ export class VentesService {
                         }
                     }
                 }
+
+                let dateVente: Date;
+                if (data.dateVente === null || data.dateVente === undefined) {
+                  dateVente = new Date();
+                }else{
+                  dateVente = new Date(data.dateVente);
+                }
+
+                let references: string = "";
+
+                if (data.reference === null || data.reference === undefined || data.reference === '') {
+                  references = data.etat ? "REF_VENTE_" + dateVente : "REF_DEVIS_" + dateVente;
+                }else{
+                  references = data.reference
+                }
+
                 const updatedVente = await tx.vente.update({
                     where: { id },
                     data: {
-                        reference: data.reference,
+                        reference: references,
                         montant: data.montant,
                         tva: data.tva,
                         paiements: {
@@ -252,7 +295,7 @@ export class VentesService {
                         },
                         etat: data.etat,
                         reliquat: data.montant - Number(data.paiements[0].montant),
-                        dateVente: new Date(data.dateVente),
+                        dateVente: dateVente,
                         client: {
                             connect: { id: data.clientId }
                         },
@@ -269,48 +312,50 @@ export class VentesService {
                     where: { venteId: id },
                     select: { id: true, stockProduiFiniId: true, venteId: true }
                 });
-                // Convertir les résultats en un ensemble pour une recherche rapide
-                const existingMap = new Map(existingStockVente.map(e => (
-                    [`${e.stockProduiFiniId}_${e.venteId}`, e.id]
-                )));
+                 
 
-                // Traitement des entrées stockVente
+                 // Traitement des nouvelles entrées stockVente
                 await Promise.all(data.stockVente.map(async (stockVente) => {
-                    const key = `${stockVente.stockProduiFiniId}_${id}`;
-                    if (existingMap.has(key)) {
-                    // Mise à jour si l'entrée existe
-                    await tx.stockVente.update({
-                        where: { id: existingMap.get(key) },
-                        data: {
-                        quantiteVendue: stockVente.quantiteVendue,
-                        prix_unitaire: stockVente.prix_unitaire,
-                        }
-                    });
+                    let quantiteVendu: number = 0;
+                    let quantiteDevis: number = 0;
+
+                    if (check.etat) {
+                        quantiteVendu = stockVente.quantiteVendue;
+                        quantiteDevis = 0;
                     } else {
-                    // Création si l'entrée n'existe pas
-                    await tx.stockVente.create({
-                        data: {
-                        quantiteVendue: stockVente.quantiteVendue,
-                        prix_unitaire: stockVente.prix_unitaire,
-                        stockProduiFini: {
-                            connect: { id: stockVente.stockProduiFiniId }
-                        },
-                        vente: {
-                            connect: { id: id}
-                        }
-                        }
-                    });
+                        quantiteVendu = 0;
+                        quantiteDevis = stockVente.quantiteVendue;
                     }
 
-                    }));
+                    // Création des nouveaux stocks
+                    const save = await tx.stockVente.create({
+                        data: {
+                            quantiteDevis: quantiteDevis,
+                            quantiteVendue: quantiteVendu,
+                            prix_unitaire: stockVente.prix_unitaire,
+                            stockProduiFini: {
+                                connect: { id: stockVente.stockProduiFiniId }
+                            },
+                            vente: {
+                                connect: { id: id }
+                            }
+                        }
+                    });
+
+                    console.log("=====================CREATED DATA========================");
+                    console.log(save);
+                }));
 
                 await Promise.all(
                     ach.paiements
                         .filter((p: PaiementVente) => p.montant === 0 || p.montant < 0 || p.montant === null || p.montant === undefined)
                         .map((p: PaiementVente) => this.db.paiementVente.delete({ where: { id: p.id } }))
                 );
-                console.log("ACH: ", ach);
-                
+
+                await Promise.all(
+                    existingStockVente.map((stock: any) => this.db.stockVente.delete({ where: { id: stock.id } }))
+                )
+
                 const description = `Mise à jour de la vente: ${data.reference}`;
                 this.trace.logger({ action: 'Mise à jour', description, userId }).then(res => console.log("TRACE SAVED: ", res));
     

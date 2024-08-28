@@ -63,7 +63,8 @@ export class ProduitService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             },
@@ -106,7 +107,8 @@ export class ProduitService {
                     select: {
                         id: true,
                         libelle: true,
-                        createdAt: true
+                        createdAt: true,
+                        symbole: true
                     }
                 }
             }
@@ -146,7 +148,8 @@ export class ProduitService {
                         unite: {
                             select: {
                                 id: true,
-                                libelle: true
+                                libelle: true,
+                                symbole: true
                             }
                         }
                     }
@@ -205,7 +208,8 @@ export class ProduitService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             },
@@ -252,7 +256,7 @@ export class ProduitService {
                         designation: data.designation,
                         description: data.description,
                         unite: {
-                            connect: { id: data.uniteId }
+                            connect: { id: data.uniteId,  }
                         }
                     },
                     select: {
@@ -264,7 +268,8 @@ export class ProduitService {
                         unite: {
                             select: {
                                 id: true,
-                                libelle: true
+                                libelle: true,
+                                symbole: true
                             }
                         }
                     }
@@ -299,7 +304,8 @@ export class ProduitService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             }
@@ -330,7 +336,8 @@ export class ProduitService {
                 unite: {
                     select: {
                         id: true,
-                        libelle: true
+                        libelle: true,
+                        symbole: true
                     }
                 }
             }
@@ -360,7 +367,8 @@ export class ProduitService {
                     unite: {
                         select: {
                             id: true,
-                            libelle: true
+                            libelle: true,
+                            symbole: true
                         }
                     }
                 }

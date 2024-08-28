@@ -51,6 +51,12 @@ export class StocksService {
                     include: {
                         unite: true
                     }
+                },
+                stockVente: {
+                    select: {
+                        id: true,
+                        quantiteVendue: true
+                    }
                 }
             },
             orderBy: order
@@ -73,7 +79,6 @@ export class StocksService {
     
         // Convertir la map en tableau
         const cumulatedArray = Array.from(cumulatedMap.values());
-    
         // Paginer les résultats cumulés
         const paginatedData = cumulatedArray.slice(offset, offset + limit);
         const totalCount = cumulatedArray.length;
