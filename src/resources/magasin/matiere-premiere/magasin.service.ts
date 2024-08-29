@@ -13,8 +13,45 @@ export class MagasinService {
         private trace: TraceService
     ) { }
 
-    list = async (filter: MagasinFetcher, query: PaginationQuery): Promise<Pagination<Magasin>> => {
-        const conditions = { ...filter }
+    list = async (filter: MagasinFetcher, query: PaginationQuery, userId: string): Promise<Pagination<Magasin>> => {
+
+            const utilisateur = await this.db.utilisateur.findUnique({
+                where: { id: userId},
+                select: {
+                    accesMagasinsMatierePremieres: {
+                        select: {
+                            magasin: {
+                                select: {
+                                    id: true,
+                                    nom: true
+                                }
+                            },
+                        }
+                    }
+                }
+            })
+
+            if (!utilisateur) {
+                throw new HttpException(errors.USER_NOT_EXIST, HttpStatus.BAD_REQUEST);
+            }
+            
+            const magasinIdsMatierePremieres = utilisateur.accesMagasinsMatierePremieres.map(access => access.magasin.id);
+
+            if (magasinIdsMatierePremieres.length === 0) {
+                return {
+                    data: [],
+                    totalPages: 0,
+                    totalCount: 0,
+                    currentPage: query.page ? query.page : 1,
+                    size: query.size ? query.size : 10,
+                };
+            }
+            
+            const conditions = {
+                ...filter,
+                id: { in: magasinIdsMatierePremieres.length ? magasinIdsMatierePremieres : undefined }
+            };
+
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 

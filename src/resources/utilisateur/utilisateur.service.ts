@@ -69,6 +69,8 @@ export class UtilisateurService {
     }
 
     findById = async (id: string): Promise<UtilisateurFull> => {
+        
+        
         const utilisateur = await this.db.utilisateur.findUnique({
             where: { id },
             select: {
@@ -109,6 +111,7 @@ export class UtilisateurService {
                 }
             }
         })
+
         if (utilisateur === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
         return utilisateur
     }
