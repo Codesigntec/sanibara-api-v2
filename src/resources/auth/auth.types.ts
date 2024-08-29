@@ -65,6 +65,16 @@ export class WorkspaceResponse {
   workspace: string
 }
 
+export class MagasinUtilisateurProduitFini{
+  @ApiProperty()
+  magasinId: string
+}
+
+export class MagasinUtilisateurMatierePremiere{
+  @ApiProperty()
+  magasinId: string
+}
+
 export class AuthResponse {
   @ApiProperty()
   accessToken: string
@@ -85,6 +95,10 @@ export class AuthResponse {
   email: string
 
   accesses: Permission[]
+
+  magasinsProduitFinis: MagasinUtilisateurProduitFini[]
+
+  accesMagasinsMatierePremieres: MagasinUtilisateurMatierePremiere[]
 
 }
 

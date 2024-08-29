@@ -114,15 +114,16 @@ export class UtilisateurService {
     }
 
     save = async (data: UtilisateurSaver, userId: string): Promise<Utilisateur> => {
+
         return await this.db.$transaction(async (tx) => {
             try {
                 const check = await tx.utilisateur.findFirst({
-                    where: {
+                    where: { 
                         email: {
                             equals: data.email,
                             mode: 'insensitive'
                         }
-                    }
+                    } 
                 })
                 if (check !== null) throw new HttpException(errors.EMAIL_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
