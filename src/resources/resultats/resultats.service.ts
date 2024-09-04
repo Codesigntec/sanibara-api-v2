@@ -349,13 +349,9 @@ export class ResultatsService {
     // Stocker le résultat pour le jour en cours
     financialData.approvisionnements[i] = totalCout;
   }
-  console.log("financialData", financialData);
-    
-
     return financialData;
   }
-
-
+  
   statistiqueYears = async (data: StatYear, userId: string): Promise<FinancialData> => { 
 
     let { year } = data;
@@ -488,9 +484,6 @@ export class ResultatsService {
       // Stocker le résultat pour le jour en cours
       financialData.approvisionnements[i] = totalCout;
     }
-    console.log("financialData", financialData);
-    
-
     return financialData;
     
   }

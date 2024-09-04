@@ -607,18 +607,31 @@ export class ProductionService {
       const check = await this.db.productions.findUnique({ where: { id: id }, select: { description: true, archive: true } })
       if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
-      const magasin = await this.db.productions.update({
+      const prod_archive = !check.archive;
+      let production_archive = false;
+      if(prod_archive === true) production_archive = true
+
+      const production = await this.db.productions.update({
           where: { id },
           data: {
-              archive: !check.archive
+              archive: production_archive
           },
-          select: { id: true }
+          select: { id: true , stockProdFini: true}
       })
+
+      production.stockProdFini.forEach(async (l) => {
+        await this.db.ligneAchat.update({
+            where: { id: l.id },
+            data: {
+              removed: production_archive
+            }
+          })
+        })
 
       const description = `Archivage d'une production: ${check.description}`
       this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
 
-      return magasin
+      return production
     }
 
     remove = async (id: string, userId: string, etat: string): Promise<ProdReturn> => {
@@ -627,36 +640,46 @@ export class ProductionService {
       if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
       const stockIds = check.stockProdFini.map(stock => stock.id);
-      const newRemovedState = !check.removed;
 
-      const magasin = await this.db.productions.update({
+      const newRemovedState = !check.removed;
+      let prod_remove = false;
+      if(newRemovedState === true) prod_remove = true
+
+      const production = await this.db.productions.update({
           where: { id },
           data: {
-              removed: newRemovedState
+              removed: prod_remove
           },
-          select: { id: true }
+          select: { id: true, stockProdFini: true }
       })
-
+      production.stockProdFini.forEach(async (l) => {
+        await this.db.ligneAchat.update({
+            where: { id: l.id },
+            data: {
+              removed: prod_remove
+            }
+          })
+        })
       const description = `Suppression logique d'une production: ${check.description}`
       this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
  
-      if (etat === 'true') {
-          // Mettre à jour les ventes liées aux stockVente
-          await this.db.vente.updateMany({
-            where: {
-              stockVente: {
-                some: {
-                  stockProduiFiniId: { in: stockIds }
-                }
-              }
-            },
-            data: {
-              removed: newRemovedState
-            }
-          });
-        }
+      // if (etat === 'true') {
+      //     // Mettre à jour les ventes liées aux stockVente
+      //     await this.db.vente.updateMany({
+      //       where: {
+      //         stockVente: {
+      //           some: {
+      //             stockProduiFiniId: { in: stockIds }
+      //           }
+      //         }
+      //       },
+      //       data: {
+      //         removed: newRemovedState
+      //       }
+      //     });
+      //   }
 
-      return magasin
+      return production
     }
 
     destroy = async (id: string, userId: string): Promise<ProdReturn> => {

@@ -44,6 +44,7 @@ export class MagasinController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
+        @Req()  req?: AuthorizedRequest
     ) : Promise<Pagination<Magasin>> {
         const filter : MagasinFetcher = {
             archive: (archive && archive === '1') ? true : false,
@@ -55,7 +56,8 @@ export class MagasinController {
             orderBy: order,
             orderDirection: direction
         }
-        return await this.service.list(filter, paginationQuery)
+        const userId = req.userId
+        return await this.service.list(filter, paginationQuery, userId)
     }
 
     @Get('/select')
