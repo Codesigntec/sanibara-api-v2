@@ -103,9 +103,24 @@ export class UtilisateurFull extends Utilisateur {
 
 export class AccesMagasin {
   @ApiProperty()
-  magasin: any//MagasinSelect
+  magasin: any //magasinSelect
 }
 
+
+export class AccesMagasinProduitFinis {
+  @ApiProperty()
+  id: string
+  
+  @ApiProperty()
+  nom: string  
+}
+export class AccesMagasinMatierePremieres {
+  @ApiProperty()
+  id: string
+
+  @ApiProperty()
+  nom: string  
+}
 
 // ================VALIDATION
 
@@ -137,7 +152,8 @@ export const saverSchema = z
     roleId: z.string({
       required_error: errors.ROLE_REQUIRED,
     }),
-    magasins: z.array(accessMagasinSchemaInfo)
+    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo),
+    magasinsPrduitsFinis: z.array(accessMagasinSchemaInfo)
   })
   .required();
 
@@ -147,11 +163,7 @@ export const updaterSchema = z
       required_error: errors.NAME_REQUIRED,
       invalid_type_error: errors.NAME_MUST_BE_STRING,
     }).min(2, errors.NAME_MUST_HAVE_2_DIGIT),
-    // password: z.string({
-    //   // required_error: errors.PASSWORD_REQUIRED,
-    // }).min(6, errors.PASSWORD_MUST_HAVE_6_DIGIT).optional(),
-    // password: z.union([z.string().length(0), z.string().min(6, "errors.PASSWORD_MUST_HAVE_6_DIGIT")])
-    // .optional().or(z.literal('')),
+
     password: z.string().min(6, errors.PASSWORD_MUST_HAVE_6_DIGIT).optional().or(z.literal('')),
     email: z.string({
       required_error: errors.EMAIL_REQUIRED,
@@ -160,6 +172,7 @@ export const updaterSchema = z
     roleId: z.string({
       required_error: errors.ROLE_REQUIRED,
     }),
-    magasins: z.array(accessMagasinSchemaInfo)
+    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo),
+    magasinsPrduitsFinis: z.array(accessMagasinSchemaInfo)
   })
   .required();

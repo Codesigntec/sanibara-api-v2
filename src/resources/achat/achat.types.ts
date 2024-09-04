@@ -17,6 +17,9 @@ export class StockMatiereFetcher extends FetcherFilter {
 } | null;
 }
 
+export class matierePremiereByStoreFletcher extends FetcherFilter {
+  magasinId?: string | null
+}
 export class LigneAchatFetcher{
 
 }

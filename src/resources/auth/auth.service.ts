@@ -92,7 +92,9 @@ export class AuthService {
                             }
                         }
                     }
-                }
+                },
+                accesMagasinsProduitsFinis: true,
+                accesMagasinsMatierePremieres: true
             }
         })
         if (!user) throw new HttpException(errors.INVALID_CREDENTIALS, HttpStatus.BAD_REQUEST);
@@ -111,7 +113,9 @@ export class AuthService {
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             expireIn: 3600 * 1000 * 3,
-            accesses: user.role.accesses
+            accesses: user.role.accesses,
+            magasinsProduitFinis: user.accesMagasinsProduitsFinis,
+            accesMagasinsMatierePremieres: user.accesMagasinsMatierePremieres
         }
 
         return auth
@@ -159,7 +163,9 @@ export class AuthService {
                             }
                         }
                     }
-                }
+                },
+                accesMagasinsProduitsFinis: true,
+                accesMagasinsMatierePremieres: true
             }
         })
         if (!check) throw new HttpException(errors.INVALID_EMAIL, HttpStatus.BAD_REQUEST)
@@ -185,7 +191,9 @@ export class AuthService {
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken,
                     expireIn: 3600 * 1000 * 3,
-                    accesses: check.role.accesses
+                    accesses: check.role.accesses,
+                    magasinsProduitFinis: check.accesMagasinsProduitsFinis,
+                    accesMagasinsMatierePremieres: check.accesMagasinsMatierePremieres
                 }
 
                 return auth

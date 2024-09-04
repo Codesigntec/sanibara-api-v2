@@ -6,6 +6,7 @@ import { Unite, UniteSelect } from "../unite/unite.types"
 // import { Categorie, CategorieSelect } from "../categorie/categorie.types"
 
 export class MatiereFetcher extends FetcherFilter {
+  search?: string | null
   designation?: string | null
   description?: string | null
   debut?: string | null

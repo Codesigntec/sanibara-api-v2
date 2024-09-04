@@ -6,7 +6,8 @@ const errors = {
     NAME_REQUIRED: "Le nom est obligatoire.",
     NAME_MUST_BE_STRING: "Le nom doit être en texte.",
     ADDRESS_REQUIRED: "L'adresse est obligatoire.",
-    ADDRESS_MUST_BE_STRING: "L'adresse doit être en texte."
+    ADDRESS_MUST_BE_STRING: "L'adresse doit être en texte.",
+    USER_NOT_EXIST: "Cet utilisateur n'existe pas ou son ID n'est pas valide.",
 }
 const infos = {
 
