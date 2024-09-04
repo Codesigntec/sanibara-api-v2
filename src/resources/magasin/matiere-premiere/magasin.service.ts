@@ -18,6 +18,12 @@ export class MagasinService {
             const utilisateur = await this.db.utilisateur.findUnique({
                 where: { id: userId},
                 select: {
+                        role: {
+                            select: {
+                                id: true,
+                                libelle: true
+                            }
+                        },
                     accesMagasinsMatierePremieres: {
                         select: {
                             magasin: {
@@ -37,7 +43,7 @@ export class MagasinService {
         
         const magasinIdsMatierePremieres = utilisateur.accesMagasinsMatierePremieres.map(access => access.magasin.id);
 
-        if (magasinIdsMatierePremieres.length === 0) {
+        if (magasinIdsMatierePremieres.length === 0 && utilisateur.role.libelle !== 'Administrateur') {
             return {
                 data: [],
                 totalPages: 0,
