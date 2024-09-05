@@ -78,6 +78,17 @@ export class AchatService {
         if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
               conditions.statutAchat = statutAchat;
          }
+
+      //   if (filter.search) {
+      //     conditions = {
+      //         ...conditions,
+      //         search: {
+      //             contains: filter.search,
+      //             mode: "insensitive"
+      //         }
+      //     }
+      //  }
+
         let order = {}
         if (query.orderBy) {
               order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'

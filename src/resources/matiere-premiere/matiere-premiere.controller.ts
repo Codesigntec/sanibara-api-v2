@@ -46,6 +46,7 @@ export class MatiereController {
         @Query('fin') fin?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
+        @Query('search') search?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<Matiere>> {
@@ -55,7 +56,8 @@ export class MatiereController {
             designation,
             uniteId,
             debut,
-            fin
+            fin,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),
