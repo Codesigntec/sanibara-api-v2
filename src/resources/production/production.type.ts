@@ -168,8 +168,9 @@ export class ProdUpdate {
 //================================FLITRE===============================
 
 export class ProductionFetcher extends FetcherFilter {
+  search?: string | null
   debut?: string | null
-  fin?: string | null
+  fin?: string | null 
 }
 
 //======================================RETURN PRODUCTION===============================

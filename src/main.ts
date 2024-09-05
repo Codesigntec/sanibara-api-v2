@@ -14,7 +14,7 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-  const port = Number(process.env.PORT) || 3002
+  const port = Number(process.env.PORT) || 3000
   const host = process.env.HOST || 'localhost'
 
   
