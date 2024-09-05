@@ -36,6 +36,20 @@ export class StocksService {
         }
     
         conditions = { ...conditions, removed: filter.removed, archive: filter.archive };
+
+        if (filter.search) {
+            conditions = {
+              OR: [
+                { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
+                {
+                      produitFini: {
+                        designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
+                      }
+                    
+                }
+              ]
+            };
+          }
     
         let order: any = {};
         if (query.orderBy) {
