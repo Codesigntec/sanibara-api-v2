@@ -946,7 +946,8 @@ export class AchatService {
                 }
             }
         });
-    
+      console.log(cumulatedMap);
+      
         // Convertir la map en tableau
         const cumulatedArray = Array.from(cumulatedMap.values());
     
@@ -1044,7 +1045,6 @@ export class AchatService {
                         id: true,
                         libelle: true,
                         tva: true,
-                        reference: true,
                         couts: true,
                         ligneAchats: {
                             select: {
@@ -1053,13 +1053,12 @@ export class AchatService {
                         }
                     }
                 }
-            }
+            } 
         })
         if (ligneAchat === null) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
         console.log(ligneAchat);
         
-
          // Filtrer les lignes d'achat pour lesquelles la quantité est supérieure à la quantité utilisée
          const filteredLigneAchat = ligneAchat.filter(ligne => ligne.quantite > ligne.qt_Utilise);
          
