@@ -5,6 +5,7 @@ import { errors } from "./fournisseur.constant"
 import { AchatFull } from "../achat/achat.types"
 
 export class FournisseurFetcher extends FetcherFilter {
+  search?: string
 }
 
 

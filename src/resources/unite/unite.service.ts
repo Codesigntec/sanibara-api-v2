@@ -15,13 +15,24 @@ export class UniteService {
     ) { }
 
     list = async (filter: UniteFetcher, query: PaginationQuery): Promise<Pagination<Unite>> => {
-        const conditions = { ...filter }
+        const { search, ...otherFilters } = filter;
+        let conditions: any = { ...otherFilters }; // Inclure les autres filtres sauf `search`
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
         let order = {}
         if(query.orderBy){
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+        }
+
+        if (filter.search) {
+            conditions = {
+                ...conditions,
+                OR: [
+                    { libelle: { equals: filter.search, mode: 'insensitive' } },
+                    { symbole: { equals: filter.search, mode: 'insensitive' } }
+                ]
+            }
         }
 
 

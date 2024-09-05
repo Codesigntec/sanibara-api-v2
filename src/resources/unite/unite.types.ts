@@ -4,6 +4,7 @@ import { z } from "zod"
 import { errors } from "./unite.constant"
 
 export class UniteFetcher extends FetcherFilter {
+  search?: string
 }
 
 export class UniteSaver {

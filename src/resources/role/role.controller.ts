@@ -42,6 +42,7 @@ export class RoleController {
         @Query('archive') archive?: string | null, 
         @Query('removed') removed?: string | null,
         @Query('page') page?: string | null,
+        @Query('search') search?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
@@ -49,6 +50,7 @@ export class RoleController {
         const filter : RoleFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

@@ -5,6 +5,7 @@ import { errors } from "./role.constant"
 import { Utilisateur, UtilisateurLight } from "../utilisateur/utilisateur.types"
 
 export class RoleFetcher extends FetcherFilter {
+  search?: string
 }
 
 export class RoleSaver {
