@@ -15,27 +15,27 @@ export class MagasinService {
 
     list = async (filter: MagasinFetcher, query: PaginationQuery, userId: string): Promise<Pagination<Magasin>> => {
 
-            const utilisateur = await this.db.utilisateur.findUnique({
-                where: { id: userId},
-                select: {
-                        role: {
+        const utilisateur = await this.db.utilisateur.findUnique({
+            where: { id: userId},
+            select: {
+                    role: {
+                        select: {
+                            id: true,
+                            libelle: true
+                        }
+                    },
+                accesMagasinsMatierePremieres: {
+                    select: {
+                        magasin: {
                             select: {
                                 id: true,
-                                libelle: true
+                                nom: true,
                             }
                         },
-                    accesMagasinsMatierePremieres: {
-                        select: {
-                            magasin: {
-                                select: {
-                                    id: true,
-                                    nom: true
-                                }
-                            },
-                        }
                     }
                 }
-            })
+            }
+        })
 
         if (!utilisateur) {
             throw new HttpException(errors.USER_NOT_EXIST, HttpStatus.BAD_REQUEST);
@@ -53,10 +53,19 @@ export class MagasinService {
             };
         }
         
-        const conditions = {
+        let conditions: any = {
             ...filter,
             id: { in: magasinIdsMatierePremieres.length ? magasinIdsMatierePremieres : undefined }
         };
+
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { nom: { contains: filter.search, mode: "insensitive" } },
+                    { adresse: { contains: filter.search, mode: "insensitive" } },
+                ]
+            }
+        }
 
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;

@@ -54,10 +54,19 @@ export class MagasinService {
             };
         }
         
-        const conditions = {
+        let conditions: any = {
             ...filter,
             id: { in: magasinIdsProduitFinis.length ? magasinIdsProduitFinis : undefined }
         };
+
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { nom: { contains: filter.search, mode: "insensitive" } },
+                    { adresse: { contains: filter.search, mode: "insensitive" } },
+                ]
+            }
+           }
 
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;

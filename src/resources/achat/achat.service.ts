@@ -70,7 +70,7 @@ export class AchatService {
   }
   
     list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatReturn>> => {
-        let conditions = {...filter }
+        let conditions: any = {...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -79,15 +79,13 @@ export class AchatService {
               conditions.statutAchat = statutAchat;
          }
 
-      //   if (filter.search) {
-      //     conditions = {
-      //         ...conditions,
-      //         search: {
-      //             contains: filter.search,
-      //             mode: "insensitive"
-      //         }
-      //     }
-      //  }
+         if (filter.search) {
+          conditions = {
+              OR: [
+                  { libelle: { contains: filter.search, mode: "insensitive" } },
+              ]
+          }
+         }
 
         let order = {}
         if (query.orderBy) {
@@ -927,6 +925,13 @@ export class AchatService {
      if (filter.achat && filter.achat.fournisseurId) {
          conditions['achat.fournisseurId'] = filter.achat.fournisseurId;
       }
+      if (filter.search) {
+        conditions = {
+            OR: [
+              { matiere: { designation: { contains: filter.search, mode: "insensitive" } } }
+            ]
+        }
+       }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
         let order = {};

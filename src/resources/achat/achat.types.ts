@@ -8,13 +8,19 @@ import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 export class AchatFetcher extends FetcherFilter {
   statutAchat?: StatutAchat
   search?: string | null
+  // libelle?: string | null
+  // date?: string | null
 }
 
 export class StockMatiereFetcher extends FetcherFilter {
+    search?: string | null
   magasinId?: string | null
   achat?: {
     fournisseurId?: string;
-} | null;
+ } | null;
+  matiere?: {
+    designation?: string;
+  } | null;
 }
 
 export class matierePremiereByStoreFletcher extends FetcherFilter {

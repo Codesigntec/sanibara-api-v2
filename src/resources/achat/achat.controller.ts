@@ -55,7 +55,7 @@ export class AchatController {
         const filter : AchatFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
-            search: search
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

@@ -18,8 +18,6 @@ export class MatiereService {
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
-        console.log(filter);
-
         // Gestion du paramètre de recherche globale 
         if (filter.search) {
             conditions = {

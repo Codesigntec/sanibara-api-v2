@@ -4,11 +4,13 @@ import { z } from "zod"
 import { errors } from "./magasin.constant"
 
 export class MagasinFetcher extends FetcherFilter {
+  search?: string | null
 }
 
 export class MagasinSaver {
   @ApiProperty()
   nom: string
+  
   
   @ApiProperty()
   adresse: string

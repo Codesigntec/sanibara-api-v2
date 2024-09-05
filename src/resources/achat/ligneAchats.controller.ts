@@ -82,6 +82,7 @@ export class LigneAchatController {
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
+        @Query('search') search?: string | null,
         @Query('magasinId') magasinId?: string | null,
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<LigneAchatFull>> {
@@ -89,11 +90,12 @@ export class LigneAchatController {
             page: Number(page),
             size: Number(size),
             orderBy: order,
-            orderDirection: direction
+            orderDirection: direction,
         }
 
         const filter : StockMatiereFetcher = {
-            magasinId: magasinId
+            magasinId: magasinId,
+            search
         }
         return await this.service.getAllLigneAchats(filter, paginationQuery)
     }
