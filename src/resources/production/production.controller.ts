@@ -91,6 +91,7 @@ export class ProductionController {
         @Query('page') page?: string | null,
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
+        @Query('search') search?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
@@ -99,7 +100,8 @@ export class ProductionController {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
             debut,
-            fin
+            fin,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

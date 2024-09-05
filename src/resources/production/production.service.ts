@@ -21,6 +21,7 @@ export class ProductionService {
       const limit = query.size ? query.size : 10;
       const offset = query.page ? (query.page - 1) * limit : 0;
 
+
       // let filters = { }
       if (filter.debut) {
           conditions = {
@@ -42,6 +43,7 @@ export class ProductionService {
           }
           conditions = { ...conditions, createdAt: dateFilter };
       }
+
 
       conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
@@ -762,7 +764,7 @@ export class ProductionService {
       if (filter.debut) {
           conditions = {
               ...conditions,
-              designation: {
+              debut: {
                   contains: filter.debut,
                   mode: "insensitive"
               }
@@ -780,6 +782,26 @@ export class ProductionService {
           conditions = { ...conditions, createdAt: dateFilter };
       }
       conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
+
+
+        // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
+        if (filter.search) {
+          conditions = {
+            OR: [
+              { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
+              {
+                stockProdFini: {
+                  some: {
+                    produitFini: {
+                      designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
+                    }
+                  }
+                }
+              }
+            ]
+          };
+        }
+
 
       let order = {}
       if (query.orderBy) {
@@ -812,17 +834,14 @@ export class ProductionService {
       let tableContent: tableReturn[] = [];
       let i = 0;
       production.forEach(element => {
-
         let nameProFini: string[] = [];
-
         element.stockProdFini.forEach((element) => {
           nameProFini.push(element.produitFini.designation);
        });
       
-        // Vérifier si au moins un produit fini de cette production est lié à StockVente
-          const hasStockVenteLink = element.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
+      // Vérifier si au moins un produit fini de cette production est lié à StockVente
+      const hasStockVenteLink = element.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
 
-      
         tableContent.push({
           id: element.id,
           numero: i += 1,

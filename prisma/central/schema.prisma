@@ -8,46 +8,69 @@ datasource db {
   url      = env("CENTRAL_DATABASE_URL")
 }
 
+
+model Admin {
+  id             String   @id @unique @default(cuid())
+  email          String   @unique
+  name           String
+  role           String   @default("Administrateur")
+  password       String
+  code           String?  @default("")
+  failedAttempts Int      @default(0) @map("failed_attempts")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("administrators")
+}
+
 model Store {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   key       String   @unique
   name      String
   email     String
   db        String
   app       App
+  created   Boolean  @default(false) // si la db physique est creee
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   subscriptions Subscription[]
+  users         User[]
 
   @@unique([app, db], map: "app_db_uniq")
   @@map("stores")
 }
 
 model Subscription {
-  id        Int      @id @default(autoincrement())
-  start     DateTime
-  end       DateTime
-  storeId   Int      @map("store_id")
-  store     Store    @relation(fields: [storeId], references: [id])
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  start        DateTime
+  end          DateTime
+  pack         String   @default("essai")
+  storeId      String   @map("store_id")
+  store        Store    @relation(fields: [storeId], references: [id])
+  partnerToken String?  @map("partner_token")
+  amount       Float @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("subscriptions")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
+  id    String @id @default(cuid())
+  email String @unique
+  name  String
+
+  storeId String @map("store_id")
+  store   Store  @relation(fields: [storeId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("users")
+  @@map("user_store")
 }
 
 enum App {
   sanifere
   sanibara
 }
-
