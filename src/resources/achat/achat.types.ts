@@ -7,7 +7,7 @@ import { FournisseurSelect } from "../fournisseur/fournisseur.types"
 
 export class AchatFetcher extends FetcherFilter {
   statutAchat?: StatutAchat
-
+  search?: string | null
 }
 
 export class StockMatiereFetcher extends FetcherFilter {

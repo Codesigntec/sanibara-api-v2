@@ -14,16 +14,41 @@ export class ResultatsService {
     ) { }
 
  
-    dateCreated = async (): Promise<number | null> => {
-        const achat = await this.db.achat.findFirst({
-          where: { removed: false, archive: false },
-          orderBy: {
-            createdAt: 'asc',
-          },
-          select: { createdAt: true }
-        });
-        return achat ? achat.createdAt.getFullYear() : null;
-      }
+  dateCreated = async (): Promise<number | null> => {
+
+        let currentYear = new Date().getFullYear();
+        let resultats = null;
+
+        if (!resultats) {
+          resultats = await this.db.achat.findFirst({
+            where: { removed: false, archive: false },
+            orderBy: {
+              date: 'asc',
+            },
+            select: {date: true },
+          });
+          currentYear = new Date(resultats.date).getFullYear();
+        }
+
+        if (!resultats) {
+        
+        resultats = await this.db.magasinMatierePremiere.findFirst({
+            where: { removed: false, archive: false },
+            orderBy: {
+              createdAt: 'asc',
+            },
+            select: { createdAt: true },
+          });
+          currentYear = new Date(resultats.createdAt).getFullYear();
+        }
+              // Si tout est null, retourner l'année en cours
+        if (!resultats) {
+          currentYear = new Date().getFullYear();
+          return currentYear;
+        }
+
+    return currentYear;
+  }
 
   cardData = async (data: FlitreCard, userId: string): Promise<Card> => {
 

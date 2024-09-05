@@ -18,18 +18,18 @@ export class MatiereService {
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
-        
-        // Gestion du paramètre de recherche globale
+        console.log(filter);
+
+        // Gestion du paramètre de recherche globale 
         if (filter.search) {
             conditions = {
                 OR: [
                     { designation: { contains: filter.search, mode: "insensitive" } },
                     { description: { contains: filter.search, mode: "insensitive" } }
-                    // Ajoute d'autres champs ici si nécessaire
                 ]
             }
         }
-
+    
         if (filter.designation) {
             conditions = {
                 ...conditions,

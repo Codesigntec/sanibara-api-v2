@@ -300,47 +300,99 @@ export class ProductionService {
             }
           });
 
-          data.productionLigneAchat.forEach(async (ligne) => {
-            const check = await this.db.ligneAchat.findUnique(
-              { 
-              where:  {id: ligne.id }, 
-              select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
-              quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} })
-              
-              console.log("ligne achat");
-              console.log(check);
-              
-              
-            const ligneUpdate = await this.db.ligneAchat.update({
-              where: { id: check.id },
-              data: {
-                  prixUnitaire: check.prixUnitaire,
-                  quantite: check.quantite,
-                  datePeremption: new Date(check.datePeremption),
-                  references: check.references,
-                  quantiteLivre: check.quantiteLivre,
-                  qt_Utilise: check.qt_Utilise + ligne.qt_Utilise,
-                  matiere: {
-                      connect: {
-                          id: check.matiereId,
-                      },
-                  },
-                  magasin: {
-                      connect: {
-                          id: check.magasinId,
-                      },
-                  },
+          const lignesAchatMap = new Map();
+
+        // Regrouper les lignes d'achat par ID
+        data.productionLigneAchat.forEach((ligne) => {
+          if (lignesAchatMap.has(ligne.id)) {
+            // Si l'ID de la ligne d'achat existe déjà, on cumule les qt_Utilise
+            lignesAchatMap.get(ligne.id).qt_Utilise += ligne.qt_Utilise;
+          } else {
+            // Sinon, on ajoute la ligne d'achat dans la Map
+            lignesAchatMap.set(ligne.id, { ...ligne });
+          }
+        });
+
+        // Boucler sur les lignes d'achat regroupées
+        for (const [id, ligne] of lignesAchatMap) {
+          const check = await this.db.ligneAchat.findUnique({
+            where: { id: ligne.id },
+            select: {
+              id: true, prixUnitaire: true, quantite: true, datePeremption: true,
+              references: true, quantiteLivre: true, qt_Utilise: true,
+              matiereId: true, magasinId: true, createdAt: true, updatedAt: true
+            }
+          });
+
+          const ligneUpdate = await this.db.ligneAchat.update({
+            where: { id: check.id },
+            data: {
+              prixUnitaire: check.prixUnitaire,
+              quantite: check.quantite,
+              datePeremption: new Date(check.datePeremption),
+              references: check.references,
+              quantiteLivre: check.quantiteLivre,
+              qt_Utilise: check.qt_Utilise + ligne.qt_Utilise, // Cumul des qt_Utilise
+              matiere: {
+                connect: {
+                  id: check.matiereId,
+                },
               },
-          })
+              magasin: {
+                connect: {
+                  id: check.magasinId,
+                },
+              },
+            },
+          });
 
-          console.log("ligneUpdate");
-          console.log(ligneUpdate);
+          console.log("ligneUpdate:", ligneUpdate);
+        }
 
-          })
+
+          // data.productionLigneAchat.forEach(async (ligne) => {
+
+          //   const check = await this.db.ligneAchat.findUnique(
+          //     { 
+          //     where:  {id: ligne.id }, 
+          //     select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
+          //     quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} 
+          //   })
+              
+              
+          //   const ligneUpdate = await this.db.ligneAchat.update({
+          //     where: { id: check.id },
+          //     data: {
+          //         prixUnitaire: check.prixUnitaire,
+          //         quantite: check.quantite,
+          //         datePeremption: new Date(check.datePeremption),
+          //         references: check.references,
+          //         quantiteLivre: check.quantiteLivre,
+          //         qt_Utilise: check.qt_Utilise + ligne.qt_Utilise,
+          //         matiere: {
+          //             connect: {
+          //                 id: check.matiereId,
+          //             },
+          //         },
+          //         magasin: {
+          //             connect: {
+          //                 id: check.magasinId,
+          //             },
+          //         },
+          //     },
+          // })
+
+          // console.log("ligneUpdate");
+          // console.log(ligneUpdate);
+
+          // })
         
           const description = `Ajout du produit fini: ${data.description}`;
           this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
-      
+          console.log("==================================== data.productionLigneAchat=====================================");
+          console.log( data.productionLigneAchat);
+          
+          
           return production;
         } catch (error: any) {
           console.log(error);
