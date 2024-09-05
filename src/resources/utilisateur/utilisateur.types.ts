@@ -6,6 +6,7 @@ import { RoleSelect } from "../role/role.types"
 // import { MagasinSelect } from "../magasin/magasin.types"
 
 export class UtilisateurFetcher extends FetcherFilter {
+  search?: string
 }
 
 export class UtilisateurMagasinsSaver {

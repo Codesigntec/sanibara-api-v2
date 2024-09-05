@@ -27,6 +27,15 @@ export class DepenseService {
                 }
             }
         }
+        if (filter.search) {
+            conditions = {
+                ...conditions,
+                motif: {
+                    contains: filter.search,
+                    mode: "insensitive"
+                }
+            }
+        }
 
         if (filter.min || filter.max) {
             let amountFilter = {};

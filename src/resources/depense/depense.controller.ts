@@ -46,6 +46,7 @@ export class DepenseController {
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
         @Query('page') page?: string | null,
+        @Query('search') search?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
@@ -57,7 +58,8 @@ export class DepenseController {
             min: (min && !isNaN(parseInt(min))) ? parseInt(min) : 0,
             max: (max && !isNaN(parseInt(max))) ? parseInt(max) : undefined,
             debut,
-            fin
+            fin,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),
