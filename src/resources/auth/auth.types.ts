@@ -9,6 +9,7 @@ export class Workspace {
   @ApiProperty()
   app: string
 }
+
 export class Credential {
   @ApiProperty()
   email: string

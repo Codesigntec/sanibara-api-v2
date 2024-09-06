@@ -4,6 +4,7 @@ import { z } from "zod"
 import { errors } from "./client.constant"
 
 export class ClientFetcher extends FetcherFilter {
+  search?: string
 }
 
 
