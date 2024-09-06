@@ -4,6 +4,7 @@ import { z } from "zod"
 import { errors } from "./devise.constant"
 
 export class DeviseFetcher extends FetcherFilter {
+  search?: string
 }
 
 export class DeviseSaver {

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards, UsePipes, Version } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodPipe } from 'src/validation/zod.pipe';
 import { ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -15,7 +15,7 @@ import {
     credentialSchema,
     forgetPasswordSchema,
     resetPasswordSchema,
-    AuthRequest
+    AuthRequest,
 } from './auth.types';
 import { WorkspaceGuard } from './workspace.guard';
 

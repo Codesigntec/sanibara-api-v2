@@ -44,6 +44,7 @@ export class StockProduiFiniController {
         @Query('archive') archive?: string | null, 
         @Query('removed') removed?: string | null,
         @Query('page') page?: string | null,
+        @Query('search') search?: string | null,
         @Query('prodFiniId') prodFiniId?: string | null,
         @Query('magasinId') magasinId?: string | null,
         @Query('size') size?: string | null,
@@ -54,7 +55,8 @@ export class StockProduiFiniController {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
             prodFiniId,
-            magasinId
+            magasinId,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

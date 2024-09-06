@@ -46,6 +46,7 @@ export class VentesController {
         @Query('removed') removed?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
+        @Query('search') search?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
         @Req() req?: AuthorizedRequest
@@ -53,6 +54,7 @@ export class VentesController {
         const filter : VenteFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

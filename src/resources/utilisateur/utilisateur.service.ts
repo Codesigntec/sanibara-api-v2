@@ -15,9 +15,22 @@ export class UtilisateurService {
     ) { }
 
     list = async (filter: UtilisateurFetcher, query: PaginationQuery): Promise<Pagination<Utilisateur>> => {
-        const conditions = { ...filter }
+        let conditions: any = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
+
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { nom: { contains: filter.search, mode: "insensitive" } },
+                    { email: { contains: filter.search, mode: "insensitive" } },
+                     {  role: {
+                        libelle: { contains: filter.search, mode: 'insensitive' } // Recherche par `libelle` dans le modèle `Role`
+                      }
+                    }
+                ]
+            }
+        }
 
         let order = {}
         if (query.orderBy) {

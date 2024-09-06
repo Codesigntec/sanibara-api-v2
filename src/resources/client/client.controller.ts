@@ -42,12 +42,14 @@ export class ClientController {
         @Query('removed') removed?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
+        @Query('search') search?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<Client>> {
         const filter : ClientFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),
@@ -88,7 +90,7 @@ export class ClientController {
             page: page ? Number(page) : undefined,
             size: size ? Number(size) : undefined,
             orderBy: order,
-            orderDirection: direction
+            orderDirection: direction,
         };
         return await this.service.statistique(id, paginationQuery);
     }

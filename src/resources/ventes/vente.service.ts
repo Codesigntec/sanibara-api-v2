@@ -36,7 +36,7 @@ export class VentesService {
 
 
     list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
-        let conditions = { ...filter }
+        let conditions: any = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -47,6 +47,22 @@ export class VentesService {
 
         if (etat !== null && etat !== undefined && etat !== '' && etat === 'true') { conditions = { ...conditions, etat: true } }
         if (etat !== null && etat !== undefined && etat !== '' && etat === 'false') { conditions = { ...conditions, etat: false } }
+
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { reference: { contains: filter.search, mode: 'insensitive' } }, // Recherche par référence dans `Vente`
+                    {
+                      client: {
+                        nom: { contains: filter.search, mode: 'insensitive' }, // Recherche par nom dans `Client`
+                        telephone: { contains: filter.search, mode: 'insensitive' }, 
+                        email: { contains: filter.search, mode: 'insensitive' }, 
+                        societe: { contains: filter.search, mode: 'insensitive' }, 
+                      }
+                    }
+                  ]
+            };
+          }
 
         
         const vente = await this.db.vente.findMany({

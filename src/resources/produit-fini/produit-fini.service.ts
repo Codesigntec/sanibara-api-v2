@@ -42,6 +42,15 @@ export class ProduitService {
             }
             conditions = { ...conditions, createdAt: dateFilter };
         }
+
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { designation: { contains: filter.search, mode: "insensitive" } },
+                    { description: { contains: filter.search, mode: "insensitive" } }
+                ]
+            }
+        }
         conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         let order = {}

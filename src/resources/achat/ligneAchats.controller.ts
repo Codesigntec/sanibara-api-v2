@@ -124,6 +124,7 @@ export class LigneAchatController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('magasinId') magasinId?: string | null,
+        @Query('search') search?: string | null,
         @Query('direction') direction?: string | null,
         @Query('idProviders') idProviders?: string | null, 
     ) : Promise<Pagination<LigneAchatFull>> {
@@ -135,7 +136,8 @@ export class LigneAchatController {
         }
 
         const filter : StockMatiereFetcher = {
-            magasinId: magasinId
+            magasinId: magasinId,
+            search
         }
         return await this.service.getAllLigneAchatsByProvider(filter, idProviders, paginationQuery)
     }

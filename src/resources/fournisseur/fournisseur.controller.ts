@@ -44,10 +44,12 @@ export class FournisseurController {
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
+        @Query('search') search?: string | null,
     ) : Promise<Pagination<Fournisseur>> {
         const filter : FournisseurFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

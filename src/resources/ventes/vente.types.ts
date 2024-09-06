@@ -5,6 +5,7 @@ import { errors } from "./vente.constant"
 
 export class VenteFetcher extends FetcherFilter {
     etat?: boolean | null
+    search?: string
 }
 
 export class Client{

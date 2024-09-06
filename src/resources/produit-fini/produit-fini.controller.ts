@@ -44,7 +44,8 @@ export class ProduitController {
         @Query('uniteId') uniteId?: string | null,
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
-        @Query('page') page?: string | null,
+        @Query('page') page?: string | null, 
+        @Query('search') search?: string | null, 
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
@@ -55,7 +56,8 @@ export class ProduitController {
             designation,
             uniteId,
             debut,
-            fin
+            fin,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

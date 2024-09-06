@@ -1082,11 +1082,18 @@ export class AchatService {
     }
 
     getAllLigneAchatsByProvider = async (filter: StockMatiereFetcher, idProviders: string, query: PaginationQuery): Promise<Pagination<LigneAchatFull>> => {
-      let conditions = { ...filter };
+      let conditions: any = { ...filter };
   
       if (filter.magasinId !== undefined && filter.magasinId !== null) {
           conditions = { ...conditions, magasinId: filter.magasinId};
       }
+      if (filter.search) {
+        conditions = {
+            OR: [
+              { matiere: { designation: { contains: filter.search, mode: "insensitive" } } }
+            ]
+        }
+       }
 
         if (idProviders) {
           conditions.achat = {

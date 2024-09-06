@@ -9,6 +9,7 @@ export class DepenseFetcher extends FetcherFilter {
   fin?: string | null
   min?: number | null
   max?: number | null
+  search?: string
 }
 
 

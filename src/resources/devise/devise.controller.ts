@@ -43,11 +43,13 @@ export class DeviseController {
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
+        @Query('search') search?: string | null,
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<Devise>> {
         const filter : DeviseFetcher = {
             archive: (archive && archive === '1') ? true : false,
             removed: (removed && removed === '1') ? true : false,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

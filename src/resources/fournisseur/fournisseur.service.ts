@@ -14,7 +14,7 @@ export class FournisseurService {
     ) { }
 
     list = async (filter: FournisseurFetcher, query: PaginationQuery): Promise<Pagination<Fournisseur>> => {
-        const conditions = { ...filter }
+        let conditions: any = { ...filter }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -23,6 +23,17 @@ export class FournisseurService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { nom: { contains: filter.search, mode: "insensitive" } },
+                    { email: { contains: filter.search, mode: "insensitive" } },
+                    { telephone: { contains: filter.search, mode: "insensitive" } },
+                    { adresse: { contains: filter.search, mode: "insensitive" } },
+                    { societe: { contains: filter.search, mode: "insensitive" } }
+                ]
+            }
+        }
 
         const fournisseurs = await this.db.fournisseur.findMany({
             take: limit,

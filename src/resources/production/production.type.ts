@@ -449,6 +449,7 @@ export class StockReturn{
 //================================FLITRE===============================
 
 export class StockFetcher extends FetcherFilter {
+  search?: string | null
   prodFiniId?: string | null
   magasinId?: string | null
 }
