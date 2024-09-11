@@ -75,10 +75,10 @@ export class ResultatsService {
       const achat = await this.db.achat.findFirst({
         where: { removed: false, archive: false },
         orderBy: { createdAt: 'asc' },
-        select: { createdAt: true }
+        select: { date: true}
       });
     
-      debut = achat ? achat.createdAt.toISOString().split('T')[0] : "";
+      debut = achat ? achat.date.toISOString().split('T')[0] : "";
       fin = new Date().toISOString().split('T')[0];
 
       if (!debut || !fin ) {
