@@ -760,16 +760,6 @@ export class ProductionService {
       const limit = query.size ? query.size : 10;
       const offset = query.page ? (query.page - 1) * limit : 0;
 
-      // // let filters = { }
-      // if (filter.debut) {
-      //     conditions = {
-      //         ...conditions,
-      //         debut: {
-      //             contains: filter.debut,
-      //             mode: "insensitive"
-      //         }
-      //     }
-      // }
 
 
       if (filter.reference) {
@@ -814,27 +804,27 @@ export class ProductionService {
           conditions = { ...conditions, createdAt: dateFilter };
       }
 
-      conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
-
-
-        // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
-        if (filter.search) {
-          conditions = {
-            OR: [
-              { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
-              {
-                stockProdFini: {
-                  some: {
-                    produitFini: {
-                      designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
-                    }
+      
+      
+      // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
+      if (filter.search) {
+        conditions = {
+          OR: [
+            { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
+            {
+              stockProdFini: {
+                some: {
+                  produitFini: {
+                    designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
                   }
                 }
               }
-            ]
-          };
-        }
-
+            }
+          ]
+        };
+      }
+      
+      conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
       let order = {}
       if (query.orderBy) {

@@ -16,7 +16,7 @@ async function main() {
                     // permissions: {},
                     accesses: {
                         createMany: {
-                            data: [
+                            data: [ 
                                 { module: 'dashboard', read: true, write: true, remove: true, archive: true },
                                 { module: 'approvisionnements_identification', read: true, write: true, remove: true, archive: true },
                                 { module: 'achats_commandes', read: true, write: true, remove: true, archive: true },
@@ -35,7 +35,7 @@ async function main() {
                                 { module: 'roles', read: true, write: true, remove: true, archive: true },
                                 { module: 'unites', read: true, write: true, remove: true, archive: true },
                                 { module: 'fournisseurs', read: true, write: true, remove: true, archive: true },
-                                { module: 'clients', read: true, write: true, remove: true, archive: true },
+                                { module: 'clients', read: true, write: true, remove: true, archive: true },  
                                 { module: 'devise', read: true, write: true, remove: true, archive: true },
                                 { module: 'traces', read: true, write: true, remove: true, archive: true },
                                 { module: 'structure', read: true, write: true, remove: true, archive: true },

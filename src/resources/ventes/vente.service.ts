@@ -36,7 +36,7 @@ export class VentesService {
 
 
     list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
-        let conditions: any = { ...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -63,7 +63,7 @@ export class VentesService {
                   ]
             };
           }
-
+          conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
         
         const vente = await this.db.vente.findMany({
             take: limit,

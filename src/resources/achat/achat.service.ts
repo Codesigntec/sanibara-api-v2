@@ -70,7 +70,7 @@ export class AchatService {
   }
   
     list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatReturn>> => {
-        let conditions: any = {...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -78,14 +78,17 @@ export class AchatService {
         if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
               conditions.statutAchat = statutAchat;
          }
+ 
 
-         if (filter.search) {
-          conditions = {
-              OR: [
-                  { libelle: { contains: filter.search, mode: "insensitive" } },
-              ]
-          }
-         }
+      if (filter.search) {
+        conditions = {
+            OR: [
+                { libelle: { contains: filter.search, mode: "insensitive" } },
+            ]
+        }
+     }
+
+     conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         let order = {}
         if (query.orderBy) {
