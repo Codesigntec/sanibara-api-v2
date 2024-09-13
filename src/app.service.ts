@@ -41,7 +41,7 @@ export class AppService {
       const produits = await this.db.ligneAchat.findMany({
           where: {
           datePeremption: {
-              lte: subDays(new Date(), -7), // Produits expirant dans les 7 jours
+              lte: subDays(new Date(), -14), // Produits expirant dans les 7 jours
           },
           },
           select: {
@@ -87,7 +87,7 @@ export class AppService {
       const produitsFini = await this.db.stockProduiFini.findMany({
           where: {
           datePeremption: {
-              lte: subDays(new Date(), -7), // Produits expirant dans les 7 jours
+              lte: subDays(new Date(), -30), // Produits expirant dans les 7 jours
           },
           },
           select: {

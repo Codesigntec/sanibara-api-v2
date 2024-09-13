@@ -223,11 +223,11 @@ const saverSchemaVente = z.object({
       }).optional().nullable(), // Accepte string, undefined, null
       z.literal(0)                      // Accepte chaîne vide
     ]),
-    // tva: z.number().nullable(),
+    // tva: z.number().nullable(), 
     paiements: z.array(PaiementInputSchema),
     etat: z.boolean(),
     dateVente: z.string(),
-    clientId: z.string(),
+    clientId: z.string().optional(),
     stockVente: z.array(z.object({
         id: z.string().optional(),
         quantiteVendue: z.number(),

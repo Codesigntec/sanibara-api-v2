@@ -125,6 +125,17 @@ export class AccesMagasinMatierePremieres {
 
 // ================VALIDATION
 
+// const accessMagasinSchemaInfo = z
+//   .object({
+//     value: z.string({
+//       invalid_type_error: errors.INVALID_STORE,
+//     }).optional().or(z.literal('')),
+//     label: z.string({
+//       invalid_type_error: errors.INVALID_STORE,
+//     }).optional().or(z.literal('')),
+//   })
+//   .required();
+
 const accessMagasinSchemaInfo = z
   .object({
     value: z.string({
@@ -133,8 +144,8 @@ const accessMagasinSchemaInfo = z
     label: z.string({
       invalid_type_error: errors.INVALID_STORE,
     }).optional().or(z.literal('')),
-  })
-  .required();
+  });
+
 
 
 export const saverSchema = z
@@ -153,8 +164,8 @@ export const saverSchema = z
     roleId: z.string({
       required_error: errors.ROLE_REQUIRED,
     }),
-    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo),
-    magasinsPrduitsFinis: z.array(accessMagasinSchemaInfo)
+    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo).optional().nullable(),
+    magasinsProduitsFinis: z.array(accessMagasinSchemaInfo).optional().nullable(),
   })
   .required();
 
@@ -173,7 +184,7 @@ export const updaterSchema = z
     roleId: z.string({
       required_error: errors.ROLE_REQUIRED,
     }),
-    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo),
-    magasinsPrduitsFinis: z.array(accessMagasinSchemaInfo)
+    magasinsMatieresPremieres: z.array(accessMagasinSchemaInfo).optional().nullable(),
+    magasinsProduitsFinis: z.array(accessMagasinSchemaInfo).optional().nullable(),
   })
-  .required();
+  .required(); 

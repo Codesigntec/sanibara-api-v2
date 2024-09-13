@@ -70,7 +70,7 @@ export class AchatService {
   }
   
     list = async (filter: AchatFetcher, statutAchat: string, query: PaginationQuery): Promise<Pagination<AchatReturn>> => {
-        let conditions: any = {...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -78,14 +78,17 @@ export class AchatService {
         if (statutAchat === 'ACHETER' || statutAchat === 'COMMANDE') {
               conditions.statutAchat = statutAchat;
          }
+ 
 
-         if (filter.search) {
-          conditions = {
-              OR: [
-                  { libelle: { contains: filter.search, mode: "insensitive" } },
-              ]
-          }
-         }
+      if (filter.search) {
+        conditions = {
+            OR: [
+                { libelle: { contains: filter.search, mode: "insensitive" } },
+            ]
+        }
+     }
+
+     conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         let order = {}
         if (query.orderBy) {
@@ -179,8 +182,6 @@ export class AchatService {
     }
     //==============================SAVE====================================
      saveAchat = async (data: AchatSaver, userId: string): Promise<Achat> => {
-      console.log("DATA", data);
-      
       for (const ligne of data.ligneAchats) {
         if (!ligne.matiere || !ligne.matiere.id) {
           throw new HttpException(errors.MATIERE_INVALID, HttpStatus.BAD_REQUEST);
@@ -195,10 +196,6 @@ export class AchatService {
           },
         } : undefined;
 
-        // if (data.libelle === null || data.libelle === undefined || data.libelle === '') {
-        //   throw new HttpException(errors.LIBELLE_INVALID, HttpStatus.BAD_REQUEST);
-        // }
-    
         let dateAchat: Date;
         if (data.date === null || data.date === undefined || data.date === '') {
           dateAchat = new Date();
@@ -231,12 +228,21 @@ export class AchatService {
        let libelle: string = '';
 
        if (!data.libelle) {
-        const action = data.statutAchat === StatutAchat.ACHETER ? 'Achat' : 'Commande';
-        libelle = `${action} du ${new Date(dateAchat).toLocaleDateString()}`;
-      } else {
-        libelle = data.libelle;
-      }
-      
+          const action = data.statutAchat === StatutAchat.ACHETER ? 'Achat' : 'Commande';
+          const randomNumber = Math.floor(1000 + Math.random() * 9000); // Générer un nombre aléatoire à 4 chiffres
+        // Options corrigées pour jour, mois et année
+        // Options corrigées pour la date
+        const options: Intl.DateTimeFormatOptions = {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        };
+        libelle = `${action} du ${new Date(dateAchat).toLocaleDateString('fr-FR', options)}_${randomNumber}`;
+        } else {
+          libelle = data.libelle;
+        }
+
+  
         const achat = await this.db.achat.create({
           data: {
             libelle: libelle,
@@ -625,8 +631,6 @@ export class AchatService {
 
         return newPaiement;
       };
-
-
       updatePaiement = async (id: string, data: PaiementSave, achatId: string ,userId: string): Promise<PaiementFull> => {
       const check = await this.db.paiement.findUnique({ where:  {id: id }, select: { montant: true } })
       if (!check) throw new HttpException(errors.PAIEMENT_NOT_EXIST, HttpStatus.BAD_REQUEST);
@@ -688,9 +692,7 @@ export class AchatService {
 
       return paiementSaver
       }
-
        //=============================DESTROY====================================
-
       destroyPaiement = async (id: string, userId: string): Promise<PaiementFull> => {
           const check = await this.db.paiement.findUnique({ where: { id: id }, select: { montant: true } })
           if (!check) throw new HttpException(errors.NOT_EXIST_PAIEMENT, HttpStatus.BAD_REQUEST);

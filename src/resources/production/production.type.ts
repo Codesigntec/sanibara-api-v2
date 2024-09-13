@@ -171,6 +171,9 @@ export class ProductionFetcher extends FetcherFilter {
   search?: string | null
   debut?: string | null
   fin?: string | null 
+  description?: string | null
+  reference?: string | null
+  produitFini?: string | null
 }
 
 //======================================RETURN PRODUCTION===============================

@@ -219,8 +219,8 @@ model Vente {
   stockVente  StockVente[]
   paiements   PaiementVente[] 
 
-  clientId     String   @map("client_id")
-  client       Client    @relation(fields: [clientId], references: [id])
+  clientId     String?   @map("client_id")
+  client       Client?    @relation(fields: [clientId], references: [id])
 
   archive   Boolean  @default(false)
   removed   Boolean  @default(false)

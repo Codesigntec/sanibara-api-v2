@@ -92,8 +92,11 @@ export class ProductionController {
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
         @Query('search') search?: string | null,
+        @Query('description') description?: string | null,
+        @Query('reference') reference?: string | null,
+        @Query('produitFini') produitFini?: string | null,
         @Query('size') size?: string | null,
-        @Query('order') order?: string | null,
+        @Query('order') order?: string | null, 
         @Query('direction') direction?: string | null,
     ) : Promise<Pagination<tableReturn>> {
         const filter : ProductionFetcher = {
@@ -101,7 +104,10 @@ export class ProductionController {
             removed: (removed && removed === '1') ? true : false,
             debut,
             fin,
-            search
+            search,
+            description,
+            reference,
+            produitFini
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

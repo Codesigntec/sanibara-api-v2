@@ -756,19 +756,41 @@ export class ProductionService {
     }
 
     listTable = async (filter: ProductionFetcher, query: PaginationQuery): Promise<Pagination<tableReturn>> => {
-      let conditions = {}
+      let conditions: any= {}
       const limit = query.size ? query.size : 10;
       const offset = query.page ? (query.page - 1) * limit : 0;
 
-      // let filters = { }
-      if (filter.debut) {
-          conditions = {
-              ...conditions,
-              debut: {
-                  contains: filter.debut,
+
+
+      if (filter.reference) {
+        conditions = {
+            ...conditions, 
+            reference: {
+                contains: filter.reference,
                   mode: "insensitive"
               }
           }
+      }
+
+      if (filter.description) {
+        conditions = {
+            ...conditions, 
+            description: {
+                contains: filter.description,
+                  mode: "insensitive"
+              }
+          }
+      }
+      if (filter.produitFini) {
+        conditions = {
+          stockProdFini: {
+            some: {
+              produitFini: {
+                designation: { contains: filter.produitFini, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
+              }
+            }
+          }
+        }
       }
 
       if (filter.debut || filter.fin) {
@@ -781,27 +803,28 @@ export class ProductionService {
           }
           conditions = { ...conditions, createdAt: dateFilter };
       }
-      conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
-
-        // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
-        if (filter.search) {
-          conditions = {
-            OR: [
-              { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
-              {
-                stockProdFini: {
-                  some: {
-                    produitFini: {
-                      designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
-                    }
+      
+      
+      // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
+      if (filter.search) {
+        conditions = {
+          OR: [
+            { reference: { contains: filter.search, mode: "insensitive" } }, // Recherche dans `reference` de Productions
+            {
+              stockProdFini: {
+                some: {
+                  produitFini: {
+                    designation: { contains: filter.search, mode: "insensitive" } // Recherche dans `designation` de ProduitFini
                   }
                 }
               }
-            ]
-          };
-        }
-
+            }
+          ]
+        };
+      }
+      
+      conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
       let order = {}
       if (query.orderBy) {

@@ -30,7 +30,7 @@ export class MatiereService {
     
         if (filter.designation) {
             conditions = {
-                ...conditions,
+                ...conditions, 
                 designation: {
                     contains: filter.designation,
                     mode: "insensitive"

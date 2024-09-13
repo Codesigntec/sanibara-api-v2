@@ -36,7 +36,7 @@ export class VentesService {
 
 
     list = async (filter: VenteFetcher, etat: string, query: PaginationQuery): Promise<Pagination<VenteTable>> => {
-        let conditions: any = { ...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -63,7 +63,7 @@ export class VentesService {
                   ]
             };
           }
-
+          conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
         
         const vente = await this.db.vente.findMany({
             take: limit,
@@ -158,12 +158,12 @@ export class VentesService {
               }
 
               let references: string = "";
-
-              if (data.reference === null || data.reference === undefined || data.reference === '') {
-                references = data.etat ? "REF_VENTE_" + dateVente : "REF_DEVIS_" + dateVente;
+              
+              if(data.reference === null || data.reference === undefined || data.reference === ''){
+                references = data.etat ? `REF_VENTE_${new Date().getTime()}` : `REF_DEVIS_${new Date().getTime()}`;
               }else{
                 references = data.reference
-              }
+              } 
 
                 const vente = await tx.vente.create({
                     data: {
@@ -178,9 +178,8 @@ export class VentesService {
                         etat: data.etat,
                         reliquat: data.montant - totalPaiements,
                         dateVente: dateVente,
-                        client:{
-                            connect:{id: data.clientId}
-                        },
+                       // Inclure client seulement si clientId est fourni
+                       ...(data.clientId ? { client: { connect: { id: data.clientId } } } : {}),
                     },
                     include: {
                       client: true,

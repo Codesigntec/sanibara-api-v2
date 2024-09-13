@@ -54,7 +54,6 @@ export class MagasinService {
         }
         
         let conditions: any = {
-            ...filter,
             id: { in: magasinIdsMatierePremieres.length ? magasinIdsMatierePremieres : undefined }
         };
 
@@ -75,6 +74,7 @@ export class MagasinService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
+        conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         const magasins = await this.db.magasinMatierePremiere.findMany({
             take: limit,

@@ -15,7 +15,7 @@ export class UtilisateurService {
     ) { }
 
     list = async (filter: UtilisateurFetcher, query: PaginationQuery): Promise<Pagination<Utilisateur>> => {
-        let conditions: any = { ...filter }
+        let conditions: any = { }
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -37,7 +37,7 @@ export class UtilisateurService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
-
+        conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
         const utilisateurs = await this.db.utilisateur.findMany({
             take: limit,
             skip: offset,
