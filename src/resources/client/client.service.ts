@@ -15,7 +15,7 @@ export class ClientService {
     ) { }
 
     list = async (filter: ClientFetcher, query: PaginationQuery): Promise<Pagination<Client>> => {
-        let conditions: any = { ...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -35,7 +35,7 @@ export class ClientService {
                 ]
             }
         }
-
+        conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
         const clients = await this.db.client.findMany({
             take: limit,
             skip: offset,

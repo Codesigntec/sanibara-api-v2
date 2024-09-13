@@ -14,7 +14,7 @@ export class FournisseurService {
     ) { }
 
     list = async (filter: FournisseurFetcher, query: PaginationQuery): Promise<Pagination<Fournisseur>> => {
-        let conditions: any = { ...filter }
+        let conditions: any = {}
         const limit = query.size ? query.size : 10;
         const offset = query.page ? (query.page - 1) * limit : 0;
 
@@ -34,7 +34,7 @@ export class FournisseurService {
                 ]
             }
         }
-
+        conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
         const fournisseurs = await this.db.fournisseur.findMany({
             take: limit,
             skip: offset,
