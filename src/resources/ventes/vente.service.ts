@@ -242,7 +242,7 @@ export class VentesService {
 
     update = async (id: string, data: Vente, userId: string): Promise<Vente> => {
         return await this.db.$transaction(async (tx) => {
-            let lastStockVente: any;
+            // let lastStockVente: any;
             try {
                 const check = await tx.vente.findUnique({
                     where: { id: id },
@@ -311,14 +311,15 @@ export class VentesService {
                         etat: data.etat,
                         reliquat: data.montant - Number(data.paiements[0].montant),
                         dateVente: dateVente,
-                        client: {
-                            connect: { id: data.clientId }
-                        },
+                        // client: {
+                        //     connect: { id: data.clientId }
+                        // },
+                        ...(data.clientId ? { client: { connect: { id: data.clientId } } } : {}),
                     },
                     include: {
                         client: true,
                         paiements: true,
-                        stockVente: true,
+                        stockVente: true, 
                     }
                 });
 
@@ -327,8 +328,7 @@ export class VentesService {
                     where: { venteId: id },
                     select: { id: true, stockProduiFiniId: true, venteId: true }
                 });
-                 
-
+                
                  // Traitement des nouvelles entrées stockVente
                 await Promise.all(data.stockVente.map(async (stockVente) => {
                     let quantiteVendu: number = 0;
