@@ -271,7 +271,7 @@ export class ResultatsService {
     };
   //------------------- Calculer les ventes ----------------------------------
     for (let i = 0; i < jours.length; i++) {
-
+ 
       const jour = jours[i];
 
       const total = await this.db.vente.aggregate({
@@ -281,6 +281,7 @@ export class ResultatsService {
       where: {
           removed: false,
           archive: false,
+          etat: true,
           dateVente: {
           gte: jour,
           lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
@@ -416,6 +417,7 @@ export class ResultatsService {
         where: {
             removed: false,
             archive: false,
+            etat: true,
             dateVente: {
             gte: jour,
             lt: new Date(jour.getFullYear(), jour.getMonth() + 1, 1), // Premier jour du mois suivant

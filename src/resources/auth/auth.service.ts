@@ -105,7 +105,6 @@ export class AuthService {
         if (!user.status && (user.removed || user.archive)) throw new HttpException(errors.ACCOUNT_DISABLED, HttpStatus.BAD_REQUEST);
 
         const tokens = this.generateJsonWebTokenAccess({ id: user.id, nom: user.nom, email: user.email }, workspace)
-
         const auth: AuthResponse = {
             id: user.id,
             email: user.email,

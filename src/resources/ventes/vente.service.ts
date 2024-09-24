@@ -525,7 +525,7 @@ export class VentesService {
               });
     
               // Mettre à jour l'achat pour refléter le paiement ajouté
-              await tx.vente.update({
+                tx.vente.update({
                 where: { id: venteId },
                 data: {
                   paiements: {
@@ -537,7 +537,7 @@ export class VentesService {
                 },
               });
             });
-    
+            
             const description = `Paiement de ${paiement.montant} pour l'achat ${venteId}`
             this.trace.logger({action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res));
     
@@ -562,14 +562,14 @@ export class VentesService {
             }
     
             // Calculer le montant total déjà payé
-            const montantTotalPaye = vente.paiements.reduce((acc, p) => acc + p.montant, 0);
-    
-    
+            let montantTotalPaye = vente.paiements.reduce((acc, p) => acc + p.montant, 0);
+
             // Calculer le reliquat restant à payer
-            const reliquat = vente.montant -  montantTotalPaye;
-    
+            montantTotalPaye = montantTotalPaye - check.montant;
+            const totaux = montantTotalPaye + data.montant
+
             // Vérifier si le paiement proposé ne dépasse pas le reliquat
-            if (data.montant > reliquat) {
+            if (totaux > vente.montant) {
             throw new HttpException(errors.MONTANT_DEPASSE_RELIQUA, HttpStatus.NOT_ACCEPTABLE);
             }
     

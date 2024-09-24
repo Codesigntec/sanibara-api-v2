@@ -14,3 +14,4 @@ import { PaiementVenteController } from './paiementvente.controller';
   providers: [VentesService, TraceService, PrismaService]
 })
 export class VenteModule { }
+//sdlkskjododsdlcssbsc
