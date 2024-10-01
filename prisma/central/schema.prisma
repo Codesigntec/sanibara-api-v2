@@ -8,7 +8,6 @@ datasource db {
   url      = env("CENTRAL_DATABASE_URL")
 }
 
-
 model Admin {
   id             String   @id @unique @default(cuid())
   email          String   @unique

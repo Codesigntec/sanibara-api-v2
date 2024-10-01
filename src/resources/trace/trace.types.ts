@@ -15,6 +15,7 @@ export class TraceFetcher {
   utilisateurId: string | null
   debut: string | null
   fin: string | null
+  search?: string | null
 }
 
 // ============= RESPONSE

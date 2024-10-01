@@ -39,18 +39,20 @@ export class TraceController {
     async list(
         @Query('action') action?: string | null,
         @Query('utilisateurId') utilisateurId?: string | null,
-        @Query('debut') debut?: string | null,
-        @Query('fin') fin?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
+        @Query('debut') debut?: string | null,
+        @Query('fin') fin?: string | null,
+        @Query('search') search?: string | null,
     ) : Promise<Pagination<Trace>> {
         const filter : TraceFetcher = {
             action,
             utilisateurId,
             debut,
-            fin
+            fin,
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),

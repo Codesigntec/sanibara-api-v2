@@ -75,10 +75,10 @@ export class DeviseService {
         
         const check = await this.db.devise.findFirst({
             where: {
-                libelle: {
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                }
+                OR: [
+                    { libelle: { equals: data.libelle, mode: 'insensitive' } },
+                    { symbole: { equals: data.symbole, mode: 'insensitive' } }
+                ]
             }
         })
         if (check !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
@@ -110,10 +110,10 @@ export class DeviseService {
                 id: {
                     not: id
                 },
-                libelle: {
-                    equals: data.libelle,
-                    mode: 'insensitive'
-                }
+                OR: [
+                    { libelle: { equals: data.libelle, mode: 'insensitive' } },
+                    { symbole: { equals: data.symbole, mode: 'insensitive' } }
+                ]
             }
         })
         if (checkFirst !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
