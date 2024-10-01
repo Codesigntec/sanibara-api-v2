@@ -673,14 +673,23 @@ export class ProductionService {
           select: { id: true , stockProdFini: true}
       })
 
-      production.stockProdFini.forEach(async (l) => {
-        await this.db.ligneAchat.update({
-            where: { id: l.id },
-            data: {
-              removed: production_archive
-            }
-          })
-        })
+      // production.stockProdFini.forEach(async (l) => {
+      //   await this.db.ligneAchat.update({
+      //       where: { id: l.id },
+      //       data: {   
+      //         removed: production_archive
+      //       }
+      //     })
+      //   })
+
+      // production.stockProdFini.forEach(async (l) => {
+      //   await this.db.stockProduiFini.update({
+      //       where: { id: l.id },
+      //       data: {   
+      //         archive: production_archive
+      //       }
+      //     })
+      //   })
 
       const description = `Archivage d'une production: ${check.description}`
       this.trace.logger({ action: 'Archivage', description, userId }).then(res => console.log("TRACE SAVED: ", res))
@@ -706,32 +715,36 @@ export class ProductionService {
           },
           select: { id: true, stockProdFini: true }
       })
-      production.stockProdFini.forEach(async (l) => {
-        await this.db.ligneAchat.update({
+      // production.stockProdFini.forEach(async (l) => {
+      //   await this.db.ligneAchat.update({
+      //       where: { id: l.id },
+      //       data: {
+      //         removed: prod_remove
+      //       }
+      //     })
+      //   })
+
+        // production.stockProdFini.forEach(async (l) => {
+        //   await this.db.stockProduiFini.update({
+        //       where: { id: l.id },
+        //       data: {
+        //         removed: prod_remove
+        //       }
+        //     })
+        //   })
+
+        // Utilisation de Promise.all pour attendre toutes les mises à jour
+        await Promise.all(production.stockProdFini.map(async (l) => {
+          await this.db.stockProduiFini.update({
             where: { id: l.id },
             data: {
               removed: prod_remove
             }
-          })
-        })
+          });
+        }));
+
       const description = `Suppression logique d'une production: ${check.description}`
       this.trace.logger({ action: 'Suppression logique', description, userId }).then(res => console.log("TRACE SAVED: ", res))
- 
-      // if (etat === 'true') {
-      //     // Mettre à jour les ventes liées aux stockVente
-      //     await this.db.vente.updateMany({
-      //       where: {
-      //         stockVente: {
-      //           some: {
-      //             stockProduiFiniId: { in: stockIds }
-      //           }
-      //         }
-      //       },
-      //       data: {
-      //         removed: newRemovedState
-      //       }
-      //     });
-      //   }
 
       return production
     }
@@ -760,8 +773,6 @@ export class ProductionService {
       const limit = query.size ? query.size : 10;
       const offset = query.page ? (query.page - 1) * limit : 0;
 
-
-
       if (filter.reference) {
         conditions = {
             ...conditions, 
@@ -770,7 +781,7 @@ export class ProductionService {
                   mode: "insensitive"
               }
           }
-      }
+      } 
 
       if (filter.description) {
         conditions = {
@@ -804,8 +815,6 @@ export class ProductionService {
           conditions = { ...conditions, createdAt: dateFilter };
       }
 
-      
-      
       // Recherche par `search` dans `reference` (Productions) et `designation` (ProduitFini via StockProduiFini)
       if (filter.search) {
         conditions = {

@@ -18,7 +18,6 @@ export class TraceService {
         // let filters = { }
         if (filter.action) {
             conditions = {
-                ...conditions,
                 action: {
                     contains: filter.action,
                     mode: "insensitive"
@@ -28,7 +27,6 @@ export class TraceService {
         // if (filter.categorieId) { conditions = { ...conditions, categorieId: filter.categorieId } }
         if (filter.utilisateurId) { 
             conditions = { 
-                ...conditions, 
                 utilisateurId: filter.utilisateurId 
             } }
         // if(filter.paymentMethode){ conditions = { ...conditions, paymentMethode: filter.paymentMethode } }
@@ -36,12 +34,12 @@ export class TraceService {
         if (filter.debut || filter.fin) {
             let dateFilter = {};
             if (filter.debut) {
-                dateFilter = { ...dateFilter, gte: new Date(filter.debut) };
+                dateFilter = {gte: new Date(filter.debut) };
             }
             if (filter.fin) {
-                dateFilter = { ...dateFilter, lte: new Date(filter.fin) };
+                dateFilter = {lte: new Date(filter.fin) };
             }
-            conditions = { ...conditions, createdAt: dateFilter };
+            conditions = { createdAt: dateFilter };
         }
         // conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
@@ -50,8 +48,25 @@ export class TraceService {
             order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
         }
 
+        if (filter.search) {
+            // Crée une clause OR pour les recherches
+            conditions = {
+                OR: [
+                    { action: { contains: filter.search, mode: 'insensitive' } },
+                    { description: { contains: filter.search, mode: 'insensitive' } },
+                    {
+                        utilisateur: {
+                            email: { contains: filter.search, mode: 'insensitive' }
+                        }
+                    }
+                ]
+            };
+        }
 
-        const matieres = await this.db.trace.findMany({
+        conditions = { ...conditions}
+
+
+        const traces = await this.db.trace.findMany({
             take: limit,
             skip: offset,
             where: conditions,
@@ -73,7 +88,7 @@ export class TraceService {
 
         const totalPages = Math.ceil(totalCount / limit);
         const pagination: Pagination<Trace> = {
-            data: matieres,
+            data: traces,
             totalPages,
             totalCount,
             currentPage: query.page ? query.page : 1,

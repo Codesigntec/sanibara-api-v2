@@ -46,10 +46,10 @@ export class DepenseController {
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
         @Query('page') page?: string | null,
-        @Query('search') search?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
         @Query('direction') direction?: string | null,
+        @Query('search') search?: string | null,
     ) : Promise<Pagination<Depense>> {
         const filter : DepenseFetcher = {
             archive: (archive && archive === '1') ? true : false,
