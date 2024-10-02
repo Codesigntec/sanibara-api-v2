@@ -274,7 +274,10 @@ export class ClientService {
     // }
 
 
-    statistique = async (id: string, query: PaginationQuery): Promise<Pagination<StatistiqueClient>> => {
+    statistique = async (id: string,filter: ClientFetcher, query: PaginationQuery): Promise<Pagination<StatistiqueClient>> => {
+
+        let conditions: any = {}
+
         const check = await this.db.client.findUnique({
             where: { id: id },
             select: { nom: true }
@@ -317,10 +320,27 @@ export class ClientService {
         const statistique: StatistiqueClient[] = [];
 
 
+        if (filter.search) {
+            conditions = {
+                OR: [
+                    { produitFini: { 
+                        designation: {
+                             contains: filter.search, mode: "insensitive" 
+                        } 
+                    } 
+                  }, 
+                  { magasin:  { 
+                    nom: { contains: filter.search, mode: "insensitive" }
+                   }
+                  },
+                ]
+            }
+        }
+
         for (const ventes of vente) {
             for (const stock of ventes.stockVente) {
                 const stockProduitFini = await this.db.stockProduiFini.findUnique({
-                    where: { id: stock.stockProduiFiniId },
+                    where: { id: stock.stockProduiFiniId, ...conditions },
                     select: { 
                         id: true, 
                         magasin: { select: { id: true, nom: true } }, 

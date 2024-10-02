@@ -140,12 +140,12 @@ export class MatiereService {
                     }
                 })
                 if (check !== null) throw new HttpException(errors.NAME_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
-
+     
 
                 const matiere = await tx.matierePremiere.create({
                     data: {
                         designation: data.designation,
-                        description: data.description,
+                        description: data.description ? data.description : "",
                         unite: {
                             connect: { id: data.uniteId }
                         }
@@ -260,12 +260,11 @@ export class MatiereService {
                 })
                 if (checkFirst !== null) throw new HttpException(errors.NAME_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
-
                 const matiere = await tx.matierePremiere.update({
                     where: { id },
                     data: {
                         designation: data.designation,
-                        description: data.description,
+                        description: data.description ? data.description : "",
                         unite: {
                             connect: { id: data.uniteId }
                         }

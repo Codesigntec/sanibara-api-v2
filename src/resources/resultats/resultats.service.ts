@@ -296,6 +296,17 @@ export class ResultatsService {
 
       const jour = jours[i];
 
+    // Obtenir le mois et l'année pour chaque jour
+    const mois = jour.getMonth(); // 0 = Janvier, 11 = Décembre
+    const annee = jour.getFullYear();
+
+    // Obtenir le premier jour du mois
+    const premierJourDuMois = new Date(annee, mois, 1);
+
+    // Obtenir le dernier jour du mois
+    const dernierJourDuMois = new Date(annee, mois + 1, 0);
+
+
       const total = await this.db.depense.aggregate({
       _sum: {
           montant: true,
@@ -304,12 +315,25 @@ export class ResultatsService {
           removed: false,
           archive: false,
           date: {
-          gte: jour,
-          lt: new Date(jour.getTime() + 24 * 60 * 60 * 1000), // Ajoute 24 heures
-          },
-      },
+            gte: premierJourDuMois, // Premier jour du mois
+            lt: dernierJourDuMois,  // Dernier jour du mois
+         },
+       },
       });
-      financialData.depenses[i] = total._sum.montant || 0;
+
+      console.log("total", total._sum.montant );
+      
+
+      // Obtenir le nombre de jours dans le mois
+      const nombreDeJoursDansMois = dernierJourDuMois.getDate(); // Obtenir le dernier jour du mois
+
+      // Calcul de la charge fixe journalière pour ce mois
+      const chargeFixeJournalier = total._sum.montant / nombreDeJoursDansMois;
+
+
+      // Stocker les dépenses journalières et les charges fixes journalières
+      // financialData.depenses[i] = total._sum.montant || 0; // Stocker les dépenses réelles du jour
+       financialData.depenses[i]  = chargeFixeJournalier; 
     }
  //------------------- Calculer les productions ----------------------------------
    

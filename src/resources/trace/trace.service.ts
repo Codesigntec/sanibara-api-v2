@@ -43,9 +43,13 @@ export class TraceService {
         }
         // conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
+        // Appliquer l'ordre de tri
         let order = {}
         if (query.orderBy) {
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc'
+            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc';
+        } else {
+            // Par défaut, trier par createdAt du plus récent au plus ancien
+            order = { createdAt: 'desc' };
         }
 
         if (filter.search) {
