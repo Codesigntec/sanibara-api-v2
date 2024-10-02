@@ -81,6 +81,9 @@ export class ClientController {
     })
     async statistique(
         @Param('id') id: string,
+        @Query('archive') archive?: string | null, 
+        @Query('removed') removed?: string | null,
+        @Query('search') search?: string | null,
         @Query('page') page?: string | null,
         @Query('size') size?: string | null,
         @Query('order') order?: string | null,
@@ -92,7 +95,12 @@ export class ClientController {
             orderBy: order,
             orderDirection: direction,
         };
-        return await this.service.statistique(id, paginationQuery);
+        const filter : ClientFetcher = {
+            archive: (archive && archive === '1') ? true : false,
+            removed: (removed && removed === '1') ? true : false,
+            search
+        }
+        return await this.service.statistique(id, filter, paginationQuery);
     }
 
 
