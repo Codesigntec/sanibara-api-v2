@@ -144,6 +144,9 @@ export class ProdUpdate {
   dateDebut: Date;
 
   @ApiProperty()
+  dateFin?: Date;
+
+  @ApiProperty()
   coutTotalProduction: number;
 
   @ApiProperty()
@@ -151,9 +154,6 @@ export class ProdUpdate {
 
   @ApiProperty()
   beneficeGros: number;
-
-  @ApiProperty()
-  dateFin?: Date;
 
   @ApiProperty({ type: [StockProduiFiniDtoUpdate] })
   stockProdFini: StockProduiFiniDtoUpdate[];

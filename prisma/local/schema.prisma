@@ -273,7 +273,7 @@ model StockVente {
 
   archive     Boolean  @default(false)
   removed     Boolean  @default(false)
-
+ 
   @@map("stock_vente")
 }
 

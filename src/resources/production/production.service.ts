@@ -104,7 +104,7 @@ export class ProductionService {
             },
           });
           let referenceProd: string = '';
-          if(data.reference === null || data.reference === undefined || data.reference === ''){
+          if(!data.reference || data.reference === null || data.reference === undefined || data.reference === ''){
             referenceProd = `REF_PROD-${new Date().getTime()}`;
           }else{
             referenceProd = data.reference;
@@ -112,13 +112,13 @@ export class ProductionService {
           let dateDebut: Date;
           let dateFin: Date;
         
-          if(data.dateDebut === null || data.dateDebut === undefined ){
+          if(!data.dateDebut || data.dateDebut === null || data.dateDebut === undefined){
             dateDebut = new Date();
           }else{
            dateDebut = new Date(data.dateDebut);
           }
 
-          if(data.dateFin === null || data.dateFin === undefined ){
+          if(!data.dateFin || data.dateFin === null || data.dateFin === undefined ){
             dateFin = new Date();
           }else{
             dateFin = new Date(data.dateFin);
@@ -150,8 +150,8 @@ export class ProductionService {
 
           if (data.description === null || data.description === undefined || data.description === '') {
             const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateDebutFormatted = check.dateDebut.toLocaleDateString('fr-FR', options);
-            const dateFinFormatted = check.dateFin.toLocaleDateString('fr-FR', options);
+            const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
+            const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
 
             let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);   
 
@@ -164,7 +164,8 @@ export class ProductionService {
                 return produit?.designation || '';  
               })
             );
-
+            console.log("datedebut1", dateDebut);
+            
             if (dateDebut === dateFin) {
               descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
             } else {
@@ -411,7 +412,7 @@ export class ProductionService {
       console.log('Data received in update method:', JSON.stringify(data, null, 2));
         return await this.db.$transaction(async (tx) => {
             try {
-                const check = await tx.productions.findUnique({ where: { id: id }, select: { reference: true, description: true, stockProdFini: true, productionLigneAchat: true, coutProduction: true } })
+                const check = await tx.productions.findUnique({ where: { id: id }, select: { reference: true, description: true, stockProdFini: { select: { id: true, produitFini: { select: { id: true }} } }, productionLigneAchat: true, coutProduction: true } })
                 if (!check) throw new HttpException(errors.NOT_EXIST, HttpStatus.BAD_REQUEST);
 
                 const checkFirst = await tx.productions.findFirst({
@@ -425,6 +426,23 @@ export class ProductionService {
                         }
                     } 
                 })
+
+                   // Récupérer les IDs des produits finis liés à StockVente
+                   const stockVenteProductIds = await this.db.stockVente.findMany({
+                    select: {
+                      stockProduiFiniId: true
+                    }
+                  }).then(results => results.map(stock => stock.stockProduiFiniId));
+                  
+                  // Vérifier si au moins un produit fini de cette production est lié à StockVente genre a été vendu
+                 const hasStockVenteLink = check.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
+
+                 if (hasStockVenteLink) {
+                     // Supprimer les propriétés de data qui ne doivent pas être mises à jour
+                    delete data.stockProdFini;
+                    delete data.productionLigneAchat;
+                    delete data.coutProduction; 
+                 }
             
                 let productionOld = check;
 
@@ -459,15 +477,17 @@ export class ProductionService {
                 }else{
                   referenceProd = data.reference;
                 }
-                
-                data.stockProdFini.forEach((stock) => {
-                  if (stock.produitFini.id && stock.produitFini.id !== null && stock.produitFini.id !== undefined && idSet.has(stock.produitFini.id)) {
-                    hasDuplicates = true;
-                  } else {
-                    idSet.add(stock.produitFini.id);
-                    ListIdProduitFini.push(stock.produitFini.id);
-                  }
-                });
+               
+                if (!hasStockVenteLink) {
+                  data.stockProdFini.forEach((stock) => {
+                    if (stock.produitFini.id && stock.produitFini.id !== null && stock.produitFini.id !== undefined && idSet.has(stock.produitFini.id)) {
+                      hasDuplicates = true;
+                    } else {
+                      idSet.add(stock.produitFini.id);
+                      ListIdProduitFini.push(stock.produitFini.id);
+                    }
+                  });
+                }
               
                 if (hasDuplicates) {
                   throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
@@ -480,8 +500,10 @@ export class ProductionService {
                   const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
                   const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
 
-                  let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);   
-
+                  let stockId: string[] = data.stockProdFini ? data.stockProdFini.map(stock => stock.produitFini.id) :  check.stockProdFini.map(stock => stock.produitFini.id);
+              
+                
+ 
                   let designationAll: string[] = await Promise.all(
                     stockId.map(async (id) => {
                       const produit = await tx.produitFini.findUnique({
@@ -490,18 +512,17 @@ export class ProductionService {
                       });
                       return produit?.designation || '';  
                     })
-                  );
+                  ); 
       
                   if (dateDebut === dateFin) {
                     descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
                   } else {
                     descriptionProd = "Production de [ " + designationAll.join(', ') + "] du " + dateDebutFormatted + " au " + dateFinFormatted;
                   }
-                }else{
+                }else{ 
                   descriptionProd = data.description
                 }
 
-                
                 const productions = await tx.productions.update({
                     where: { id: id },
                     data: {
@@ -512,7 +533,7 @@ export class ProductionService {
                       beneficeDetails: data.beneficeDetails,
                       beneficeGros: data.beneficeGros,
                       dateFin: dateFin,   
-                      stockProdFini: {
+                      stockProdFini: data.stockProdFini ? {
                         create: data.stockProdFini.map((stock) => ({
                           reference: stock.reference,
                           pu_gros: stock.pu_gros,
@@ -530,8 +551,8 @@ export class ProductionService {
                             },
                           },
                         })),
-                      },
-                      productionLigneAchat: {
+                      } : undefined,
+                      productionLigneAchat: data.productionLigneAchat ? {
                         create: data.productionLigneAchat.map((ligne) => ({
                           qt_Utilise: ligne.qt_Utilise,
                           ligneAchat: {
@@ -540,14 +561,50 @@ export class ProductionService {
                             },
                           },
                         })),
-                      },
-                      coutProduction: {
+                      } : undefined,
+                      coutProduction: data.coutProduction ? {
                         create: data.coutProduction.map((cout) => ({
                           libelle: cout.libelle,
                           montant: cout.montant,
-                          motif: cout.motif
-                        })),
-                      }
+                          motif: cout.motif,
+                        })), 
+                      } : undefined,
+                      // stockProdFini: {
+                      //   create: data.stockProdFini.map((stock) => ({
+                      //     reference: stock.reference,
+                      //     pu_gros: stock.pu_gros,
+                      //     pu_detail: stock.pu_detail,
+                      //     qt_produit: stock.qt_produit,
+                      //     datePeremption: new Date(stock.datePeremption),
+                      //     produitFini: {
+                      //       connect: {
+                      //         id: stock.produitFini.id,
+                      //       },
+                      //     },
+                      //     magasin: {
+                      //       connect: {
+                      //         id: stock.magasin.id,
+                      //       },
+                      //     },
+                      //   })),
+                      // },
+                      // productionLigneAchat: {
+                      //   create: data.productionLigneAchat.map((ligne) => ({
+                      //     qt_Utilise: ligne.qt_Utilise,
+                      //     ligneAchat: {
+                      //       connect: {
+                      //         id: ligne.id,
+                      //       },
+                      //     },
+                      //   })),
+                      // }, 
+                      // coutProduction: {
+                      //   create: data.coutProduction.map((cout) => ({
+                      //     libelle: cout.libelle,
+                      //     montant: cout.montant,
+                      //     motif: cout.motif
+                      //   })),
+                      // }
                     },
                     include: {
                       stockProdFini: {
@@ -577,25 +634,14 @@ export class ProductionService {
                     },
                 })
 
-                // Récupérer les IDs des produits finis liés à StockVente
-                const stockVenteProductIds = await this.db.stockVente.findMany({
-                  select: {
-                    stockProduiFiniId: true
-                  }
-                }).then(results => results.map(stock => stock.stockProduiFiniId));
-                
-                // Vérifier si au moins un produit fini de cette production est lié à StockVente
-               const hasStockVenteLink = check.stockProdFini.some(stock => stockVenteProductIds.includes(stock.id));
-
-                if (!hasStockVenteLink) {
-                    //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
-                  await Promise.all([
-                    ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
-                    ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
-                    ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
-                  ]);
-                  
-                }
+              if (!hasStockVenteLink) {
+                  //========= Supprimer les anciennes lignes d'achat, coûts et paiements ============
+                await Promise.all([
+                  ...productionOld.stockProdFini.map((l) => this.db.stockProduiFini.delete({ where: { id: l.id } })),
+                  ...productionOld.productionLigneAchat.map((c) => this.db.productionLigneAchat.delete({ where: { id: c.id } })),
+                  ...productionOld.coutProduction.map((p) => this.db.coutProduction.delete({ where: { id: p.id } })),
+                ]);
+              }
 
               // Filtrer et supprimer les entités supprimées avant de retourner la production
               productions.stockProdFini = productions.stockProdFini.filter(stock =>
@@ -607,19 +653,20 @@ export class ProductionService {
               productions.coutProduction = productions.coutProduction.filter(cout =>  
                 !check.coutProduction.some(oldCout => oldCout.id === cout.id)
               );
-              
-               // Vérifiez les lignes d'achat existantes avant de mettre à jour
-                    const existingLignes = await Promise.all([
-                      ...data.productionLigneAchat.map(ligne => tx.ligneAchat.findUnique({
-                        where: { id: ligne.id }
-                      })),
-                      ...check.productionLigneAchat.map(oldLigne => tx.ligneAchat.findUnique({
-                        where: { id: oldLigne.ligneAchatId }
-                      }))
-                    ]);
+            
+              if (data.productionLigneAchat && data.productionLigneAchat.length > 0) {
 
-                  // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
-                  const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
+                  // Vérifiez les lignes d'achat existantes avant de mettre à jour
+                  const existingLignes = await Promise.all([
+                  ...data.productionLigneAchat.map(ligne => tx.ligneAchat.findUnique({
+                    where: { id: ligne.id }
+                  })),
+                  ...check.productionLigneAchat.map(oldLigne => tx.ligneAchat.findUnique({
+                    where: { id: oldLigne.ligneAchatId }
+                  }))
+                ]); 
+                    // Filtrer les lignes trouvées pour éviter les erreurs lors de la mise à jour
+                    const validProductionLigneAchat = data.productionLigneAchat.filter(ligne =>
                     existingLignes.some(e => e?.id === ligne.id)
                   );
 
@@ -648,13 +695,12 @@ export class ProductionService {
                       });
                     })
                   ]);
-
+              }
                 const description = `Modification du production: ${check.description} -> ${data.description}`
                 this.trace.logger({ action: 'Modification', description, userId }).then(res => console.log("TRACE SAVED: ", res))
                 return productions
             } catch (error: any) {
-              console.log("ERROR: ", error);
-              
+                console.log("ERROR: ", error);
                 if (error.status) throw new HttpException(error.message, error.status);
                 else throw new HttpException(errors.UNKNOWN_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
             }

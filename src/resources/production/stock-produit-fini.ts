@@ -28,7 +28,7 @@ export class StocksService {
             };
         }
     
-        if (filter.prodFiniId) {
+        if (filter.prodFiniId) {  
             conditions.prodFiniId = {
                 contains: filter.prodFiniId,
                 mode: "insensitive"
@@ -67,6 +67,9 @@ export class StocksService {
                     }
                 },
                 stockVente: {
+                    where: {
+                        removed: false
+                      },
                     select: {
                         id: true,
                         quantiteVendue: true

@@ -432,7 +432,7 @@ export class VentesService {
     }
 
     remove = async (id: string, userId: string): Promise<VenteArchiveDeleteAndDestory> => {
-        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true, removed: true } })
+        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true, removed: true, stockVente: true } })
         if (!check) throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
 
         const vente = await this.db.vente.update({
@@ -443,6 +443,18 @@ export class VentesService {
             select: { id: true, reference: true, createdAt: true }
         })
 
+        await Promise.all(
+            check.stockVente.map(async (stockVente: any) => {
+              await this.db.stockVente.update({
+                where: { id: stockVente.id },
+                data: {
+                  removed: !check.removed,
+                },
+              });
+            })
+          );
+          
+
         const description = `Suppression logique de la vente: ${check.reference}`
         this.trace.logger({action: 'Suppression logique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
@@ -451,7 +463,7 @@ export class VentesService {
     }
 
     destroy = async (id: string, userId: string): Promise<VenteArchiveDeleteAndDestory> => {
-        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true } })
+        const check = await this.db.vente.findUnique({ where:  {id: id }, select: { reference: true, stockVente: true } })
         if (!check) throw new HttpException(errors.NOT_VENTE_EXIST, HttpStatus.BAD_REQUEST);
 
         try {
@@ -460,6 +472,15 @@ export class VentesService {
                 select: { id: true, reference: true, createdAt: true }
             })
 
+            await Promise.all(
+                check.stockVente.map(async (stockVente: any) => {
+                  await this.db.stockVente.delete({
+                    where: { id: stockVente.id },
+                    select: { id: true }
+                  });
+                })
+              );
+              
             const description = `Suppression physique de l'unité: ${check.reference}`
             this.trace.logger({action: 'Suppression physique', description, userId }).then(res=>console.log("TRACE SAVED: ", res))
 
