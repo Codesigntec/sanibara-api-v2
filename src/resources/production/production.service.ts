@@ -106,6 +106,8 @@ export class ProductionService {
           let referenceProd: string = '';
           if(data.reference === null || data.reference === undefined || data.reference === ''){
             referenceProd = `REF_PROD-${new Date().getTime()}`;
+          }else{
+            referenceProd = data.reference;
           }
           let dateDebut: Date;
           let dateFin: Date;
@@ -143,30 +145,33 @@ export class ProductionService {
           if (hasDuplicates) {
             throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
           } 
-          let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);
-
-          let designationAll: string[] = await Promise.all(
-            stockId.map(async (id) => {
-              const produit = await tx.produitFini.findUnique({
-                where: { id: id },
-                select: { designation: true }
-              });
-              return produit?.designation || '';  
-            })
-          );
-
+          
           let descriptionProd: string = "";
 
           if (data.description === null || data.description === undefined || data.description === '') {
             const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
-            const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
+            const dateDebutFormatted = check.dateDebut.toLocaleDateString('fr-FR', options);
+            const dateFinFormatted = check.dateFin.toLocaleDateString('fr-FR', options);
+
+            let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);   
+
+            let designationAll: string[] = await Promise.all(
+              stockId.map(async (id) => {
+                const produit = await tx.produitFini.findUnique({
+                  where: { id: id },
+                  select: { designation: true }
+                });
+                return produit?.designation || '';  
+              })
+            );
 
             if (dateDebut === dateFin) {
               descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
             } else {
               descriptionProd = "Production de [ " + designationAll.join(', ') + "] du " + dateDebutFormatted + " au " + dateFinFormatted;
             }
+          }else{
+            descriptionProd = data.description;
           }
 
           const production = await tx.productions.create({
@@ -350,44 +355,6 @@ export class ProductionService {
 
           console.log("ligneUpdate:", ligneUpdate);
         }
-
-
-          // data.productionLigneAchat.forEach(async (ligne) => {
-
-          //   const check = await this.db.ligneAchat.findUnique(
-          //     { 
-          //     where:  {id: ligne.id }, 
-          //     select: {id: true, prixUnitaire: true, quantite: true, datePeremption: true, references: true,
-          //     quantiteLivre: true, qt_Utilise: true, matiereId: true, magasinId: true, createdAt: true, updatedAt: true} 
-          //   })
-              
-              
-          //   const ligneUpdate = await this.db.ligneAchat.update({
-          //     where: { id: check.id },
-          //     data: {
-          //         prixUnitaire: check.prixUnitaire,
-          //         quantite: check.quantite,
-          //         datePeremption: new Date(check.datePeremption),
-          //         references: check.references,
-          //         quantiteLivre: check.quantiteLivre,
-          //         qt_Utilise: check.qt_Utilise + ligne.qt_Utilise,
-          //         matiere: {
-          //             connect: {
-          //                 id: check.matiereId,
-          //             },
-          //         },
-          //         magasin: {
-          //             connect: {
-          //                 id: check.magasinId,
-          //             },
-          //         },
-          //     },
-          // })
-
-          // console.log("ligneUpdate");
-          // console.log(ligneUpdate);
-
-          // })
         
           const description = `Ajout du produit fini: ${data.description}`;
           this.trace.logger({ action: 'Ajout', description, userId }).then((res) => console.log('TRACE SAVED: ', res));
@@ -485,6 +452,13 @@ export class ProductionService {
                 let ListIdProduitFini: string[] = [];
                 let idSet = new Set<string>();
                 let hasDuplicates = false;
+
+                let referenceProd: string = '';
+                if(data.reference === null || data.reference === undefined || data.reference === ''){
+                  referenceProd = `REF_PROD-${new Date().getTime()}`;
+                }else{
+                  referenceProd = data.reference;
+                }
                 
                 data.stockProdFini.forEach((stock) => {
                   if (stock.produitFini.id && stock.produitFini.id !== null && stock.produitFini.id !== undefined && idSet.has(stock.produitFini.id)) {
@@ -498,12 +472,42 @@ export class ProductionService {
                 if (hasDuplicates) {
                   throw new HttpException(errors.DUPLICATION_PRODUIT_FINIS, HttpStatus.BAD_REQUEST);
                 } 
+
+                let descriptionProd: string = "";
+
+                if (data.description === null || data.description === undefined || data.description === '') {
+                  const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                  const dateDebutFormatted = dateDebut.toLocaleDateString('fr-FR', options);
+                  const dateFinFormatted = dateFin.toLocaleDateString('fr-FR', options);
+
+                  let stockId: string[] = data.stockProdFini.map(stock => stock.produitFini.id);   
+
+                  let designationAll: string[] = await Promise.all(
+                    stockId.map(async (id) => {
+                      const produit = await tx.produitFini.findUnique({
+                        where: { id: id },
+                        select: { designation: true }
+                      });
+                      return produit?.designation || '';  
+                    })
+                  );
+      
+                  if (dateDebut === dateFin) {
+                    descriptionProd = "Production de [ " + designationAll.join(', ') + "] le " + dateDebutFormatted;
+                  } else {
+                    descriptionProd = "Production de [ " + designationAll.join(', ') + "] du " + dateDebutFormatted + " au " + dateFinFormatted;
+                  }
+                }else{
+                  descriptionProd = data.description
+                }
+
+                
                 const productions = await tx.productions.update({
                     where: { id: id },
                     data: {
-                      reference: data.reference,
+                      reference: referenceProd,
                       dateDebut: dateDebut,
-                      description: data.description,
+                      description: descriptionProd,
                       coutTotalProduction: data.coutTotalProduction,
                       beneficeDetails: data.beneficeDetails,
                       beneficeGros: data.beneficeGros,

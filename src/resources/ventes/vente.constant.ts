@@ -22,7 +22,6 @@ const errors = {
 const infos = {
 
 }
-
 export {
     errors,
     infos
