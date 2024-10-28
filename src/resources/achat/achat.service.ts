@@ -402,13 +402,37 @@ export class AchatService {
               })),
             }        
           }
+
+          let dateAchat: Date;
+          if (data.date === null || data.date === undefined || data.date === '') {
+            dateAchat = new Date();
+          } else {
+            dateAchat = new Date(data.date);
+          }
+
+          let libelle: string = '';
+
+          if (!data.libelle) {
+             const action = data.statutAchat === StatutAchat.ACHETER ? 'Achat' : 'Commande';
+             const randomNumber = Math.floor(1000 + Math.random() * 9000); // Générer un nombre aléatoire à 4 chiffres
+           // Options corrigées pour jour, mois et année
+           // Options corrigées pour la date
+           const options: Intl.DateTimeFormatOptions = {
+               day: '2-digit',
+               month: '2-digit',
+               year: 'numeric'
+           };
+           libelle = `${action} du ${new Date(dateAchat).toLocaleDateString('fr-FR', options)}_${randomNumber}`;
+           } else {
+             libelle = data.libelle;
+           }
           
           // Update achat
           const updatedAchat = await tx.achat.update({
               where: { id: achatId },
               data: {
-                  libelle: data.libelle,
-                  date: new Date(data.date),
+                  libelle: libelle,
+                  date: dateAchat,
                   statutAchat: data.statutAchat,
                   etat: data.etat,
                   updatedAt: new Date(),
