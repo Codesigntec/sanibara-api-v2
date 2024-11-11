@@ -17,6 +17,7 @@ export class AppService {
 
 
   @Cron(CronExpression.EVERY_DAY_AT_10AM)
+// @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
       console.log("Running a task every 30 seconds");
       await this.checkExpiringProducts();

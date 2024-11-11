@@ -18,7 +18,7 @@ const prismaClientProvider: FactoryProvider<PrismaClient> = {
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '230h' },
+      signOptions: { expiresIn: '36h' },
     }),
   ],
   providers: [PrismaClientManager, prismaClientProvider],

@@ -9,6 +9,7 @@ import { errors } from './auth.constant';
 @Injectable()
 export class AuthGuard implements CanActivate {
 
+  private openEndpoints: string[] = ['/api/v2/devises'];
   constructor(
     private jwtService: JwtService,
     private db: PrismaService
@@ -17,8 +18,26 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
 
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
-    if (!token) throw new UnauthorizedException(errors.UNAUTHORIZED_TOKEN);
+
+      // // Vérification si l'endpoint est libre
+      // if (this.openEndpoints.some((endpoint) => request.path.startsWith(endpoint))) {
+      //   return true; // Autorise l'accès sans authentification
+      // }
+
+          // Vérification si l'endpoint est libre
+    if (this.openEndpoints.some((endpoint) => request.path.startsWith(endpoint))) {
+      // Vérification si la méthode est GET
+      if (request.method === 'GET') {
+        return true; // Autorise l'accès pour les requêtes GET
+      } else {
+        // Bloque les autres méthodes (POST, PUT, DELETE, etc.)
+        throw new UnauthorizedException(errors.UNAUTHORIZED_TOKEN);
+      }
+    }
+  
+      // Extraction du token
+      const token = this.extractTokenFromHeader(request);
+      if (!token) throw new UnauthorizedException(errors.UNAUTHORIZED_TOKEN);
 
     try {
       const payload = await this.jwtService.verifyAsync<AuthAccessPayload>(
