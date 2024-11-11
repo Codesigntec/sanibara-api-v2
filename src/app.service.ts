@@ -15,9 +15,8 @@ export class AppService {
   }
 
 
-
   @Cron(CronExpression.EVERY_DAY_AT_10AM)
-// @Cron(CronExpression.EVERY_10_SECONDS)
+ // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
       console.log("Running a task every 30 seconds");
       await this.checkExpiringProducts();
@@ -133,4 +132,128 @@ export class AppService {
        console.error("Error checking expiring products:", error);
       }
   }
+
+  async destroy() {
+
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    // Récupère les dépenses supprimées dont la date de mise à jour dépasse un mois
+    const depensesToDelete = await this.db.depense.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+    // Récupère les achats supprimées dont la date de mise à jour dépasse un mois
+    const achatToDelete = await this.db.achat.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+    // Récupère les clients supprimées dont la date de mise à jour dépasse un mois
+    const clientToDelete = await this.db.client.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+   // Récupère les devises supprimées dont la date de mise à jour dépasse un mois
+    const devisesToDelete = await this.db.devise.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+    // Récupère les fournisseurs supprimées dont la date de mise à jour dépasse un mois
+    const frsToDelete = await this.db.fournisseur.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
+
+
+
+    
+    // Supprime les dépenses récupérées
+    const deleteDepensesPromises = depensesToDelete.map(depense =>
+        this.db.depense.delete({
+            where: { id: depense.id }
+        })
+    );
+
+    // Supprime les achats récupérées
+    const deleteAchatPromises = achatToDelete.map(achat =>
+        this.db.achat.delete({
+            where: { id: achat.id }
+        })
+    );
+
+    // Supprime les clients récupérées
+    const deleteClientPromises = clientToDelete.map(client =>
+        this.db.client.delete({
+            where: { id: client.id }
+        })
+    );
+    
+    // Supprime les devises récupérées
+    const deleteDevisePromises = devisesToDelete.map(devise =>
+        this.db.devise.delete({
+            where: { id: devise.id }
+        })
+    );
+
+    // Supprime les frs récupérées
+    const deleteFrsPromises = frsToDelete.map(frs =>
+        this.db.fournisseur.delete({
+            where: { id: frs.id }
+        })
+    );
+
+
+
+  }
 }
+ 

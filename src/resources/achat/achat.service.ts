@@ -526,7 +526,8 @@ export class AchatService {
         const achat = await this.db.achat.update({
             where: { id },
             data: {
-                removed: achat_remove
+                removed: achat_remove,
+                updatedAt: new Date(),
             },
             select: {
                 id: true,
@@ -541,7 +542,8 @@ export class AchatService {
           await this.db.ligneAchat.update({
               where: { id: l.id },
               data: {
-                removed: achat_remove
+                removed: achat_remove,
+                updatedAt: new Date(),
               }
             })
           })

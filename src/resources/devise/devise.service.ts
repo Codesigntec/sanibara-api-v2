@@ -159,7 +159,8 @@ export class DeviseService {
         const devise = await this.db.devise.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: { id: true, numero: true, libelle: true, symbole: true, createdAt: true }
         })

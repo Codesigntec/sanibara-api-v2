@@ -335,7 +335,8 @@ export class MatiereService {
         const article = await this.db.matierePremiere.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: {
                 id: true,

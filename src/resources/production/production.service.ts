@@ -761,7 +761,8 @@ export class ProductionService {
       const production = await this.db.productions.update({
           where: { id },
           data: {
-              removed: prod_remove
+              removed: prod_remove,
+              updatedAt: new Date(),
           },
           select: { id: true, stockProdFini: true }
       })

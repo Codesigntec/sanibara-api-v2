@@ -182,7 +182,8 @@ export class RoleService {
         const role = await this.db.role.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: { id: true, numero: true, libelle: true, createdAt: true }
         })
