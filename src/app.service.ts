@@ -138,6 +138,8 @@ export class AppService {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
+    // =======================================[ RECUPERATION ]=======================================
+
     // Récupère les dépenses supprimées dont la date de mise à jour dépasse un mois
     const depensesToDelete = await this.db.depense.findMany({
         where: {
@@ -258,7 +260,99 @@ export class AppService {
         }
      });
 
-    
+    // Récupère les productions supprimées dont la date de mise à jour dépasse un mois
+    const productionsToDelete = await this.db.productions.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
+    // Récupère les produitFinis supprimées dont la date de mise à jour dépasse un mois
+    const produitFiniToDelete = await this.db.produitFini.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
+    // Récupère les role supprimées dont la date de mise à jour dépasse un mois
+    const roleToDelete = await this.db.role.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
+    // Récupère les unite supprimées dont la date de mise à jour dépasse un mois
+    const uniteToDelete = await this.db.unite.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
+    // Récupère les utilisateur supprimées dont la date de mise à jour dépasse un mois
+    const utilisateurToDelete = await this.db.utilisateur.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+    // Récupère les vente supprimées dont la date de mise à jour dépasse un mois
+    const venteToDelete = await this.db.vente.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+    });
+
+    //============================================[DELETE]===================================================
+
+
     // Supprime les dépenses récupérées
     const deleteDepensesPromises = depensesToDelete.map(depense =>
         this.db.depense.delete({
@@ -315,8 +409,50 @@ export class AppService {
         })
     );
 
+    // Supprime les productions récupérées
+    const deleteproductionsPromises = productionsToDelete.map(mp =>
+        this.db.productions.delete({
+            where: { id: mp.id }
+        })
+    );
 
+    // Supprime les produitFini récupérées
+    const deleteproduitFiniPromises = produitFiniToDelete.map(mp =>
+        this.db.produitFini.delete({
+            where: { id: mp.id }
+        })
+    );
+
+    // Supprime les role récupérées
+    const deleterolePromises = roleToDelete.map(mp =>
+        this.db.role.delete({
+            where: { id: mp.id }
+        })
+    );
+
+    // Supprime les unite récupérées
+    const deleteunitePromises = uniteToDelete.map(mp =>
+        this.db.unite.delete({
+            where: { id: mp.id }
+        })
+    );
+
+    // Supprime les utilisateur récupérées
+    const deleteutilisateurPromises = utilisateurToDelete.map(mp =>
+        this.db.utilisateur.delete({
+            where: { id: mp.id }
+        })
+    );
+
+    // Supprime les vente récupérées
+    const deleteventePromises = venteToDelete.map(mp =>
+        this.db.vente.delete({
+            where: { id: mp.id }
+        })
+    );
 
   }
+
+  
 }
  
