@@ -334,7 +334,8 @@ export class ProduitService {
         const article = await this.db.produitFini.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: {
                 id: true,

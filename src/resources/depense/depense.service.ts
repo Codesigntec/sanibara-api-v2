@@ -193,7 +193,8 @@ export class DepenseService {
         const depense = await this.db.depense.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: {
                 id: true,

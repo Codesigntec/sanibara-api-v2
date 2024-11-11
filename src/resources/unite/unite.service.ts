@@ -157,7 +157,8 @@ export class UniteService {
         const unite = await this.db.unite.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: { id: true, libelle: true, symbole: true, createdAt: true }
         })

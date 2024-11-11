@@ -26,6 +26,7 @@ export class PrismaClientManager implements OnModuleDestroy {
     else return "public"
   }
 
+  
   getClient = (request: Request): PrismaClient =>{
     const tenantId =  this.getTenantId(request)
     let client = this.clients[tenantId];

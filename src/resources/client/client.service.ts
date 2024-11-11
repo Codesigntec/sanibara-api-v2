@@ -169,7 +169,8 @@ export class ClientService {
         const client = await this.db.client.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: {
                 id: true,

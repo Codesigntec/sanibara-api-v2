@@ -194,7 +194,8 @@ export class MagasinService {
         const magasin = await this.db.magasinProduitFini.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: { id: true, numero: true, nom: true, adresse: true, createdAt: true }
         })

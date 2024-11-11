@@ -438,7 +438,8 @@ export class VentesService {
         const vente = await this.db.vente.update({
             where: { id },
             data: {
-                removed: !check.removed
+                removed: !check.removed,
+                updatedAt: new Date(),
             },
             select: { id: true, reference: true, createdAt: true }
         })
@@ -632,11 +633,8 @@ export class VentesService {
                 throw new HttpException(errors.NOT_REMOVABLE_PAIEMENT, HttpStatus.BAD_REQUEST);
             }
         }
-
-
+        
         //===================STOCK PRODUIT FINI====================
-
-
         findByIdStockProduiFini = async (id: string): Promise<StockProduiFiniDto> => {
             return await this.db.stockProduiFini.findUnique({
                 where: { id },
