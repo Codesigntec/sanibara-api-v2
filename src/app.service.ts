@@ -214,6 +214,21 @@ export class AppService {
      });
 
 
+    // Récupère les magasinMatierePremiere supprimées dont la date de mise à jour dépasse un mois
+    const mpToDelete = await this.db.magasinMatierePremiere.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
+
 
 
     
@@ -248,6 +263,13 @@ export class AppService {
     // Supprime les frs récupérées
     const deleteFrsPromises = frsToDelete.map(frs =>
         this.db.fournisseur.delete({
+            where: { id: frs.id }
+        })
+    );
+
+    // Supprime les magasinMatierePremiere récupérées
+    const deleteMpPromises = mpToDelete.map(frs =>
+        this.db.magasinMatierePremiere.delete({
             where: { id: frs.id }
         })
     );
