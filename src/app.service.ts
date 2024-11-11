@@ -20,6 +20,7 @@ export class AppService {
   async handleCron() {
       console.log("Running a task every 30 seconds");
       await this.checkExpiringProducts();
+      await this.destroy();
   }
 
    formatDetailedDate = (strDate: string) => {
@@ -453,6 +454,6 @@ export class AppService {
 
   }
 
-  
+
 }
  
