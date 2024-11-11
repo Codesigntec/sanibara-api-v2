@@ -213,7 +213,6 @@ export class AppService {
         }
      });
 
-
     // Récupère les magasinMatierePremiere supprimées dont la date de mise à jour dépasse un mois
     const mpToDelete = await this.db.magasinMatierePremiere.findMany({
         where: {
@@ -229,7 +228,35 @@ export class AppService {
         }
      });
 
+    // Récupère les magasinProduitFini supprimées dont la date de mise à jour dépasse un mois
+    const pfToDelete = await this.db.magasinProduitFini.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
 
+    // Récupère les matierePremiere supprimées dont la date de mise à jour dépasse un mois
+    const matierePremiereToDelete = await this.db.matierePremiere.findMany({
+        where: {
+            removed: true,
+            updatedAt: {
+                lt: oneMonthAgo
+            }
+        },
+        select: {
+            id: true,
+            removed: true,
+            updatedAt: true
+        }
+     });
 
     
     // Supprime les dépenses récupérées
@@ -271,6 +298,20 @@ export class AppService {
     const deleteMpPromises = mpToDelete.map(frs =>
         this.db.magasinMatierePremiere.delete({
             where: { id: frs.id }
+        })
+    );
+
+    // Supprime les magasinProduitFini récupérées
+    const deletePfPromises = pfToDelete.map(pf =>
+        this.db.magasinProduitFini.delete({
+            where: { id: pf.id }
+        })
+    );
+
+    // Supprime les matierePremiere récupérées
+    const deleteMatierePremierePromises = matierePremiereToDelete.map(mp =>
+        this.db.matierePremiere.delete({
+            where: { id: mp.id }
         })
     );
 
