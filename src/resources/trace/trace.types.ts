@@ -13,7 +13,6 @@ export class TraceSaver {
 export class TraceFetcher {
   action: string | null
   utilisateurId: string | null
-  email: string | null
   debut: string | null
   fin: string | null
   search?: string | null

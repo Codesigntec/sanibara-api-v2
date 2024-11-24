@@ -45,7 +45,6 @@ export class TraceController {
         @Query('direction') direction?: string | null,
         @Query('debut') debut?: string | null,
         @Query('fin') fin?: string | null,
-        @Query('email') email?: string | null,
         @Query('search') search?: string | null,
     ) : Promise<Pagination<Trace>> {
         const filter : TraceFetcher = {
@@ -53,8 +52,7 @@ export class TraceController {
             utilisateurId,
             debut,
             fin,
-            search,
-            email
+            search
         }
         const paginationQuery : PaginationQuery = {
             page: Number(page),
