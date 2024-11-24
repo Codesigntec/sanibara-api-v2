@@ -31,14 +31,6 @@ export class TraceService {
             } 
         }
 
-        if (filter.email) { 
-            conditions = { 
-                utilisateur: {
-                    email: filter.email
-                }
-            } 
-        }
-
         if (filter.debut || filter.fin) {
             let dateFilter = {};
             if (filter.debut) {
@@ -52,13 +44,18 @@ export class TraceService {
         // conditions = { ...conditions, removed: filter.removed, archive: filter.archive }
 
         // Appliquer l'ordre de tri
-        let order = {}
+        let order: any = {};
         if (query.orderBy) {
-            order[query.orderBy] = query.orderDirection ? query.orderDirection : 'asc';
+        if (query.orderBy === 'email') {
+            order = { utilisateur: { email: query.orderDirection || 'asc' } };
         } else {
-            // Par défaut, trier par createdAt du plus récent au plus ancien
-            order = { createdAt: 'desc' };
+            order[query.orderBy] = query.orderDirection || 'asc';
         }
+        } else {
+        // Par défaut, trier par createdAt du plus récent au plus ancien
+        order = { createdAt: 'desc' };
+        }
+
 
         if (filter.search) {
             // Crée une clause OR pour les recherches
