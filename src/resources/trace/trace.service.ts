@@ -24,12 +24,20 @@ export class TraceService {
                 }
             }
         }
-        // if (filter.categorieId) { conditions = { ...conditions, categorieId: filter.categorieId } }
+
         if (filter.utilisateurId) { 
             conditions = { 
                 utilisateurId: filter.utilisateurId 
-            } }
-        // if(filter.paymentMethode){ conditions = { ...conditions, paymentMethode: filter.paymentMethode } }
+            } 
+        }
+
+        if (filter.email) { 
+            conditions = { 
+                utilisateur: {
+                    email: filter.email
+                }
+            } 
+        }
 
         if (filter.debut || filter.fin) {
             let dateFilter = {};
