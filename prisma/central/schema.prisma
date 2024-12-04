@@ -23,16 +23,15 @@ model Admin {
 }
 
 model Store {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  name      String
-  email     String
-  db        String
-  app       App
-  created   Boolean  @default(false) // si la db physique est creee
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
+  id            String         @id @default(cuid())
+  key           String         @unique
+  name          String
+  email         String
+  db            String
+  app           App
+  created       Boolean        @default(false)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   subscriptions Subscription[]
   users         User[]
 
@@ -46,25 +45,23 @@ model Subscription {
   end          DateTime
   pack         String   @default("essai")
   storeId      String   @map("store_id")
-  store        Store    @relation(fields: [storeId], references: [id])
   partnerToken String?  @map("partner_token")
-  amount       Float @default(0)
+  amount       Float    @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  store        Store    @relation(fields: [storeId], references: [id])
 
   @@map("subscriptions")
 }
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  name  String
-
-  storeId String @map("store_id")
-  store   Store  @relation(fields: [storeId], references: [id])
-
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  storeId   String   @map("store_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  store     Store    @relation(fields: [storeId], references: [id])
 
   @@map("user_store")
 }

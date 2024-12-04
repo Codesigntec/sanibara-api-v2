@@ -67,12 +67,13 @@ export class DeviseService {
 
     save = async (data: DeviseSaver, userId: string): Promise<Devise> => {
 
+        console.log("service",userId);
+
         const totalCount = await this.db.devise.count();
         if (totalCount > 0) {
             throw new HttpException(errors.DEVISE_ALREADY_EXIST, HttpStatus.BAD_REQUEST);
         }
 
-        
         const check = await this.db.devise.findFirst({
             where: {
                 OR: [
@@ -83,8 +84,6 @@ export class DeviseService {
         })
         if (check !== null) throw new HttpException(errors.ALREADY_EXIST, HttpStatus.BAD_REQUEST);
 
-  
-
         const devise = await this.db.devise.create({
             data: {
                 libelle: data.libelle,
@@ -92,8 +91,6 @@ export class DeviseService {
             },
             select: { id: true, numero: true, libelle: true, symbole: true, createdAt: true }
         })
-
-
 
         const description = `Ajout de devise: ${data.libelle}`
         this.trace.logger({ action: 'Ajout', description, userId }).then(res => console.log("TRACE SAVED: ", res))

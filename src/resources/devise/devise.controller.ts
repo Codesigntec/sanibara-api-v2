@@ -86,6 +86,8 @@ export class DeviseController {
     @ApiOkResponse({ type: [DeviseSelect] })
     async save(@Body() data: DeviseSaver, @Req() req: AuthorizedRequest): Promise<Devise> {
         const userId = req.userId
+        console.log("req",req);
+        console.log("userId",userId);
         return await this.service.save(data, userId)
     }
 
