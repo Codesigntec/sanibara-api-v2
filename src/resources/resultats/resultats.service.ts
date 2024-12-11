@@ -13,42 +13,87 @@ export class ResultatsService {
         private trace: TraceService
     ) { }
 
- 
-  dateCreated = async (): Promise<number | null> => {
-
-        let currentYear = new Date().getFullYear();
-        let resultats = null;
-
+    dateCreated = async (): Promise<number | null> => {
+      let currentYear = new Date().getFullYear();
+      let resultats = null;
+    
+      try {
         if (!resultats) {
           resultats = await this.db.achat.findFirst({
             where: { removed: false, archive: false },
             orderBy: {
               date: 'asc',
             },
-            select: {date: true },
+            select: { date: true },
           });
-          currentYear = new Date(resultats.date).getFullYear();
+          if (resultats) {
+            currentYear = new Date(resultats.date).getFullYear();
+          }
         }
-
+    
         if (!resultats) {
-        
-        resultats = await this.db.magasinMatierePremiere.findFirst({
+          resultats = await this.db.magasinMatierePremiere.findFirst({
             where: { removed: false, archive: false },
             orderBy: {
               createdAt: 'asc',
             },
             select: { createdAt: true },
           });
-          currentYear = new Date(resultats.createdAt).getFullYear();
+          if (resultats) {
+            currentYear = new Date(resultats.createdAt).getFullYear();
+          }
         }
-              // Si tout est null, retourner l'année en cours
+    
+        // Si tout est null, retourner l'année en cours
         if (!resultats) {
           currentYear = new Date().getFullYear();
-          return currentYear;
         }
+    
+      } catch (error) {
+        console.error("Une erreur s'est produite lors de l'exécution de la méthode:", error);
+        // Optionnel : retourner une valeur spécifique ou gérer l'erreur autrement si nécessaire
+        return null;
+      }
+    
+      return currentYear;
+    };
+    
+ 
+  // dateCreated = async (): Promise<number | null> => {
 
-    return currentYear;
-  }
+  //       let currentYear = new Date().getFullYear();
+  //       let resultats = null;
+
+  //       if (!resultats) {
+  //         resultats = await this.db.achat.findFirst({
+  //           where: { removed: false, archive: false },
+  //           orderBy: {
+  //             date: 'asc',
+  //           },
+  //           select: {date: true },
+  //         });
+  //         currentYear = new Date(resultats.date).getFullYear();
+  //       }
+
+  //       if (!resultats) {
+        
+  //       resultats = await this.db.magasinMatierePremiere.findFirst({
+  //           where: { removed: false, archive: false },
+  //           orderBy: {
+  //             createdAt: 'asc',
+  //           },
+  //           select: { createdAt: true },
+  //         });
+  //         currentYear = new Date(resultats.createdAt).getFullYear();
+  //       }
+  //             // Si tout est null, retourner l'année en cours
+  //       if (!resultats) {
+  //         currentYear = new Date().getFullYear();
+  //         return currentYear;
+  //       }
+
+  //   return currentYear;
+  // }
 
   cardData = async (data: FlitreCard, userId: string): Promise<Card> => {
 
@@ -78,9 +123,9 @@ export class ResultatsService {
         select: { date: true}
       });
     
-      debut = achat ? achat.date.toISOString().split('T')[0] : "";
+      debut = achat ? achat.date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0] ;
       fin = new Date().toISOString().split('T')[0];
-
+    
       if (!debut || !fin ) {
         throw new HttpException(errors.ERROR_CONVERT_DATE, HttpStatus.BAD_REQUEST);
       }

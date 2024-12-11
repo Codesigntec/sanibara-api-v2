@@ -27,12 +27,13 @@ export class AuthGuard implements CanActivate {
           // Vérification si l'endpoint est libre
     if (this.openEndpoints.some((endpoint) => request.path.startsWith(endpoint))) {
       // Vérification si la méthode est GET
-      if (request.method === 'GET') {
-        return true; // Autorise l'accès pour les requêtes GET
-      } else {
-        // Bloque les autres méthodes (POST, PUT, DELETE, etc.)
-        throw new UnauthorizedException(errors.UNAUTHORIZED_TOKEN);
-      }
+      // if (request.method === 'GET') {
+      //   return true; // Autorise l'accès pour les requêtes GET
+      // } else {
+      //   // Bloque les autres méthodes (POST, PUT, DELETE, etc.)
+      //   throw new UnauthorizedException(errors.UNAUTHORIZED_TOKEN);
+      // }
+      return true;
     }
   
       // Extraction du token
